@@ -1,0 +1,233 @@
+/* 主窗口样式 - 浅色系主题 */
+QMainWindow, QDialog {
+    background-color: #f8f9fa;
+}
+
+/* 表格样式 */
+QTableWidget {
+    background-color: white;
+    border: 1px solid #e6e7e8;
+    border-radius: 6px;
+    selection-background-color: #e1efff;
+    alternate-background-color: #fafbfc;
+}
+
+QTableWidget::item {
+    padding: 5px;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+QTableWidget::item:selected {
+    background-color: #e1efff;
+    color: #333333;
+}
+
+QHeaderView::section {
+    background-color: #f1f3f5;
+    color: #555555;
+    padding: 8px;
+    border: none;
+    border-right: 1px solid #e6e7e8;
+    border-bottom: 1px solid #e6e7e8;
+    font-weight: 600;
+}
+
+/* 按钮样式 */
+QPushButton {
+    background-color: #6cb7fb;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #4fa0f8;
+}
+
+QPushButton:pressed {
+    background-color: #3d90ea;
+}
+
+QPushButton:disabled {
+    background-color: #d9dde0;
+    color: #a9aeb2;
+}
+
+/* 搜索按钮特殊样式 */
+QPushButton#searchButton {
+    background-color: #59ccb6;
+    min-width: 80px;
+}
+
+QPushButton#searchButton:hover {
+    background-color: #40c4aa;
+}
+
+QPushButton#searchButton:pressed {
+    background-color: #34b69c;
+}
+
+/* 搜索框样式 */
+QLineEdit {
+    border: 1px solid #e6e7e8;
+    border-radius: 5px;
+    padding: 8px;
+    background-color: white;
+    font-size: 14px;
+}
+
+QLineEdit:focus {
+    border: 1px solid #6cb7fb;
+}
+
+QLineEdit#searchEdit {
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 15px;
+    border: 1px solid #e6e7e8;
+}
+
+QLineEdit#searchEdit:focus {
+    border: 1px solid #59ccb6;
+}
+
+/* 标签样式 */
+QLabel#gameTitle {
+    font-size: 18pt;
+    color: #505a68;
+    font-weight: bold;
+    padding-bottom: 10px;
+}
+
+/* 文本区域样式 */
+QTextEdit {
+    background-color: white;
+    border: 1px solid #e6e7e8;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+/* 下拉框样式 */
+QComboBox {
+    border: 1px solid #e6e7e8;
+    border-radius: 5px;
+    padding: 6px;
+    background-color: white;
+    min-width: 6em;
+}
+
+QComboBox::drop-down {
+    width: 20px;
+    border: none;
+    background: #6cb7fb;
+}
+
+QComboBox QAbstractItemView {
+    background-color: white;
+    border: 1px solid #e6e7e8;
+    selection-background-color: #e1efff;
+}
+
+/* 排序下拉框特殊样式 */
+QComboBox#sortComboBox {
+    border: 1px solid #e6e7e8;
+    background-color: #f5f7fa;
+    color: #505a68;
+    font-weight: bold;
+}
+
+QComboBox#sortComboBox::drop-down {
+    background: #59ccb6;
+}
+
+/* 进度条样式 */
+QProgressBar {
+    border: 1px solid #e6e7e8;
+    border-radius: 5px;
+    background-color: #f5f7fa;
+    text-align: center;
+    height: 20px;
+}
+
+QProgressBar::chunk {
+    background-color: #6cb7fb;
+}
+
+/* 单选按钮样式 */
+QRadioButton {
+    color: #505a68;
+    spacing: 8px;
+}
+
+QRadioButton::indicator {
+    width: 16px;
+    height: 16px;
+}
+
+/* 分组框样式 */
+QGroupBox {
+    border: 1px solid #e6e7e8;
+    border-radius: 6px;
+    margin-top: 12px;
+    font-weight: bold;
+    color: #505a68;
+    background-color: white;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 5px;
+}
+
+/* 菜单样式 */
+QMenuBar {
+    background-color: #f1f3f5;
+    color: #505a68;
+}
+
+QMenuBar::item {
+    background-color: transparent;
+    padding: 8px 16px;
+}
+
+QMenuBar::item:selected {
+    background-color: #e1efff;
+}
+
+QMenu {
+    background-color: white;
+    border: 1px solid #e6e7e8;
+    border-radius: 5px;
+}
+
+QMenu::item {
+    padding: 8px 20px;
+}
+
+QMenu::item:selected {
+    background-color: #e1efff;
+    color: #505a68;
+}
+
+/* 状态栏样式 */
+QStatusBar {
+    background-color: #f1f3f5;
+    color: #505a68;
+    padding: 5px;
+}
+
+/* 状态栏标签样式 */
+QLabel#statusLabel {
+    color: #505a68;
+    font-weight: bold;
+}
+
+/* 搜索区域样式 */
+QHBoxLayout#searchLayout {
+    border-bottom: 1px solid #e6e7e8;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+} 
