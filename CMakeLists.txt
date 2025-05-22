@@ -72,7 +72,7 @@ add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 add_executable(${PROJECT_NAME}
-    # WIN32 # If you need a terminal for debug, please comment this statement
+    WIN32 # If you need a terminal for debug, please comment this statement
     ${app_icon_resource_windows}
     ${SOURCES}
     ${HEADERS}
