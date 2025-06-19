@@ -70,6 +70,7 @@ release/
 # Build directories
 build/
 bin/
+release-package/
 
 # User-specific files
 *.user

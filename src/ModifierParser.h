@@ -27,11 +27,9 @@ public:
     
     // 解析修改器详情HTML
     static ModifierInfo* parseModifierDetailHTML(const std::string& html, const QString& modifierName);
-    
-    // 直接从HTML内容解析修改器选项
+      // 直接从HTML内容解析修改器选项
     // 用于从剪贴板内容或用户提供的HTML片段解析选项
     static QStringList parseOptionsFromHTML(const QString& html);
-    
-    // 检测修改器名称
+      // 检测修改器名称
     static QString detectGameNameFromHTML(const QString& html);
-}; 
+};

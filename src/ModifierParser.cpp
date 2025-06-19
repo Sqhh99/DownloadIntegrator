@@ -646,88 +646,30 @@ ModifierInfo* ModifierParser::parseModifierDetailHTML(const std::string& html, c
         // 使用parseOptionsFromHTML方法提取选项
         modifier->options = parseOptionsFromHTML(htmlQt);
         
-        // 如果没有成功提取选项且有选项计数，则添加一些默认选项作为示例
+        // 如果没有成功提取选项且有选项计数，则添加通用选项作为后备
         if (modifier->options.isEmpty() && modifier->optionsCount > 0) {
-            qDebug() << "未能提取有效选项，根据游戏名称添加特定选项";
+            qDebug() << "未能提取有效选项，使用通用选项作为后备";
             
-            // 根据游戏名称添加特定选项
-            QString gameName = modifierName.toLower();
-            
-            if (gameName.contains("legend of heroes") && gameName.contains("three kingdoms")) {
-                // Legend of Heroes: Three Kingdoms特定选项
-                modifier->options.append("● 基本选项");
-                modifier->options.append("• Num 1 – Infinite Energy");
-                modifier->options.append("• Num 2 – Infinite Mood");
-                modifier->options.append("• Num 3 – Social Action Won't Decrease");
-                modifier->options.append("• Num 4 – Max NPC Friendship");
-                modifier->options.append("• Num 5 – NPC Friendship Multiplier");
-                modifier->options.append("• Num 6 – Max NPC Respect");
-                modifier->options.append("• Num 7 – Max NPC Gratitude");
-                modifier->options.append("• Num 8 – Max NPC Approval");
-                modifier->options.append("• Num 9 – Set Game Speed");
-                modifier->options.append("• Num 0 – Battle: Infinite Troops");
-                modifier->options.append("• Num . – Battle: Infinite Morale");
-                modifier->options.append("• Num + – Battle: Empty Enemy Troops");
-                modifier->options.append("• Num – – Battle: Empty Enemy Morale");
-                modifier->options.append("● 高级选项");
-                modifier->options.append("• Ctrl+Num 1 – Duel: Infinite Health");
-                modifier->options.append("• Ctrl+Num 2 – Duel: Super Damage/One Hit Kills");
-                modifier->options.append("• Ctrl+Num 3 – Duel: Infinite Qi");
-                modifier->options.append("• Ctrl+Num 4 – Duel: Infinite AP");
-                modifier->options.append("• Ctrl+Num 5 – Debate: Infinite Health");
-                modifier->options.append("• Ctrl+Num 6 – Debate: Super Damage/One Hit Kills");
-                modifier->options.append("• Ctrl+Num 7 – Debate: Infinite Inspiration");
-                modifier->options.append("• Ctrl+Num 8 – Debate: Infinite AP");
-                modifier->options.append("• Ctrl+Num 9 – Edit Money");
-                modifier->options.append("• Ctrl+Num 0 – Edit Base Reputation");
-                modifier->options.append("• Ctrl+Num . – Edit Good Evil Value");
-                modifier->options.append("• Ctrl+Num + – Edit Holy Points");
-            } 
-            else if (gameName.contains("cyberpunk") || gameName.contains("2077")) {
-                // Cyberpunk 2077特定选项
-                modifier->options.append("● 基本选项");
-                modifier->options.append("• Num 1 – 无限生命值");
-                modifier->options.append("• Num 2 – 无限耐力");
-                modifier->options.append("• Num 3 – 无限物品/弹药");
-                modifier->options.append("• Num 4 – 物品不减少");
-                modifier->options.append("• Num 5 – 治疗物品无冷却");
-                modifier->options.append("• Num 6 – 手榴弹无冷却");
-                modifier->options.append("• Num * – 发射系统无冷却");
-                modifier->options.append("• Num 7 – 无需装弹");
-                modifier->options.append("• Num 8 – 超级精准度");
-                modifier->options.append("• Num 9 – 无后座力");
-                modifier->options.append("• Num 0 – 一击必杀");
-                modifier->options.append("● 控制选项");
-                modifier->options.append("• Ctrl+Num 1 – 修改金钱");
-                modifier->options.append("• Ctrl+Num 2 – 无限经验");
-                modifier->options.append("• Ctrl+Num 3 – 经验倍数");
-                modifier->options.append("• Ctrl+Num 4 – 无限街头信誉");
-                modifier->options.append("• Alt+Num 1 – 无限RAM");
-                modifier->options.append("• Alt+Num 2 – 冻结入侵协议计时器");
-            }
-            // ...其他游戏的特定选项...
-            else {
-                // 通用选项
-                modifier->options.append("● 基本功能");
-                modifier->options.append("• Num 1 – 无限生命值");
-                modifier->options.append("• Num 2 – 无限弹药/耐力");
-                modifier->options.append("• Num 3 – 无限物品");
-                modifier->options.append("• Num 4 – 一击必杀");
-                modifier->options.append("● 高级功能");
-                modifier->options.append("• Ctrl+Num 1 – 修改金钱");
-                modifier->options.append("• Ctrl+Num 2 – 修改经验值");
-                modifier->options.append("• Ctrl+Num 3 – 超级速度");
-                modifier->options.append("• Ctrl+Num 4 – 无敌模式");
-                modifier->options.append("• Ctrl+Num 5 – 隐形模式");
-            }
-            
-            // 如果选项为空，但知道有选项数量，更新选项数量
-            if (modifier->optionsCount > 0) {
-                qDebug() << "保留原有选项数量标记：" << modifier->optionsCount;
-            } else {
-                modifier->optionsCount = modifier->options.size();
-                qDebug() << "未找到选项数量标记，使用示例选项数量：" << modifier->optionsCount;
-            }
+            // 通用选项作为后备
+            modifier->options.append("● 基本功能");
+            modifier->options.append("• Num 1 – 无限生命值");
+            modifier->options.append("• Num 2 – 无限弹药/耐力");
+            modifier->options.append("• Num 3 – 无限物品");
+            modifier->options.append("• Num 4 – 一击必杀");
+            modifier->options.append("● 高级功能");
+            modifier->options.append("• Ctrl+Num 1 – 修改金钱");
+            modifier->options.append("• Ctrl+Num 2 – 修改经验值");
+            modifier->options.append("• Ctrl+Num 3 – 超级速度");
+            modifier->options.append("• Ctrl+Num 4 – 无敌模式");
+            modifier->options.append("• Ctrl+Num 5 – 隐形模式");
+        }
+        
+        // 如果选项为空，但知道有选项数量，更新选项数量
+        if (modifier->optionsCount > 0) {
+            qDebug() << "保留原有选项数量标记：" << modifier->optionsCount;
+        } else {
+            modifier->optionsCount = modifier->options.size();
+            qDebug() << "未找到选项数量标记，使用示例选项数量：" << modifier->optionsCount;
         }
         
         qDebug() << "修改器详情解析完成，提取了 " << modifier->options.size() << " 个选项";
@@ -760,340 +702,125 @@ QStringList ModifierParser::parseOptionsFromHTML(const QString& html) {
     }
     
     try {
-        // 检查是否是特定游戏的内容
-        QString gameName = detectGameNameFromHTML(html);
-        qDebug() << "检测到可能的游戏名称：" << gameName;
+        // 统一的选项解析：使用通用解析规则处理所有游戏
+        QMap<QString, QString> cleanOptions;
         
-        // 特定游戏的特殊处理
-        bool isSpecialGame = false;
+        // 4. 新增：处理复杂的HTML结构（如FLiNG trainer网站的格式）
+        // 这种格式包含tooltip、JavaScript等复杂元素
+        QRegularExpression complexHtmlRegex(
+            "((?:Num|Ctrl\\+Num|Alt\\+Num|Shift\\+(?:Num|F\\d))\\s*[\\d\\+\\-\\.]+|(?:Ctrl|Alt|Shift)\\+[\\d\\+\\-\\.]+)\\s*(?:&#8211;|[-–])\\s*([^<]+?)(?=\\s*<(?:span|script|br))",
+            QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption
+        );
+        QRegularExpressionMatchIterator complexMatches = complexHtmlRegex.globalMatch(html);
         
-        if (!gameName.isEmpty()) {
-            if (gameName.contains("Legend of Heroes", Qt::CaseInsensitive) && 
-                gameName.contains("Three Kingdoms", Qt::CaseInsensitive)) {
-                // 特殊处理英雄传说：三国的选项
-                isSpecialGame = true;
-                options.append("● 基本选项");
-                options.append("• Num 1 – Infinite Energy");
-                options.append("• Num 2 – Infinite Mood");
-                options.append("• Num 3 – Social Action Won't Decrease");
-                options.append("• Num 4 – Max NPC Friendship");
-                options.append("• Num 5 – NPC Friendship Multiplier");
-                options.append("• Num 6 – Max NPC Respect");
-                options.append("• Num 7 – Max NPC Gratitude");
-                options.append("• Num 8 – Max NPC Approval");
-                options.append("• Num 9 – Set Game Speed");
-                options.append("• Num 0 – Battle: Infinite Troops");
-                options.append("• Num . – Battle: Infinite Morale");
-                options.append("• Num + – Battle: Empty Enemy Troops");
-                options.append("• Num – – Battle: Empty Enemy Morale");
-                options.append("● 高级选项");
-                options.append("• Ctrl+Num 1 – Duel: Infinite Health");
-                options.append("• Ctrl+Num 2 – Duel: Super Damage/One Hit Kills");
-                options.append("• Ctrl+Num 3 – Duel: Infinite Qi");
-                options.append("• Ctrl+Num 4 – Duel: Infinite AP");
-                options.append("• Ctrl+Num 5 – Debate: Infinite Health");
-                options.append("• Ctrl+Num 6 – Debate: Super Damage/One Hit Kills");
-                options.append("• Ctrl+Num 7 – Debate: Infinite Inspiration");
-                options.append("• Ctrl+Num 8 – Debate: Infinite AP");
-                options.append("• Ctrl+Num 9 – Edit Money");
-                options.append("• Ctrl+Num 0 – Edit Base Reputation");
-                options.append("• Ctrl+Num . – Edit Good Evil Value");
-                options.append("• Ctrl+Num + – Edit Holy Points");
+        while (complexMatches.hasNext()) {
+            QRegularExpressionMatch match = complexMatches.next();
+            QString hotkey = match.captured(1).trimmed();
+            QString description = match.captured(2).trimmed();
+            
+            // 清理热键格式
+            hotkey.replace(QRegularExpression("\\s+"), " ");
+            
+            // 清理描述文本
+            description.replace("&amp;", "&");
+            description.replace("&#8211;", "-");
+            description.replace("&#046;", ".");
+            description.replace("&#8217;", "'");
+            description = description.trimmed();
+            
+            // 验证这是一个有效的选项
+            if (!description.isEmpty() && 
+                !description.contains("jQuery", Qt::CaseInsensitive) && 
+                !description.contains("function", Qt::CaseInsensitive) &&
+                !description.contains("script", Qt::CaseInsensitive) &&
+                !description.contains("tooltip", Qt::CaseInsensitive) &&
+                description.length() > 2) {
                 
-                qDebug() << "应用特定游戏模板：Legend of Heroes: Three Kingdoms，添加 " << options.size() << " 个选项";
-                return options;
-            }
-            else if (gameName.contains("Lost Village", Qt::CaseInsensitive)) {
-                // The Lost Village 的选项模板
-                isSpecialGame = true;
-                options.append("● 基本选项");
-                options.append("• Num 1 – Edit Faith");
-                options.append("• Num 2 – Edit Gift");
-                options.append("• Num 3 – Edit Prestige");
-                options.append("• Num 4 – Fast Build");
-                options.append("• Num 5 – Fast Research");
-                options.append("• Num 6 – Zero Warehouse Weight");
-                options.append("• Num 7 – New Game: V0 Toast");
-                
-                options.append("● 编辑数量");
-                options.append("• Shift+F1 – Edit Material Amounts");
-                options.append("• Shift+F2 – Edit Book Amounts");
-                options.append("• Shift+F3 – Edit Supply Amounts");
-                options.append("• Shift+F4 – Edit Elixir Amounts");
-                options.append("• Shift+F5 – Edit Food Amounts");
-                options.append("• Shift+F6 – Edit Gift Amounts");
-                
-                qDebug() << "应用特定游戏模板：The Lost Village，添加 " << options.size() << " 个选项";
-                return options;
-            }
-            else if (gameName.contains("Easy Red", Qt::CaseInsensitive) && 
-                    (gameName.contains("2") || gameName.contains("II"))) {
-                // Easy Red 2 特定模板
-                isSpecialGame = true;
-                options.append("● 基本选项");
-                options.append("• Num 1 – God Mode");
-                options.append("• Num 2 – Infinite Health");
-                options.append("• Num 3 – Infinite Stamina");
-                options.append("• Num 4 – Infinite Ammo");
-                options.append("• Num 5 – No Reload");
-                options.append("• Num 6 – No Recoil");
-                options.append("• Num 7 – Rapid Fire");
-                options.append("• Num 8 – Vehicle: Infinite Ammo");
-                
-                options.append("● 高级选项");
-                options.append("• Ctrl+Num 1 – Edit Items Amount");
-                options.append("• Ctrl+Num 2 – Zero Weight");
-                options.append("• Ctrl+Num 3 – Unlock All Missions");
-                options.append("• Ctrl+Num 4 – Set Game Speed");
-                options.append("• Ctrl+Num 5 – Set Movement Speed");
-                options.append("• Ctrl+Num 6 – Set Jump Height");
-                
-                qDebug() << "应用特定游戏模板：Easy Red 2，添加 " << options.size() << " 个选项";
-                return options;
-            }
-            else if (gameName.contains("Frostpunk", Qt::CaseInsensitive) &&
-                    (gameName.contains("2") || gameName.contains("II"))) {
-                // Frostpunk 2 特定模板
-                isSpecialGame = true;
-                options.append("● 基本选项");
-                options.append("• Num 1 – Edit Heatstamps");
-                options.append("• Num 2 – Edit Prefabs");
-                options.append("• Num 3 – Edit Cores");
-                options.append("• Num 4 – Edit Coal (Stockpile)");
-                options.append("• Num 5 – Edit Oil (Stockpile)");
-                options.append("• Num 6 – Edit Food (Stockpile)");
-                options.append("• Num 7 – Edit Materials (Stockpile)");
-                options.append("• Num 8 – Edit Goods (Stockpile)");
-                options.append("• Num 9 – Edit Scraps");
-                options.append("• Num 0 – Zero Generator Wear");
-                
-                options.append("● 高级选项");
-                options.append("• Ctrl+Num 1 – Edit Community & Faction Population");
-                options.append("• Ctrl+Num 2 – Max Community & Faction Relation");
-                options.append("• Ctrl+Num 3 – Instant Construction");
-                options.append("• Ctrl+Num 4 – Instant Expansion");
-                options.append("• Ctrl+Num 5 – Instant Demolish");
-                options.append("• Ctrl+Num 6 – Instant Research");
-                options.append("• Ctrl+Num 7 – Instant Expedition");
-                options.append("• Ctrl+Num 8 – Instant Council Cooldown (No Recess)");
-                options.append("• Ctrl+Num 9 – Law Proposal Always Pass");
-                options.append("• Ctrl+Num 0 – Set Game Speed");
-                
-                options.append("● 灾难控制");
-                options.append("• Alt+Num 1 – Edit Tension");
-                options.append("• Alt+Num 2 – Edit Hunger");
-                options.append("• Alt+Num 3 – Edit Disease");
-                options.append("• Alt+Num 4 – Edit Cold");
-                options.append("• Alt+Num 5 – Edit Squalor");
-                options.append("• Alt+Num 6 – Edit Crime");
-                
-                qDebug() << "应用特定游戏模板：Frostpunk 2，添加 " << options.size() << " 个选项";
-                return options;
-            }
-            else if (gameName.contains("S.T.A.L.K.E.R.", Qt::CaseInsensitive) && 
-                    (gameName.contains("2") || gameName.contains("II") || gameName.contains("Heart of Chornobyl"))) {
-                // S.T.A.L.K.E.R. 2: Heart of Chornobyl 特定模板
-                isSpecialGame = true;
-                options.append("● 基本选项");
-                options.append("• Num 1 – Super Accuracy");
-                options.append("• Num 2 – God Mode");
-                options.append("• Num 3 – Infinite Health");
-                options.append("• Num 4 – Infinite Stamina");
-                options.append("• Num 5 – No Radiation");
-                options.append("• Num 6 – No Bleeding");
-                options.append("• Num 7 – No Hunger");
-                options.append("• Num 8 – No Drowsiness");
-                options.append("• Num 9 – Infinite Ammo");
-                options.append("• Num 0 – No Reload");
-                
-                qDebug() << "应用特定游戏模板：S.T.A.L.K.E.R. 2: Heart of Chornobyl，添加 " << options.size() << " 个选项";
-                return options;
-            }
-            else if (gameName.contains("Enshrouded", Qt::CaseInsensitive)) {
-                // Enshrouded 特定模板
-                isSpecialGame = true;
-                options.append("● 基本选项");
-                options.append("• Num 1 – Infinite Health");
-                options.append("• Num 2 – Infinite Mana");
-                options.append("• Num 3 – Infinite Stamina");
-                options.append("• Num 4 – Freeze Enshrouded Duration");
-                options.append("• Num 5 – Max Comfort");
-                options.append("• Num 6 – Infinite Equipment Durability");
-                options.append("• Num 7 – Edit Critical Chance");
-                options.append("• Num 8 – Increase Critical Damage %");
-                options.append("• Num 9 – Increase Melee Damage %");
-                options.append("• Num 0 – Increase Ranged Damage %");
-                
-                options.append("● 高级选项");
-                options.append("• Ctrl+Num 1 – Edit Exp");
-                options.append("• Ctrl+Num 2 – Exp Multiplier");
-                options.append("• Ctrl+Num 3 – Skill Points Won't Decrease");
-                options.append("• Ctrl+Num 4 – Edit Dragged Item Amount");
-                options.append("• Ctrl+Num 5 – No Crafting Material Requirements");
-                options.append("• Ctrl+Num 6 – Set Game Speed");
-                
-                qDebug() << "应用特定游戏模板：Enshrouded，添加 " << options.size() << " 个选项";
-                return options;
+                cleanOptions[hotkey] = description;
+                qDebug() << "从复杂HTML结构提取选项：" << hotkey << " - " << description;
             }
         }
         
-        if (!isSpecialGame) {
-            // 尝试提取清洁的热键选项，避免前端代码干扰
-            QMap<QString, QString> cleanOptions;
+        // 5. 新增：处理带有<br>标签分隔的复杂选项
+        QRegularExpression brComplexRegex(
+            "((?:Num|Ctrl\\+Num|Alt\\+Num|Shift\\+(?:Num|F\\d))\\s*[\\d\\+\\-\\.]+|(?:Ctrl|Alt|Shift)\\+[\\d\\+\\-\\.]+)\\s*(?:&#8211;|[-–])\\s*([^<]+?)\\s*<br",
+            QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption
+        );
+        QRegularExpressionMatchIterator brComplexMatches = brComplexRegex.globalMatch(html);
+        
+        while (brComplexMatches.hasNext()) {
+            QRegularExpressionMatch match = brComplexMatches.next();
+            QString hotkey = match.captured(1).trimmed();
+            QString description = match.captured(2).trimmed();
             
-            // 1. 从HTML中提取所有可能的热键模式 (Num X - Description)，限制每个匹配范围，避免贪婪匹配
-            QRegularExpression hotkeyRegex("((?:Num|Ctrl\\+Num|Alt\\+Num|Shift\\+(?:Num|F\\d))\\s*\\d+)\\s*(?:&#8211;|[-–])\\s*([^<\"\\(\\)\\{\\}Num]+(?=Num|<|$))",
-                                         QRegularExpression::CaseInsensitiveOption);
-            QRegularExpressionMatchIterator matches = hotkeyRegex.globalMatch(html);
+            // 清理热键格式
+            hotkey.replace(QRegularExpression("\\s+"), " ");
             
-            while (matches.hasNext()) {
-                QRegularExpressionMatch match = matches.next();
-                QString hotkey = match.captured(1).trimmed();
-                QString description = match.captured(2).trimmed();
+            // 清理描述文本
+            description.replace("&amp;", "&");
+            description.replace("&#8211;", "-");
+            description.replace("&#046;", ".");
+            description.replace("&#8217;", "'");
+            description = description.trimmed();
+            
+            // 验证这是一个有效的选项
+            if (!description.isEmpty() && 
+                !description.contains("jQuery", Qt::CaseInsensitive) && 
+                !description.contains("function", Qt::CaseInsensitive) &&
+                !description.contains("script", Qt::CaseInsensitive) &&
+                description.length() > 2) {
                 
-                // 清理HTML实体和其他特殊字符
-                description.replace("&amp;", "&");
-                description.replace("&#8211;", "-");
-                description.replace("&#046;", ".");
-                description.replace("&#8217;", "'");
-                description = description.trimmed();
+                // 只有当当前选项更完整时才替换
+                if (!cleanOptions.contains(hotkey) || cleanOptions[hotkey].length() < description.length()) {
+                    cleanOptions[hotkey] = description;
+                    qDebug() << "从<br>复杂结构提取选项：" << hotkey << " - " << description;
+                }
+            }
+        }
+        
+        // 分类整理解析出的选项
+        if (!cleanOptions.isEmpty()) {
+            QStringList basicOptions;
+            QStringList ctrlOptions;
+            QStringList altOptions;
+            QStringList shiftOptions;            
+            QMapIterator<QString, QString> it(cleanOptions);
+            while (it.hasNext()) {
+                it.next();
+                QString hotkey = it.key();
+                QString description = it.value();
+                QString formattedOption = "• " + hotkey + " – " + description;
                 
-                // 忽略包含jQuery或JavaScript的项
-                if (!description.contains("jQuery", Qt::CaseInsensitive) && 
-                    !description.contains("function", Qt::CaseInsensitive) &&
-                    !description.contains("document", Qt::CaseInsensitive) &&
-                    !description.contains("tooltip", Qt::CaseInsensitive) &&
-                    !description.isEmpty()) {
-                    
-                    // 标准化热键格式
-                    hotkey.replace(QRegularExpression("\\s+"), " ");
-                    
-                    // 使用热键作为键来避免重复 (更高质量的描述会覆盖低质量的)
-                    if (!cleanOptions.contains(hotkey) || 
-                        (cleanOptions.contains(hotkey) && cleanOptions[hotkey].length() < description.length())) {
-                        cleanOptions[hotkey] = description;
-                        qDebug() << "提取热键选项：" << hotkey << " - " << description;
-                    }
+                if (hotkey.startsWith("Ctrl+", Qt::CaseInsensitive)) {
+                    ctrlOptions.append(formattedOption);
+                } else if (hotkey.startsWith("Alt+", Qt::CaseInsensitive)) {
+                    altOptions.append(formattedOption);
+                } else if (hotkey.startsWith("Shift+", Qt::CaseInsensitive)) {
+                    shiftOptions.append(formattedOption);
+                } else {
+                    basicOptions.append(formattedOption);
                 }
             }
             
-            // 2. 尝试从段落中提取更清洁的选项
-            QRegularExpression paragraphRegex("<p[^>]*>\\s*((?:Num|Ctrl\\+Num|Alt\\+Num|Shift\\+(?:Num|F\\d))\\s*\\d+)\\s*(?:&#8211;|[-–])\\s*([^<]+)</p>", 
-                                           QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption);
-            matches = paragraphRegex.globalMatch(html);
-            
-            while (matches.hasNext()) {
-                QRegularExpressionMatch match = matches.next();
-                QString hotkey = match.captured(1).trimmed();
-                QString description = match.captured(2).trimmed();
-                
-                // 清理HTML实体和其他特殊字符
-                description.replace("&amp;", "&");
-                description.replace("&#8211;", "-");
-                description.replace("&#046;", ".");
-                description.replace("&#8217;", "'");
-                description = description.trimmed();
-                
-                // 忽略包含jQuery或JavaScript的项
-                if (!description.contains("jQuery", Qt::CaseInsensitive) && 
-                    !description.contains("function", Qt::CaseInsensitive) &&
-                    !description.contains("document", Qt::CaseInsensitive) &&
-                    !description.contains("tooltip", Qt::CaseInsensitive) &&
-                    !description.isEmpty()) {
-                    
-                    // 标准化热键格式
-                    hotkey.replace(QRegularExpression("\\s+"), " ");
-                    
-                    // 使用热键作为键来避免重复 (更高质量的描述会覆盖低质量的)
-                    if (!cleanOptions.contains(hotkey) || 
-                        (cleanOptions.contains(hotkey) && cleanOptions[hotkey].length() < description.length())) {
-                        cleanOptions[hotkey] = description;
-                        qDebug() << "从段落提取热键选项：" << hotkey << " - " << description;
-                    }
-                }
+            // 按类别添加选项
+            if (!basicOptions.isEmpty()) {
+                options.append("● 基本选项");
+                options.append(basicOptions);
             }
             
-            // 3. 匹配常见的拆分模式 (如：换行分隔的选项)
-            QRegularExpression brSplitRegex("((?:Num|Ctrl\\+Num|Alt\\+Num|Shift\\+(?:Num|F\\d))\\s*\\d+)\\s*(?:&#8211;|[-–])\\s*([^<>\\n]+)<br\\s*/?>", 
-                                         QRegularExpression::CaseInsensitiveOption);
-            matches = brSplitRegex.globalMatch(html);
-            
-            while (matches.hasNext()) {
-                QRegularExpressionMatch match = matches.next();
-                QString hotkey = match.captured(1).trimmed();
-                QString description = match.captured(2).trimmed();
-                
-                // 清理HTML实体和其他特殊字符
-                description.replace("&amp;", "&");
-                description.replace("&#8211;", "-");
-                description.replace("&#046;", ".");
-                description.replace("&#8217;", "'");
-                description = description.trimmed();
-                
-                // 忽略包含jQuery或JavaScript的项
-                if (!description.contains("jQuery", Qt::CaseInsensitive) && 
-                    !description.contains("function", Qt::CaseInsensitive) &&
-                    !description.contains("document", Qt::CaseInsensitive) &&
-                    !description.contains("tooltip", Qt::CaseInsensitive) &&
-                    !description.isEmpty()) {
-                    
-                    // 标准化热键格式
-                    hotkey.replace(QRegularExpression("\\s+"), " ");
-                    
-                    // 使用热键作为键来避免重复 (更高质量的描述会覆盖低质量的)
-                    if (!cleanOptions.contains(hotkey) || 
-                        (cleanOptions.contains(hotkey) && cleanOptions[hotkey].length() < description.length())) {
-                        cleanOptions[hotkey] = description;
-                        qDebug() << "从<br>分隔中提取热键选项：" << hotkey << " - " << description;
-                    }
-                }
+            if (!ctrlOptions.isEmpty()) {
+                options.append("● Ctrl组合键选项");
+                options.append(ctrlOptions);
             }
             
-            // 现在处理已经清理过的选项，分类整理
-            if (!cleanOptions.isEmpty()) {
-                QStringList basicOptions;
-                QStringList ctrlOptions;
-                QStringList altOptions;
-                QStringList shiftOptions;
-                
-                QMapIterator<QString, QString> it(cleanOptions);
-                while (it.hasNext()) {
-                    it.next();
-                    QString hotkey = it.key();
-                    QString description = it.value();
-                    QString formattedOption = "• " + hotkey + " – " + description;
-                    
-                    if (hotkey.startsWith("Ctrl+", Qt::CaseInsensitive)) {
-                        ctrlOptions.append(formattedOption);
-                    } else if (hotkey.startsWith("Alt+", Qt::CaseInsensitive)) {
-                        altOptions.append(formattedOption);
-                    } else if (hotkey.startsWith("Shift+", Qt::CaseInsensitive)) {
-                        shiftOptions.append(formattedOption);
-                    } else {
-                        basicOptions.append(formattedOption);
-                    }
-                }
-                
-                // 添加分类和选项
-                if (!basicOptions.isEmpty()) {
-                    options.append("● 基本选项");
-                    options.append(basicOptions);
-                }
-                
-                if (!ctrlOptions.isEmpty()) {
-                    options.append("● Ctrl组合键选项");
-                    options.append(ctrlOptions);
-                }
-                
-                if (!altOptions.isEmpty()) {
-                    options.append("● Alt组合键选项");
-                    options.append(altOptions);
-                }
-                
-                if (!shiftOptions.isEmpty()) {
-                    options.append("● Shift组合键选项");
-                    options.append(shiftOptions);
-                }
+            if (!altOptions.isEmpty()) {
+                options.append("● Alt组合键选项");
+                options.append(altOptions);
+            }
+            
+            if (!shiftOptions.isEmpty()) {
+                options.append("● Shift组合键选项");
+                options.append(shiftOptions);
             }
         }
         
@@ -1152,7 +879,7 @@ QString ModifierParser::detectGameNameFromHTML(const QString& html) {
             // 提取游戏名称（通常是冒号前的部分，如果有冒号的话）
             if (title.contains(":")) {
                 gameName = title.section(':', 0, 0).trimmed();
-        } else {
+            } else {
                 gameName = title;
             }
             
@@ -1237,4 +964,5 @@ QString ModifierParser::detectGameNameFromHTML(const QString& html) {
     
     qDebug() << "游戏名称检测结果：" << gameName;
     return gameName;
-} 
+}
+

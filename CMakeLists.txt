@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.25) # CMake install : https://cmake.org/downloa
 project(DownloadIntegrator LANGUAGES CXX)
 set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/icon.rc")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_PREFIX_PATH "d:/Qt/6.6.0/msvc2019_64") # Qt Kit Dir
+set(CMAKE_PREFIX_PATH "d:/Qt/6.6.3/msvc2019_64") # Qt Kit Dir
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # 添加vcpkg库目录到CMAKE_PREFIX_PATH（用于pugixml）
-list(APPEND CMAKE_PREFIX_PATH "D:/cpplibs/vcpkg/installed/x64-windows")
+list(APPEND CMAKE_PREFIX_PATH "D:/vcpkg/installed/x64-windows")
 
 # Qt组件
 find_package(Qt6 COMPONENTS Widgets Network Core REQUIRED)

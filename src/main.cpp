@@ -17,12 +17,12 @@
 void addDllSearchPaths() {
 #ifdef _WIN32
     // 添加vcpkg安装的DLL目录到搜索路径
-    QString vcpkgBinPath = "D:/cpplibs/vcpkg/installed/x64-windows/bin";
+    QString vcpkgBinPath = "D:/vcpkg/installed/x64-windows/bin";
     QByteArray vcpkgPathBytes = vcpkgBinPath.toLocal8Bit();
     
     // 使用Windows API添加DLL搜索路径
     SetDllDirectoryA(vcpkgPathBytes.constData());
-    
+
     qDebug() << "已添加DLL搜索路径: " << vcpkgBinPath;
 #endif
 }
