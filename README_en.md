@@ -1,6 +1,6 @@
 # DownloadIntegrator
 
-**English** | [简体中文](README_zh.md)
+**简体中文** | [English](README_en.md)
 
 A Qt-based desktop application for downloading and managing game modifiers/trainers.
 
