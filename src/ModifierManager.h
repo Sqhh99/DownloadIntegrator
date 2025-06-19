@@ -35,7 +35,7 @@ enum class SortType {
 // 修改器查找回调函数类型
 using ModifierFoundCallback = std::function<void(const QList<ModifierInfo>&)>;
 using ModifierDetailCallback = std::function<void(ModifierInfo*)>;
-using ModifierDownloadFinishedCallback = std::function<void(bool, const QString&, const ModifierInfo&)>;
+using ModifierDownloadFinishedCallback = std::function<void(bool, const QString&, const QString&, const ModifierInfo&, bool)>;
 using UpdateProgressCallback = std::function<void(int, int, bool)>; // 当前进度, 总数, 是否有更新
 
 class ModifierManager : public QObject

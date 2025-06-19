@@ -738,6 +738,137 @@ QString DownloadIntegrator::getDownloadDirectory()
     return ConfigManager::getInstance().getDownloadDirectory();
 }
 
+// 从URL推断文件扩展名
+QString DownloadIntegrator::getFileExtensionFromUrl(const QString& url)
+{
+    QString cleanUrl = url;
+    
+    // 移除查询参数和fragment
+    if (cleanUrl.contains("?")) {
+        cleanUrl = cleanUrl.split("?").first();
+    }
+    if (cleanUrl.contains("#")) {
+        cleanUrl = cleanUrl.split("#").first();
+    }
+    
+    // 获取URL路径的最后部分（文件名）
+    QString fileName = cleanUrl.split("/").last();
+    
+    // 如果没有扩展名，返回空字符串
+    if (!fileName.contains(".")) {
+        return QString();
+    }
+    
+    // 处理特殊的双扩展名
+    if (fileName.contains(".tar.")) {
+        if (fileName.endsWith(".gz")) return ".tar.gz";
+        if (fileName.endsWith(".bz2")) return ".tar.bz2";
+        if (fileName.endsWith(".xz")) return ".tar.xz";
+    }
+    
+    // 处理常见的缩写扩展名
+    if (fileName.endsWith(".tgz")) return ".tgz";
+    if (fileName.endsWith(".tbz2")) return ".tbz2";
+    if (fileName.endsWith(".txz")) return ".txz";
+    
+    // 获取普通扩展名
+    QString extension = "." + fileName.split(".").last().toLower();
+    
+    qDebug() << "从URL推断文件扩展名：" << url << " -> " << extension;
+    
+    return extension;
+}
+
+// 检测文件的实际格式（通过文件魔数）
+QString DownloadIntegrator::detectFileFormat(const QString& filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "无法打开文件进行格式检测：" << filePath;
+        return QString();
+    }
+    
+    // 读取文件头部字节（魔数）
+    QByteArray header = file.read(32); // 读取前32字节足够检测大多数格式
+    file.close();
+    
+    if (header.isEmpty()) {
+        return QString();
+    }
+    
+    // 检测各种文件格式的魔数
+    // ZIP 格式: 50 4B 03 04 或 50 4B 05 06 或 50 4B 07 08
+    if (header.startsWith("\x50\x4B\x03\x04") || 
+        header.startsWith("\x50\x4B\x05\x06") ||
+        header.startsWith("\x50\x4B\x07\x08")) {
+        return "zip";
+    }
+    
+    // RAR 格式: 52 61 72 21 1A 07 00 (RAR!\x1A\x07\x00)
+    if (header.startsWith("Rar!\x1A\x07\x00") || header.startsWith("Rar!\x1A\x07\x01")) {
+        return "rar";
+    }
+    
+    // 7Z 格式: 37 7A BC AF 27 1C
+    if (header.startsWith("\x37\x7A\xBC\xAF\x27\x1C")) {
+        return "7z";
+    }
+    
+    // PE 可执行文件 (EXE): MZ (4D 5A)
+    if (header.startsWith("MZ")) {
+        return "exe";
+    }
+    
+    // GZIP 格式: 1F 8B
+    if (header.startsWith("\x1F\x8B")) {
+        return "gz";
+    }
+    
+    // BZIP2 格式: 42 5A 68 (BZh)
+    if (header.startsWith("BZh")) {
+        return "bz2";
+    }
+    
+    qDebug() << "无法识别文件格式，文件头：" << header.left(16).toHex();
+    return QString();
+}
+
+// 检查文件是否为压缩包格式
+bool DownloadIntegrator::isArchiveFile(const QString& filePath)
+{
+    QString detectedFormat = detectFileFormat(filePath);
+    
+    // 基于魔数检测
+    if (detectedFormat == "zip" || detectedFormat == "rar" || detectedFormat == "7z" || 
+        detectedFormat == "gz" || detectedFormat == "bz2") {
+        return true;
+    }
+    
+    // 如果魔数检测失败，回退到扩展名检测
+    QFileInfo fileInfo(filePath);
+    QString extension = fileInfo.suffix().toLower();
+    return (extension == "zip" || extension == "rar" || extension == "7z" || 
+            extension == "tar" || extension == "gz" || extension == "bz2" || 
+            extension == "xz" || extension == "tgz" || extension == "tbz2");
+}
+
+// 检查文件是否为可执行文件
+bool DownloadIntegrator::isExecutableFile(const QString& filePath)
+{
+    QString detectedFormat = detectFileFormat(filePath);
+    
+    // 基于魔数检测
+    if (detectedFormat == "exe") {
+        return true;
+    }
+    
+    // 如果魔数检测失败，回退到扩展名检测
+    QFileInfo fileInfo(filePath);
+    QString extension = fileInfo.suffix().toLower();
+    return (extension == "exe" || extension == "msi" || extension == "bat" || 
+            extension == "cmd" || extension == "com");
+}
+
 // 更新已下载修改器列表
 void DownloadIntegrator::updateDownloadedModifiersList()
 {
@@ -1089,9 +1220,6 @@ void DownloadIntegrator::onDownloadButtonClicked()
         fileName += "latest";
     }
     
-    // 添加扩展名
-    fileName += ".zip";
-    
     // 确定下载URL
     QString downloadUrl;
     
@@ -1116,6 +1244,28 @@ void DownloadIntegrator::onDownloadButtonClicked()
     while (downloadUrl.endsWith(",")) {
         downloadUrl.chop(1);
     }
+    
+    // 智能推断文件扩展名
+    QString fileExtension = getFileExtensionFromUrl(downloadUrl);
+    if (fileExtension.isEmpty()) {
+        // 对于FLiNG网站的动态下载链接，根据URL特征和修改器名称判断
+        if (downloadUrl.contains("flingtrainer.com/downloads/")) {
+            // FLiNG网站的修改器通常是压缩包格式
+            // 但我们先假设是exe，让后续的文件格式检测来修正
+            fileExtension = ".exe";
+            qDebug() << "检测到FLiNG下载链接，使用临时.exe扩展名，将在下载后自动检测并修正";
+        } else {
+            // 其他情况默认使用.exe
+            fileExtension = ".exe";
+            qDebug() << "无法从URL推断扩展名，使用默认.exe扩展名";
+        }
+    }
+    
+    qDebug() << "下载URL:" << downloadUrl;
+    qDebug() << "推断的文件扩展名:" << fileExtension;
+    
+    // 添加正确的扩展名
+    fileName += fileExtension;
     
     // 确认下载
     QString message = QString("确认下载以下修改器？\n\n名称: %1\n版本: %2\n存储位置: %3")
@@ -1158,14 +1308,47 @@ void DownloadIntegrator::onDownloadButtonClicked()
                 ui->versionSelect->currentText(),
                 fullDownloadPath,
                 // 下载完成回调
-                [this, fileName, fullDownloadPath](bool success, const QString& errorMsg, const ModifierInfo& modifier) {
+                [this, fileName, fullDownloadPath](bool success, const QString& errorMsg, const QString& actualPath, const ModifierInfo& modifier, bool isArchive) {
                     ui->downloadProgress->setVisible(false);
                     ui->downloadButton->setEnabled(true);
                     
                     if (success) {
                         showStatusMessage("下载完成", 5000);
-                        QMessageBox::information(this, "下载完成", 
-                                               "修改器 " + fileName + " 下载完成。");
+                        
+                        QString displayMessage;
+                        QString finalFileName = fileName;
+                        
+                        // 检查是否有扩展名修正的信息
+                        if (!errorMsg.isEmpty() && errorMsg.contains("文件格式已自动检测并修正为")) {
+                            // 从错误消息中提取新文件名
+                            QRegularExpression regex("文件格式已自动检测并修正为: (.+)");
+                            QRegularExpressionMatch match = regex.match(errorMsg);
+                            if (match.hasMatch()) {
+                                finalFileName = match.captured(1);
+                                qDebug() << "文件扩展名已修正为：" << finalFileName;
+                            }
+                        }
+                        
+                        if (isArchive) {
+                            displayMessage = QString("修改器 %1 下载完成。\n\n"
+                                            "⚠️ 注意：此修改器为压缩包格式，可能包含反作弊程序和使用说明。\n"
+                                            "请手动解压文件并仔细阅读其中的使用说明，\n"
+                                            "确保遵循相关操作约定后再使用。").arg(finalFileName);
+                            
+                            if (!errorMsg.isEmpty() && errorMsg.contains("文件格式已自动检测并修正为")) {
+                                displayMessage += "\n\n✅ 文件格式已自动检测并修正。";
+                            }
+                            
+                            QMessageBox::information(this, "下载完成 - 压缩包格式", displayMessage);
+                        } else {
+                            displayMessage = "修改器 " + finalFileName + " 下载完成。";
+                            
+                            if (!errorMsg.isEmpty() && errorMsg.contains("文件格式已自动检测并修正为")) {
+                                displayMessage += "\n\n✅ 文件格式已自动检测并修正。";
+                            }
+                            
+                            QMessageBox::information(this, "下载完成", displayMessage);
+                        }
                                                
                         // 获取版本信息
                         QString version;
@@ -1175,8 +1358,8 @@ void DownloadIntegrator::onDownloadButtonClicked()
                             version = ui->versionSelect->currentText();
                         }
                         
-                        // 添加到已下载修改器列表
-                        addDownloadedModifier(modifier, version, fullDownloadPath);
+                        // 添加到已下载修改器列表 - 使用实际的文件路径
+                        addDownloadedModifier(modifier, version, actualPath);
                         
                         // 切换到已下载标签页
                         m_tabWidget->setCurrentIndex(1);
@@ -1729,17 +1912,101 @@ void DownloadIntegrator::onDownloadedModifierDoubleClicked(int row, int column)
         qDebug() << "运行修改器:" << info.name;
         
         QFileInfo fileInfo(info.filePath);
-        if (fileInfo.exists()) {
-            // 使用QProcess启动程序
+        if (!fileInfo.exists()) {
+            // 处理文件不存在的情况（保持原有逻辑不变）
+            QString message = QString("修改器文件不存在：\n%1\n\n"
+                                    "可能的原因：\n"
+                                    "• 文件被移动或删除\n"
+                                    "• 文件被杀毒软件误删\n"
+                                    "• 存储路径发生变化\n\n"
+                                    "是否从列表中移除此项？")
+                                    .arg(info.filePath);
+            
+            QMessageBox::StandardButton reply = QMessageBox::question(
+                this, 
+                "文件不存在", 
+                message,
+                QMessageBox::Yes | QMessageBox::No,
+                QMessageBox::Yes
+            );
+            
+            if (reply == QMessageBox::Yes) {
+                // 从列表中删除
+                ModifierManager::getInstance().removeDownloadedModifier(row);
+                updateDownloadedModifiersList();
+            }
+            return;
+        }
+        
+        // 文件存在，检测文件类型
+        if (isExecutableFile(info.filePath)) {
+            // 可执行文件，直接运行
             QProcess::startDetached(info.filePath, QStringList());
             showStatusMessage("已启动 " + info.name, 3000);
-        } else {
-            QMessageBox::warning(this, "运行失败", 
-                               QString("文件不存在: %1").arg(info.filePath));
+        } else if (isArchiveFile(info.filePath)) {
+            // 压缩包文件，提供详细的安全提示
+            QString detectedFormat = detectFileFormat(info.filePath);
+            if (detectedFormat.isEmpty()) {
+                // 如果魔数检测失败，使用扩展名
+                detectedFormat = fileInfo.suffix().toUpper();
+            } else {
+                detectedFormat = detectedFormat.toUpper();
+            }
             
-            // 从列表中删除
-            ModifierManager::getInstance().removeDownloadedModifier(row);
-            updateDownloadedModifiersList();
+            QString message = QString("修改器 \"%1\" 是压缩包格式 (.%2)。\n\n"
+                                    "🔒 安全提示：\n"
+                                    "此修改器以压缩包形式分发，可能包含：\n"
+                                    "• 反作弊绕过程序\n"
+                                    "• 详细的使用说明\n"
+                                    "• 特殊的运行要求\n\n"
+                                    "⚠️ 重要操作步骤：\n"
+                                    "1. 右键点击文件选择解压\n"
+                                    "2. 仔细阅读解压后的 README 或说明文件\n"
+                                    "3. 关闭游戏和反作弊软件（如需要）\n"
+                                    "4. 按照说明文档的要求操作\n"
+                                    "5. 确保遵循所有使用约定\n\n"
+                                    "是否打开文件所在文件夹进行手动操作？")
+                                    .arg(info.name)
+                                    .arg(detectedFormat);
+            
+            QMessageBox::StandardButton reply = QMessageBox::question(
+                this, 
+                "压缩包修改器 - 需要手动操作", 
+                message,
+                QMessageBox::Yes | QMessageBox::No,
+                QMessageBox::Yes
+            );
+            
+            if (reply == QMessageBox::Yes) {
+                // 打开文件所在文件夹并选中文件
+                QProcess::startDetached("explorer", QStringList() << "/select," << QDir::toNativeSeparators(info.filePath));
+                showStatusMessage("已打开文件夹，请手动解压并按说明操作", 5000);
+            }
+        } else {
+            // 其他格式文件，提示用户
+            QString extension = fileInfo.suffix();
+            if (extension.isEmpty()) {
+                extension = "未知";
+            }
+            
+            QString message = QString("修改器 \"%1\" 是 %2 格式文件。\n\n"
+                                    "这不是常见的可执行文件或压缩包格式。\n"
+                                    "可能需要特殊的程序来打开此文件。\n\n"
+                                    "是否在文件管理器中打开查看？")
+                                    .arg(info.name)
+                                    .arg(extension.isEmpty() ? "未知" : ("." + extension.toUpper()));
+            
+            QMessageBox::StandardButton reply = QMessageBox::question(
+                this, 
+                "未知文件格式", 
+                message,
+                QMessageBox::Yes | QMessageBox::No,
+                QMessageBox::Yes
+            );
+            
+            if (reply == QMessageBox::Yes) {
+                QProcess::startDetached("explorer", QStringList() << "/select," << QDir::toNativeSeparators(info.filePath));
+            }
         }
     }
 }
@@ -1781,14 +2048,46 @@ void DownloadIntegrator::downloadModifier(const QString& url, const QString& fil
             ui->versionSelect->currentText(),
             downloadPath,
             // 下载完成回调 - 修复捕获
-            [this, fileName, downloadPath](bool success, const QString& errorMsg, const ModifierInfo& modifier) {
+            [this, fileName, downloadPath](bool success, const QString& errorMsg, const QString& actualPath, const ModifierInfo& modifier, bool isArchive) {
                 ui->downloadProgress->setVisible(false);
                 ui->downloadButton->setEnabled(true);
                 
                 if (success) {
                     showStatusMessage("下载完成", 5000);
-                    QMessageBox::information(this, "下载完成", 
-                                           "修改器 " + fileName + " 下载完成。");
+                    
+                    QString finalFileName = fileName;
+                    
+                    // 检查是否有扩展名修正的信息
+                    if (!errorMsg.isEmpty() && errorMsg.contains("文件格式已自动检测并修正为")) {
+                        QRegularExpression regex("文件格式已自动检测并修正为: (.+)");
+                        QRegularExpressionMatch match = regex.match(errorMsg);
+                        if (match.hasMatch()) {
+                            finalFileName = match.captured(1);
+                            qDebug() << "文件扩展名已修正为：" << finalFileName;
+                        }
+                    }
+                    
+                    QString message;
+                    if (isArchive) {
+                        message = QString("修改器 %1 下载完成。\n\n"
+                                        "⚠️ 注意：此修改器为压缩包格式，可能包含反作弊程序和使用说明。\n"
+                                        "请手动解压文件并仔细阅读其中的使用说明，\n"
+                                        "确保遵循相关操作约定后再使用。").arg(finalFileName);
+                        
+                        if (!errorMsg.isEmpty() && errorMsg.contains("文件格式已自动检测并修正为")) {
+                            message += "\n\n✅ 文件格式已自动检测并修正。";
+                        }
+                        
+                        QMessageBox::information(this, "下载完成 - 压缩包格式", message);
+                    } else {
+                        message = "修改器 " + finalFileName + " 下载完成。";
+                        
+                        if (!errorMsg.isEmpty() && errorMsg.contains("文件格式已自动检测并修正为")) {
+                            message += "\n\n✅ 文件格式已自动检测并修正。";
+                        }
+                        
+                        QMessageBox::information(this, "下载完成", message);
+                    }
                                            
                     // 获取版本信息
                     QString version;
@@ -1798,8 +2097,8 @@ void DownloadIntegrator::downloadModifier(const QString& url, const QString& fil
                         version = ui->versionSelect->currentText();
                     }
                     
-                    // 添加到已下载修改器列表
-                    addDownloadedModifier(modifier, version, downloadPath);
+                    // 添加到已下载修改器列表 - 使用实际的文件路径
+                    addDownloadedModifier(modifier, version, actualPath);
                     
                     // 切换到已下载标签页
                     m_tabWidget->setCurrentIndex(1);

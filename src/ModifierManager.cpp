@@ -121,20 +121,19 @@ void ModifierManager::downloadModifier(const ModifierInfo& modifier,
                                       const QString& savePath,
                                       ModifierDownloadFinishedCallback callback,
                                       DLProgressCallback progressCallback)
-{
-    // 使用DownloadManager下载修改器
+{    // 使用DownloadManager下载修改器
     DownloadManager::getInstance().downloadModifier(
         modifier,
         version,
         savePath,
-        [this, callback, version, savePath](bool success, const QString& errorMsg, const ModifierInfo& modifier) {
+        [this, callback, version, savePath](bool success, const QString& errorMsg, const QString& actualPath, const ModifierInfo& modifier, bool isArchive) {
             if (success) {
-                // 添加到已下载修改器列表
-                addDownloadedModifier(modifier, version, savePath);
+                // 添加到已下载修改器列表 - 使用实际的文件路径
+                addDownloadedModifier(modifier, version, actualPath);
             }
             
             if (callback) {
-                callback(success, errorMsg, modifier);
+                callback(success, errorMsg, actualPath, modifier, isArchive);
             }
         },
         progressCallback

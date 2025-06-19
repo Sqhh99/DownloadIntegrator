@@ -20,6 +20,8 @@
 #include <QUrl>
 #include <QRegularExpression>
 #include <QTableWidget>
+#include <QProcess>
+#include <QDir>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
@@ -197,6 +199,10 @@ private:
     // 辅助方法
     void showStatusMessage(const QString& message, int timeout = 0);
     QString getDownloadDirectory();
+    QString getFileExtensionFromUrl(const QString& url);
+    QString detectFileFormat(const QString& filePath);
+    bool isArchiveFile(const QString& filePath);
+    bool isExecutableFile(const QString& filePath);
     
     // 网络操作方法 - 通过ModifierManager实现
     void simulateDownload(const QString& url, const QString& fileName);
