@@ -34,6 +34,19 @@ int main(int argc, char *argv[])
     try {
         qDebug() << "应用程序开始初始化...";
         
+        // 首先初始化资源系统（关键！）
+        Q_INIT_RESOURCE(resources);
+        qDebug() << "✅ 资源系统已初始化";
+        
+        // 验证资源系统
+        QDir resourceRoot(":/");
+        if (resourceRoot.exists()) {
+            QStringList entries = resourceRoot.entryList();
+            qDebug() << "📁 可用资源目录:" << entries;
+        } else {
+            qDebug() << "❌ 资源系统初始化失败!";
+        }
+        
         // 添加DLL搜索路径
         addDllSearchPaths();
         

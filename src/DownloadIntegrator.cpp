@@ -255,7 +255,9 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     downloadedLayout->addWidget(m_downloadedTable);
     downloadedLayout->addLayout(buttonLayout);
     
-    // 加载样式表
+    // 注释掉重复的样式表加载，由ThemeManager统一管理
+    // 如果需要特定样式，应该在CSS中使用objectName选择器
+    /*
     QFile styleFile(":/style/main.qss");
     if (styleFile.open(QFile::ReadOnly)) {
         QString style = QLatin1String(styleFile.readAll());
@@ -265,6 +267,7 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     } else {
         qDebug() << "无法加载样式表文件: " << styleFile.errorString();
     }
+    */
     
     // 设置表格属性
     ui->modifierTable->setColumnCount(4);

@@ -79,15 +79,27 @@ private:
                 styleFilePath = ":/style/main.qss";
                 break;
         }
-        
-        QFile styleFile(styleFilePath);
+          QFile styleFile(styleFilePath);
         if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
             QString styleSheet = QLatin1String(styleFile.readAll());
             app.setStyleSheet(styleSheet);
-            qDebug() << "已应用" << getThemeName(theme) << "样式表";
+            qDebug() << "已应用" << getThemeName(theme) << "样式表，文件路径:" << styleFilePath;
+            qDebug() << "样式表大小:" << styleSheet.length() << "字符";
             styleFile.close();
         } else {
-            qDebug() << "无法打开样式表文件:" << styleFile.errorString();
+            qDebug() << "无法打开样式表文件:" << styleFilePath;
+            qDebug() << "错误信息:" << styleFile.errorString();
+            
+            // 列出可用的资源文件
+            QDir resourceDir(":/");
+            qDebug() << "资源根目录是否存在:" << resourceDir.exists();
+            
+            QDir styleDir(":/style");
+            qDebug() << "样式目录是否存在:" << styleDir.exists();
+            if (styleDir.exists()) {
+                QStringList styleFiles = styleDir.entryList(QStringList() << "*.qss", QDir::Files);
+                qDebug() << "可用的样式文件:" << styleFiles;
+            }
             
             // 如果无法加载样式表，回退到浅色主题
             if (theme != ConfigManager::Theme::Light) {
