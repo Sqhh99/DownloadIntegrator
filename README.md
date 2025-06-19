@@ -1,8 +1,7 @@
 # DownloadIntegrator
 
-[English](README.md) | **简体中文**
 
-基于 Qt 的桌面应用程序，用于下载和管理游戏修改器/训练器。
+基于 Qt ，用于下载和管理游戏修改器。
 
 ## 🚀 功能特性
 
