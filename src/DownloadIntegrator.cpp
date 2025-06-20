@@ -1443,9 +1443,21 @@ void DownloadIntegrator::simulateDownload(const QString& url, const QString& fil
 // 打开下载文件夹
 void DownloadIntegrator::onOpenFolderButtonClicked()
 {
-    // 打开下载文件夹
-    QString downloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-    qDebug() << "打开文件夹：" << downloadPath;
+    // 使用用户配置的下载目录，而不是系统默认下载目录
+    QString downloadPath = ConfigManager::getInstance().getDownloadDirectory();
+    qDebug() << "打开用户配置的下载文件夹：" << downloadPath;
+    
+    // 确保目录存在
+    QDir downloadDir(downloadPath);
+    if (!downloadDir.exists()) {
+        if (downloadDir.mkpath(".")) {
+            qDebug() << "创建下载目录：" << downloadPath;
+        } else {
+            qDebug() << "无法创建下载目录：" << downloadPath;
+            showStatusMessage("无法创建下载目录：" + downloadPath, 5000);
+            return;
+        }
+    }
     
     QDesktopServices::openUrl(QUrl::fromLocalFile(downloadPath));
     showStatusMessage("打开文件夹：" + downloadPath, 3000);
