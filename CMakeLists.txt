@@ -86,3 +86,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core
     pugixml::pugixml
 ) # Qt6 Shared Library
+
+# 静态链接运行时库，避免VCRUNTIME140_1.dll等依赖问题
+if(MSVC)
+    set_property(TARGET ${PROJECT_NAME} PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
