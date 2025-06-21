@@ -62,9 +62,5 @@
 
 如果您遇到任何问题或有疑问：
 - 在 GitHub 上创建 [Issue](../../issues)
-- 查看 [Wiki](../../wiki) 获取文档
-- 查看现有的 [Discussions](../../discussions)
-
----
 
 **Made with ❤️ using Qt and C++**
