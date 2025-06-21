@@ -49,6 +49,11 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     // 设置UI
     ui->setupUi(this);
     
+    // 设置分割条初始比例为2:1（左边比右边稍多一些）
+    ui->mainSplitter->setSizes({600, 400}); // 2:1的比例
+    ui->mainSplitter->setStretchFactor(0, 2); // 左侧拉伸因子为2
+    ui->mainSplitter->setStretchFactor(1, 1); // 右侧拉伸因子为1
+    
     // 设置主题菜单
     setupThemeMenu();
     setupLanguageMenu();
