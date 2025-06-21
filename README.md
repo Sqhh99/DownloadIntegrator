@@ -26,54 +26,10 @@
 ### 方式一：下载发布版本
 1. 从 [Releases 页面](../../releases) 下载最新版本
 2. 将 zip 文件解压到您选择的位置
-3. 运行 `DownloadIntegrator.exe` 文件
+3. 运行 `DownloadIntegrator-v2.0.1-win-x64-setup.exe` 文件
 
-### 方式二：从源码构建
-1. 克隆此仓库：
-   ```bash
-   git clone https://github.com/yourusername/DownloadIntegrator.git
-   cd DownloadIntegrator
-   ```
-
-2. 创建构建目录并配置：
-   ```bash
-   mkdir build
-   cd build
-   cmake .. -DCMAKE_BUILD_TYPE=Release
-   ```
-
-3. 构建项目：
-   ```bash
-   cmake --build . --config Release
-   ```
-
-4. 运行应用程序：
-   ```bash
-   ./Release/DownloadIntegrator.exe
-   ```
-
-## 🛠️ 开发说明
-
-### 项目结构
-```
-DownloadIntegrator/
-├── src/                    # 源代码
-│   ├── DownloadIntegrator.*  # 主应用程序
-│   ├── DownloadManager.*    # 下载管理
-│   ├── ModifierManager.*    # 修改器管理
-│   └── ...
-├── resources/              # 资源文件（图标、样式、翻译）
-├── translations/           # 语言文件
-├── build/                  # 构建输出
-└── release-package/        # 发布打包
 ```
 
-### 核心组件
-- **DownloadManager**: 处理文件下载和自动类型检测
-- **ModifierManager**: 管理已下载的修改器和元数据
-- **NetworkManager**: 网络操作和 HTTP 请求
-- **FileSystem**: 文件操作和路径管理
-- **SearchManager**: 搜索功能和结果解析
 
 ## 🤝 贡献指南
 
@@ -107,14 +63,6 @@ DownloadIntegrator/
 - 在 GitHub 上创建 [Issue](../../issues)
 - 查看 [Wiki](../../wiki) 获取文档
 - 查看现有的 [Discussions](../../discussions)
-
-## 🎯 发展路线图
-
-- [ ] 支持更多平台（macOS、Linux）
-- [ ] 增强搜索过滤和排序功能
-- [ ] 批量下载功能
-- [ ] 自定义源的插件系统
-- [ ] 高级文件组织功能
 
 ---
 
