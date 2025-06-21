@@ -24,6 +24,7 @@
 ## 📦 安装方法
 
 ### 方式一：下载发布版本
+```
 1. 从 [Releases 页面](../../releases) 下载最新版本
 2. 将 zip 文件解压到您选择的位置
 3. 运行 `DownloadIntegrator-v2.0.1-win-x64-setup.exe` 文件
