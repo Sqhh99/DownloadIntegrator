@@ -1,8 +1,10 @@
 /* 经典主题样式表 - 模拟Windows XP/7风格 */
 
 /* 全局变量 */
-* {
+QWidget {
     font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 9pt;
+    color: #202020;
 }
 
 /* 主窗口样式 */
@@ -130,6 +132,7 @@ QLineEdit {
     padding: 3px 5px;
     selection-background-color: #316ac5;
     selection-color: white;
+    color: #202020;
 }
 
 QLineEdit:focus {
@@ -150,6 +153,12 @@ QLabel#gameTitle {
 /* 详情标签 */
 QLabel[text^="<b>"] {
     color: #404040;
+}
+
+/* 通用标签样式 */
+QLabel {
+    color: #202020;
+    font-weight: normal;
 }
 
 /* 标签页样式 */
@@ -189,6 +198,7 @@ QTextEdit, QTextBrowser {
     border: 1px solid #a0a0a0;
     selection-background-color: #316ac5;
     selection-color: white;
+    color: #202020;
 }
 
 /* 下拉框样式 */
@@ -240,43 +250,52 @@ QProgressBar::chunk {
 
 /* 单选按钮样式 */
 QRadioButton {
-    color: black;
-    spacing: 5px;
+    color: #202020;
+    spacing: 8px;
+    font-weight: normal;
 }
 
 QRadioButton::indicator {
-    width: 13px;
-    height: 13px;
-    border: 1px solid #a0a0a0;
-    border-radius: 7px;
-    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #ffffff, stop:1 #f0f0f0);
+    width: 15px;
+    height: 15px;
+    border: 2px solid #a0a0a0;
+    border-radius: 9px;
+    background-color: white;
 }
 
 QRadioButton::indicator:checked {
-    image: url(:/icons/checkmark.png);
-    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f0f0f0, stop:1 #e8e8e8);
-    border: 1px solid #316ac5;
+    background-color: #316ac5;
+    border: 2px solid #316ac5;
 }
 
 QRadioButton::indicator:hover {
-    border: 1px solid #7eb4ea;
+    border: 2px solid #7eb4ea;
+    background-color: #f8fbff;
+}
+
+QRadioButton::indicator:checked:hover {
+    background-color: #7eb4ea;
+    border: 2px solid #7eb4ea;
 }
 
 /* 分组框样式 */
 QGroupBox {
     border: 1px solid #a0a0a0;
     border-radius: 3px;
-    margin-top: 10px;
+    margin-top: 12px;
     background-color: transparent;
+    color: #202020;
+    font-weight: normal;
 }
 
 QGroupBox::title {
     subcontrol-origin: margin;
     subcontrol-position: top left;
     left: 10px;
-    top: -8px;
-    padding: 0 3px;
+    padding: 0 5px;
     background-color: #f0f0f0;
+    color: #202020;
+    font-weight: bold;
 }
 
 /* 菜单样式 */
