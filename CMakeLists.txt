@@ -13,8 +13,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # 添加vcpkg库目录到CMAKE_PREFIX_PATH（用于pugixml）
 list(APPEND CMAKE_PREFIX_PATH "D:/vcpkg/installed/x64-windows")
 
+# 查找所需的库
+find_package(CURL REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
+
 # Qt组件
-find_package(Qt6 COMPONENTS Widgets Network Core REQUIRED)
+find_package(Qt6 COMPONENTS Widgets Network Core Concurrent REQUIRED)
 
 # 查找pugixml库
 find_package(pugixml CONFIG REQUIRED)
@@ -35,6 +39,8 @@ set(SOURCES
     src/ModifierInfoManager.cpp
     src/SearchManager.cpp
     src/LanguageManager.cpp
+    src/GameMappingManager.cpp
+    src/translator.cpp
 )
 
 # Define header files
@@ -52,6 +58,8 @@ set(HEADERS
     src/ModifierInfoManager.h
     src/SearchManager.h
     src/LanguageManager.h
+    src/GameMappingManager.h
+    src/translator.h
 )
 
 # Define UI files
@@ -84,11 +92,20 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Widgets 
     Qt6::Network
     Qt6::Core
+    Qt6::Concurrent
     pugixml::pugixml
+    CURL::libcurl
+    nlohmann_json::nlohmann_json
 ) # Qt6 Shared Library
 
 # 静态链接运行时库，避免VCRUNTIME140_1.dll等依赖问题
 if(MSVC)
     set_property(TARGET ${PROJECT_NAME} PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    
+    # 解决库冲突问题
+    target_link_options(${PROJECT_NAME} PRIVATE 
+        $<$<CONFIG:Debug>:/NODEFAULTLIB:msvcrt.lib>
+        $<$<CONFIG:Release>:/NODEFAULTLIB:msvcrtd.lib>
+    )
 endif()

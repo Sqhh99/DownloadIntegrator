@@ -35,7 +35,7 @@ void SearchManager::initializeDefaultSuggestions()
 {
     qDebug() << "初始化默认搜索建议列表";
     
-    // 添加热门游戏名称
+    // 添加热门游戏名称（英文）
     m_searchHistory.append("Cyberpunk 2077");
     m_searchHistory.append("Red Dead Redemption 2");
     m_searchHistory.append("Grand Theft Auto V");
@@ -51,6 +51,18 @@ void SearchManager::initializeDefaultSuggestions()
     m_searchHistory.append("Resident Evil 4");
     m_searchHistory.append("S.T.A.L.K.E.R. 2: Heart of Chornobyl");
     m_searchHistory.append("Frostpunk 2");
+    
+    // 添加中文游戏名称（支持中文搜索）
+    GameMappingManager& mappingManager = GameMappingManager::getInstance();
+    if (mappingManager.initialize()) {
+        QStringList chineseNames = mappingManager.getAllChineseNames();
+        for (const QString& name : chineseNames) {
+            if (!m_searchHistory.contains(name)) {
+                m_searchHistory.append(name);
+            }
+        }
+        qDebug() << "已添加" << chineseNames.size() << "个中文游戏名到搜索建议";
+    }
     
     // 保存到设置
     saveSearchHistory();
@@ -72,6 +84,43 @@ void SearchManager::searchModifiers(const QString& searchTerm,
         loadFeaturedModifiers(callback);
         return;
     }
+    
+    // 检查是否包含中文字符，如果有则进行翻译
+    GameMappingManager& mappingManager = GameMappingManager::getInstance();
+    if (mappingManager.containsChinese(searchTerm)) {
+        qDebug() << "检测到中文搜索词，正在翻译：" << searchTerm;
+        
+        // 首先尝试快速映射（从内置映射和缓存中查找）
+        QString englishTerm = mappingManager.translateToEnglish(searchTerm);
+        
+        if (!englishTerm.isEmpty() && englishTerm != searchTerm) {
+            qDebug() << "中文翻译成功：" << searchTerm << " -> " << englishTerm;
+            // 使用翻译后的英文进行搜索
+            performSearch(englishTerm, callback);        } else {
+            // 如果快速映射失败，使用异步翻译
+            qDebug() << "使用异步翻译API：" << searchTerm;
+            mappingManager.translateToEnglishAsync(searchTerm, [this, searchTerm, callback](const QString& translatedTerm) {
+                if (!translatedTerm.isEmpty()) {
+                    qDebug() << "异步翻译完成，开始搜索：" << translatedTerm;
+                    performSearch(translatedTerm, callback);
+                } else {
+                    qDebug() << "翻译失败，使用原始搜索词";
+                    performSearch(searchTerm, callback);
+                }
+            });
+            return; // 异步执行，直接返回
+        }
+    } else {
+        // 直接搜索英文或其他语言
+        performSearch(searchTerm, callback);
+    }
+}
+
+// 执行实际的搜索操作
+void SearchManager::performSearch(const QString& searchTerm, 
+                                 std::function<void(const QList<ModifierInfo>&)> callback)
+{
+    qDebug() << "SearchManager::performSearch - 执行搜索：" << searchTerm;
     
     // 构建URL
     QString url;
@@ -222,13 +271,9 @@ void SearchManager::searchModifiers(const QString& searchTerm,
                     fallbackList.append(rdr);
                 }
                 
-                if (!fallbackList.isEmpty()) {
-                    updateModifierManagerList(fallbackList);
-                    if (callback) {
-                        callback(fallbackList);
-                    }
-                } else if (callback) {
-                    callback(QList<ModifierInfo>()); // 返回空列表
+                // 调用回调函数，即使是空列表
+                if (callback) {
+                    callback(fallbackList);
                 }
             }
         }
@@ -728,4 +773,4 @@ void SearchManager::fetchRecentlyUpdatedModifiers(std::function<void(const QList
             }
         }
     );
-} 
+}

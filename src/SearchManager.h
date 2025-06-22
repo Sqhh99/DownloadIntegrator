@@ -8,6 +8,7 @@
 #include <QStringList>
 #include "ModifierParser.h"
 #include "ModifierInfoManager.h"
+#include "GameMappingManager.h"
 
 /**
  * @brief 搜索管理器，负责处理搜索功能和搜索历史
@@ -135,9 +136,7 @@ public:
      * @param modifiers 修改器列表
      * @return 排序后的修改器列表
      */
-    QList<ModifierInfo> sortByPopularity(const QList<ModifierInfo>& modifiers);
-
-    /**
+    QList<ModifierInfo> sortByPopularity(const QList<ModifierInfo>& modifiers);    /**
      * @brief 按日期排序搜索结果
      * @param modifiers 修改器列表
      * @return 排序后的修改器列表
@@ -151,6 +150,10 @@ private:
     // 禁止拷贝和赋值
     SearchManager(const SearchManager&) = delete;
     SearchManager& operator=(const SearchManager&) = delete;
+
+    // 执行实际的搜索操作（内部方法）
+    void performSearch(const QString& searchTerm, 
+                      std::function<void(const QList<ModifierInfo>&)> callback);
 
     // 更新自动完成器
     void updateCompleter();

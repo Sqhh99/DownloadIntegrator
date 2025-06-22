@@ -1,0 +1,824 @@
+{
+    "name": "中文游戏名映射配置",
+    "version": "1.0",
+    "description": "支持中文搜索的游戏名映射表，用于将中文游戏名转换为英文进行搜索",
+    "mappings": {
+        "艾尔登法环": {
+            "english": "Elden Ring",
+            "aliases": [
+                "老头环",
+                "环",
+                "法环"
+            ],
+            "category": "动作RPG"
+        },
+        "荒野大镖客2": {
+            "english": "Red Dead Redemption 2",
+            "aliases": [
+                "大镖客2",
+                "RDR2",
+                "荒野大镖客：救赎2"
+            ],
+            "category": "开放世界"
+        },
+        "赛博朋克2077": {
+            "english": "Cyberpunk 2077",
+            "aliases": [
+                "赛博朋克",
+                "朋克2077",
+                "CP2077"
+            ],
+            "category": "RPG"
+        },
+        "巫师3": {
+            "english": "The Witcher 3",
+            "aliases": [
+                "巫师3：狂猎",
+                "猎魔人3",
+                "狂猎"
+            ],
+            "category": "RPG"
+        },
+        "侠盗猎车手5": {
+            "english": "Grand Theft Auto V",
+            "aliases": [
+                "GTA5",
+                "GTAV",
+                "侠盗猎车手V"
+            ],
+            "category": "开放世界"
+        },
+        "辐射4": {
+            "english": "Fallout 4",
+            "aliases": [
+                "废土4",
+                "辐射"
+            ],
+            "category": "RPG"
+        },
+        "上古卷轴5": {
+            "english": "Skyrim",
+            "aliases": [
+                "天际",
+                "老滚5",
+                "天际省"
+            ],
+            "category": "RPG"
+        },
+        "霍格沃茨之遗": {
+            "english": "Hogwarts Legacy",
+            "aliases": [
+                "哈利波特",
+                "霍格沃茨",
+                "魔法学院"
+            ],
+            "category": "动作RPG"
+        },
+        "博德之门3": {
+            "english": "Baldur's Gate 3",
+            "aliases": [
+                "BG3",
+                "博德之门"
+            ],
+            "category": "回合制RPG"
+        },
+        "暗黑破坏神4": {
+            "english": "Diablo IV",
+            "aliases": [
+                "暗黑4",
+                "D4",
+                "大菠萝4"
+            ],
+            "category": "ARPG"
+        },
+        "星空": {
+            "english": "Starfield",
+            "aliases": [
+                "星域"
+            ],
+            "category": "太空RPG"
+        },
+        "生化危机4": {
+            "english": "Resident Evil 4",
+            "aliases": [
+                "RE4",
+                "生化4"
+            ],
+            "category": "生存恐怖"        },
+        "刺客信条": {
+            "english": "Assassin's Creed",
+            "aliases": [
+                "AC",
+                "刺客信条系列"
+            ],
+            "category": "动作冒险"
+        },
+        "刺客信条：幻景": {
+            "english": "Assassin's Creed Mirage",
+            "aliases": [
+                "刺客信条幻景",
+                "AC幻景"
+            ],
+            "category": "动作冒险"
+        },
+        "使命召唤：现代战争3": {
+            "english": "Call of Duty: Modern Warfare 3",
+            "aliases": [
+                "COD现代战争3",
+                "MW3",
+                "使命召唤MW3"
+            ],
+            "category": "射击"
+        },
+        "冰汽时代2": {
+            "english": "Frostpunk 2",
+            "aliases": [
+                "极地朋克2",
+                "冰雪朋克2"
+            ],
+            "category": "城市建造"
+        },
+        "潜行者2": {
+            "english": "S.T.A.L.K.E.R. 2: Heart of Chornobyl",
+            "aliases": [
+                "STALKER2",
+                "切尔诺贝利之心"
+            ],
+            "category": "生存射击"
+        },
+        "怪物猎人世界": {
+            "english": "Monster Hunter: World",
+            "aliases": [
+                "MHW",
+                "怪猎世界"
+            ],
+            "category": "动作RPG"
+        },
+        "怪物猎人崛起": {
+            "english": "Monster Hunter Rise",
+            "aliases": [
+                "MHR",
+                "怪猎崛起"
+            ],
+            "category": "动作RPG"
+        },
+        "只狼": {
+            "english": "Sekiro: Shadows Die Twice",
+            "aliases": [
+                "只狼：影逝二度",
+                "影逝二度"
+            ],
+            "category": "动作冒险"
+        },
+        "黑暗之魂3": {
+            "english": "Dark Souls III",
+            "aliases": [
+                "魂3",
+                "黑魂3"
+            ],
+            "category": "动作RPG"
+        },
+        "战神": {
+            "english": "God of War",
+            "aliases": [
+                "战神4",
+                "奎托斯"
+            ],
+            "category": "动作冒险"
+        },
+        "地平线零之曙光": {
+            "english": "Horizon Zero Dawn",
+            "aliases": [
+                "地平线",
+                "零之曙光"
+            ],
+            "category": "动作RPG"
+        },
+        "地平线西之绝境": {
+            "english": "Horizon Forbidden West",
+            "aliases": [
+                "地平线2",
+                "西之绝境"
+            ],
+            "category": "动作RPG"
+        },
+        "死亡搁浅": {
+            "english": "Death Stranding",
+            "aliases": [
+                "DS",
+                "小岛秀夫"
+            ],
+            "category": "动作冒险"
+        },
+        "对马岛之魂": {
+            "english": "Ghost of Tsushima",
+            "aliases": [
+                "对马岛",
+                "武士游戏"
+            ],
+            "category": "动作冒险"
+        },
+        "漫威蜘蛛侠": {
+            "english": "Marvel's Spider-Man",
+            "aliases": [
+                "蜘蛛侠",
+                "漫威蜘蛛人"
+            ],
+            "category": "动作冒险"
+        },
+        "剑星": {
+            "english": "Stellar Blade",
+            "aliases": [
+                "剑",
+                "星之剑"
+            ],
+            "category": "动作冒险"
+        },
+        "黑神话悟空": {
+            "english": "Black Myth: Wukong",
+            "aliases": [
+                "悟空",
+                "黑神话"
+            ],
+            "category": "动作RPG"
+        },
+        "幻兽帕鲁": {
+            "english": "Palworld",
+            "aliases": [
+                "帕鲁",
+                "宝可梦枪版",
+                "幻兽"
+            ],
+            "category": "生存建造"
+        },
+        "永劫无间": {
+            "english": "Naraka: Bladepoint",
+            "aliases": [
+                "永劫",
+                "无间"
+            ],
+            "category": "大逃杀"
+        },
+        "英雄联盟": {
+            "english": "League of Legends",
+            "aliases": [
+                "LOL",
+                "撸啊撸",
+                "联盟"
+            ],
+            "category": "MOBA"
+        },
+        "守望先锋2": {
+            "english": "Overwatch 2",
+            "aliases": [
+                "OW2",
+                "守望",
+                "屁股"
+            ],
+            "category": "射击"
+        },
+        "反恐精英2": {
+            "english": "Counter-Strike 2",
+            "aliases": [
+                "CS2",
+                "反恐",
+                "CSGO2"
+            ],
+            "category": "射击"
+        },
+        "DOTA2": {
+            "english": "Dota 2",
+            "aliases": [
+                "刀塔2",
+                "刀塔",
+                "DOTA"
+            ],
+            "category": "MOBA"
+        },
+        "泰拉瑞亚": {
+            "english": "Terraria",
+            "aliases": [
+                "泰拉",
+                "TR"
+            ],
+            "category": "沙盒"
+        },
+        "我的世界": {
+            "english": "Minecraft",
+            "aliases": [
+                "MC",
+                "挖矿",
+                "方块"
+            ],
+            "category": "沙盒"
+        },
+        "森林": {
+            "english": "The Forest",
+            "aliases": [
+                "森林之子前作"
+            ],
+            "category": "生存恐怖"
+        },
+        "森林之子": {
+            "english": "Sons of The Forest",
+            "aliases": [
+                "森林2"
+            ],
+            "category": "生存恐怖"
+        },
+        "生存者": {
+            "english": "Green Hell",
+            "aliases": [
+                "绿色地狱"
+            ],
+            "category": "生存"
+        },
+        "深岩银河": {
+            "english": "Deep Rock Galactic",
+            "aliases": [
+                "DRG",
+                "矮人"
+            ],
+            "category": "合作射击"
+        },
+        "铁拳8": {
+            "english": "Tekken 8",
+            "aliases": [
+                "铁拳",
+                "TK8"
+            ],
+            "category": "格斗"
+        },
+        "街霸6": {
+            "english": "Street Fighter 6",
+            "aliases": [
+                "街头霸王6",
+                "SF6"
+            ],
+            "category": "格斗"
+        },
+        "真人快打1": {
+            "english": "Mortal Kombat 1",
+            "aliases": [
+                "MK1",
+                "真快1"
+            ],
+            "category": "格斗"
+        },
+        "鬼泣5": {
+            "english": "Devil May Cry 5",
+            "aliases": [
+                "DMC5",
+                "鬼泣"
+            ],
+            "category": "动作"
+        },
+        "尼尔机械纪元": {
+            "english": "NieR: Automata",
+            "aliases": [
+                "尼尔",
+                "2B",
+                "机械纪元"
+            ],
+            "category": "动作RPG"
+        },
+        "尼尔伪装者": {
+            "english": "NieR Replicant",
+            "aliases": [
+                "尼尔复制体"
+            ],
+            "category": "动作RPG"
+        },
+        "最终幻想7重制版": {
+            "english": "Final Fantasy VII Remake",
+            "aliases": [
+                "FF7R",
+                "最终幻想7R"
+            ],
+            "category": "RPG"
+        },
+        "最终幻想16": {
+            "english": "Final Fantasy XVI",
+            "aliases": [
+                "FF16",
+                "最终幻想16"
+            ],
+            "category": "RPG"
+        },
+        "王国之心": {
+            "english": "Kingdom Hearts",
+            "aliases": [
+                "KH"
+            ],
+            "category": "动作RPG"
+        },
+        "女神异闻录5": {
+            "english": "Persona 5",
+            "aliases": [
+                "P5",
+                "女神5"
+            ],
+            "category": "RPG"
+        },
+        "如龙": {
+            "english": "Yakuza",
+            "aliases": [
+                "龙如",
+                "人中之龙"
+            ],
+            "category": "动作冒险"
+        },
+        "审判之眼": {
+            "english": "Judgment",
+            "aliases": [
+                "审判",
+                "木村拓哉"
+            ],
+            "category": "动作冒险"
+        },
+        "失落审判": {
+            "english": "Lost Judgment",
+            "aliases": [
+                "审判2"
+            ],
+            "category": "动作冒险"
+        },
+        "孤岛惊魂6": {
+            "english": "Far Cry 6",
+            "aliases": [
+                "FC6",
+                "孤岛惊魂"
+            ],
+            "category": "开放世界射击"
+        },
+        "孤岛惊魂5": {
+            "english": "Far Cry 5",
+            "aliases": [
+                "FC5"
+            ],
+            "category": "开放世界射击"
+        },
+        "看门狗军团": {
+            "english": "Watch Dogs: Legion",
+            "aliases": [
+                "看门狗3",
+                "WD3"
+            ],
+            "category": "开放世界"
+        },
+        "看门狗2": {
+            "english": "Watch Dogs 2",
+            "aliases": [
+                "WD2"
+            ],
+            "category": "开放世界"
+        },
+        "全境封锁2": {
+            "english": "Tom Clancy's The Division 2",
+            "aliases": [
+                "全境2",
+                "分裂2"
+            ],
+            "category": "射击RPG"
+        },
+        "彩虹六号围攻": {
+            "english": "Rainbow Six Siege",
+            "aliases": [
+                "R6",
+                "彩六"
+            ],
+            "category": "战术射击"
+        },
+        "刺客信条奥德赛": {
+            "english": "Assassin's Creed Odyssey",
+            "aliases": [
+                "AC奥德赛",
+                "奥德赛"
+            ],
+            "category": "动作RPG"
+        },
+        "刺客信条起源": {
+            "english": "Assassin's Creed Origins",
+            "aliases": [
+                "AC起源",
+                "起源"
+            ],
+            "category": "动作RPG"
+        },
+        "刺客信条英灵殿": {
+            "english": "Assassin's Creed Valhalla",
+            "aliases": [
+                "AC英灵殿",
+                "英灵殿"
+            ],
+            "category": "动作RPG"
+        },
+        "地铁离去": {
+            "english": "Metro Exodus",
+            "aliases": [
+                "地铁3",
+                "离去"
+            ],
+            "category": "射击"
+        },
+        "地铁2033": {
+            "english": "Metro 2033",
+            "aliases": [
+                "地铁1"
+            ],
+            "category": "射击"
+        },
+        "地铁最后的曙光": {
+            "english": "Metro: Last Light",
+            "aliases": [
+                "地铁2"
+            ],
+            "category": "射击"
+        },
+        "古墓丽影暗影": {
+            "english": "Shadow of the Tomb Raider",
+            "aliases": [
+                "古墓丽影3",
+                "劳拉3"
+            ],
+            "category": "动作冒险"
+        },
+        "古墓丽影崛起": {
+            "english": "Rise of the Tomb Raider",
+            "aliases": [
+                "古墓丽影2",
+                "劳拉2"
+            ],
+            "category": "动作冒险"
+        },
+        "古墓丽影": {
+            "english": "Tomb Raider",
+            "aliases": [
+                "劳拉",
+                "TR"
+            ],
+            "category": "动作冒险"
+        },
+        "控制": {
+            "english": "Control",
+            "aliases": [
+                "控制游戏"
+            ],
+            "category": "超自然动作"
+        },
+        "量子破碎": {
+            "english": "Quantum Break",
+            "aliases": [
+                "QB"
+            ],
+            "category": "动作冒险"
+        },
+        "心灵杀手2": {
+            "english": "Alan Wake 2",
+            "aliases": [
+                "AW2"
+            ],
+            "category": "生存恐怖"
+        },
+        "心灵杀手": {
+            "english": "Alan Wake",
+            "aliases": [
+                "AW"
+            ],
+            "category": "动作冒险"
+        },
+        "层层恐惧": {
+            "english": "Layers of Fear",
+            "aliases": [
+                "LOF"
+            ],
+            "category": "心理恐怖"
+        },
+        "小偷模拟器": {
+            "english": "Thief Simulator",
+            "aliases": [
+                "小偷"
+            ],
+            "category": "模拟"
+        },
+        "房屋建筑师": {
+            "english": "House Builder",
+            "aliases": [
+                "建房子"
+            ],
+            "category": "模拟建造"
+        },
+        "卡车模拟器": {
+            "english": "Euro Truck Simulator 2",
+            "aliases": [
+                "欧卡2",
+                "ETS2",
+                "卡车"
+            ],
+            "category": "模拟驾驶"
+        },
+        "美国卡车模拟": {
+            "english": "American Truck Simulator",
+            "aliases": [
+                "美卡",
+                "ATS"
+            ],
+            "category": "模拟驾驶"
+        },
+        "农场模拟器": {
+            "english": "Farming Simulator",
+            "aliases": [
+                "农场",
+                "FS"
+            ],
+            "category": "模拟经营"
+        },
+        "城市天际线": {
+            "english": "Cities: Skylines",
+            "aliases": [
+                "天际线",
+                "城市建造"
+            ],
+            "category": "城市建造"
+        },
+        "双点医院": {
+            "english": "Two Point Hospital",
+            "aliases": [
+                "医院模拟"
+            ],
+            "category": "模拟经营"
+        },
+        "监狱建筑师": {
+            "english": "Prison Architect",
+            "aliases": [
+                "监狱"
+            ],
+            "category": "模拟建造"
+        },
+        "钢铁雄心4": {
+            "english": "Hearts of Iron IV",
+            "aliases": [
+                "HOI4",
+                "钢4"
+            ],
+            "category": "策略"
+        },
+        "欧洲普遍征服者4": {
+            "english": "Europa Universalis IV",
+            "aliases": [
+                "EU4",
+                "欧陆风云4"
+            ],
+            "category": "策略"
+        },
+        "文明6": {
+            "english": "Civilization VI",
+            "aliases": [
+                "CIV6",
+                "席德梅尔文明6"
+            ],
+            "category": "回合策略"
+        },
+        "全面战争战锤3": {
+            "english": "Total War: Warhammer III",
+            "aliases": [
+                "全战锤3",
+                "TWW3"
+            ],
+            "category": "策略"
+        },
+        "全面战争三国": {
+            "english": "Total War: Three Kingdoms",
+            "aliases": [
+                "全战三国",
+                "TW3K"
+            ],
+            "category": "策略"
+        },
+        "十字军之王3": {
+            "english": "Crusader Kings III",
+            "aliases": [
+                "CK3",
+                "十字军3"
+            ],
+            "category": "策略"
+        },
+        "群星": {
+            "english": "Stellaris",
+            "aliases": [
+                "恒星"
+            ],
+            "category": "4X策略"
+        },
+        "环世界": {
+            "english": "RimWorld",
+            "aliases": [
+                "边缘世界"
+            ],
+            "category": "殖民模拟"
+        },
+        "缺氧": {
+            "english": "Oxygen Not Included",
+            "aliases": [
+                "ONI"
+            ],
+            "category": "生存建造"
+        },
+        "戴森球计划": {
+            "english": "Dyson Sphere Program",
+            "aliases": [
+                "DSP",
+                "戴森球"
+            ],
+            "category": "工厂建造"
+        },
+        "异形工厂": {
+            "english": "Factorio",
+            "aliases": [
+                "工厂"
+            ],
+            "category": "工厂建造"
+        },
+        "传送门2": {
+            "english": "Portal 2",
+            "aliases": [
+                "传送门"
+            ],
+            "category": "解谜"
+        },
+        "半条命爱莉克斯": {
+            "english": "Half-Life: Alyx",
+            "aliases": [
+                "HL爱莉克斯",
+                "半条命VR"
+            ],
+            "category": "VR射击"
+        },
+        "半条命2": {
+            "english": "Half-Life 2",
+            "aliases": [
+                "HL2"
+            ],
+            "category": "射击"
+        },
+        "左4死2": {
+            "english": "Left 4 Dead 2",
+            "aliases": [
+                "L4D2",
+                "求生之路2"
+            ],
+            "category": "合作射击"
+        },
+        "反恐精英起源": {
+            "english": "Counter-Strike: Source",
+            "aliases": [
+                "CSS"
+            ],
+            "category": "射击"
+        },
+        "军团要塞2": {
+            "english": "Team Fortress 2",
+            "aliases": [
+                "TF2"
+            ],
+            "category": "射击"
+        },
+        "彩虹小马": {
+            "english": "It Takes Two",
+            "aliases": [
+                "双人成行"
+            ],
+            "category": "合作冒险"
+        },
+        "胡闹厨房": {
+            "english": "Overcooked",
+            "aliases": [
+                "煮糊了"
+            ],
+            "category": "合作"
+        },
+        "分手厨房": {
+            "english": "Overcooked! 2",
+            "aliases": [
+                "胡闹厨房2",
+                "煮糊了2"
+            ],
+            "category": "合作"
+        },
+        "人类一败涂地": {
+            "english": "Human: Fall Flat",
+            "aliases": [
+                "人类",
+                "HFF"
+            ],
+            "category": "物理解谜"
+        },
+        "糖豆人": {
+            "english": "Fall Guys",
+            "aliases": [
+                "糖豆"
+            ],
+            "category": "大逃杀"
+        }
+    }
+}

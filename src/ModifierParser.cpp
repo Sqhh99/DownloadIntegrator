@@ -2,6 +2,87 @@
 #include <QDebug>
 #include <QRegularExpression>
 
+// 辅助函数：判断是否为数字或序号词汇
+bool isNumberOrSequenceWord(const QString& word) {
+    QString wordLower = word.toLower();
+    
+    // 检查是否为纯数字
+    bool isNumber;
+    wordLower.toInt(&isNumber);
+    if (isNumber) return true;
+    
+    // 检查是否为罗马数字或序号词汇
+    QStringList sequenceWords = {
+        "i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x",
+        "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+        "age", "episode", "part", "vol", "volume", "season", "chapter"
+    };
+    
+    return sequenceWords.contains(wordLower);
+}
+
+// 辅助函数：检查标题是否包含等价的数字表达
+bool containsEquivalentNumber(const QString& title, const QString& searchWord) {
+    QString titleLower = title.toLower();
+    QString wordLower = searchWord.toLower();
+    
+    // 数字对应关系映射
+    QMap<QString, QStringList> numberEquivalents = {
+        {"1", {"i", "one", "first"}},
+        {"2", {"ii", "two", "second", "age"}},  // "age" 常用于表示续作
+        {"3", {"iii", "three", "third"}},
+        {"4", {"iv", "four", "fourth"}},
+        {"5", {"v", "five", "fifth"}},
+        {"6", {"vi", "six", "sixth"}},
+        {"age", {"2", "ii", "two", "second"}},  // "age" 通常指代第二部
+        {"episode", {"part", "vol", "volume"}},
+        {"part", {"episode", "vol", "volume"}}
+    };
+    
+    // 检查是否有等价表达
+    for (auto it = numberEquivalents.begin(); it != numberEquivalents.end(); ++it) {
+        QString key = it.key();
+        QStringList values = it.value();
+        
+        // 如果搜索词是 key，检查标题是否包含 values 中的任何一个
+        if (wordLower == key) {
+            for (const QString& value : values) {
+                if (titleLower.contains(value)) {
+                    return true;
+                }
+            }
+        }
+        
+        // 如果搜索词是 values 中的一个，检查标题是否包含 key
+        if (values.contains(wordLower) && titleLower.contains(key)) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+// HTML实体解码函数
+QString decodeHtmlEntities(const QString& text) {
+    QString result = text;
+    
+    // 常见HTML实体替换
+    result.replace("&amp;", "&");
+    result.replace("&lt;", "<");
+    result.replace("&gt;", ">");
+    result.replace("&quot;", "\"");
+    result.replace("&#39;", "'");
+    result.replace("&apos;", "'");
+    result.replace("&#8217;", "'");  // 右单引号
+    result.replace("&#8216;", "'");  // 左单引号
+    result.replace("&#8220;", "\""); // 左双引号
+    result.replace("&#8221;", "\""); // 右双引号
+    result.replace("&#8211;", "-");  // en dash
+    result.replace("&#8212;", "—");  // em dash
+    
+    return result;
+}
+
 ModifierParser::ModifierParser()
 {
 }
@@ -53,15 +134,22 @@ QList<ModifierInfo> ModifierParser::parseModifierListHTML(const std::string& htm
         // 处理搜索词，拆分为单词列表以便进行更灵活的匹配
         QStringList searchWords;
         if (!searchTerm.isEmpty()) {
-            // 将搜索词分割为单词，忽略短单词(如"the", "of"等)
-            QStringList words = searchTerm.split(" ", Qt::SkipEmptyParts);
+            // 解码HTML实体
+            QString decodedSearchTerm = decodeHtmlEntities(searchTerm);
+            
+            // 将搜索词分割为单词，但保留重要的短词（如数字、序号）
+            QStringList words = decodedSearchTerm.split(" ", Qt::SkipEmptyParts);
             for (const QString& word : words) {
-                if (word.length() > 2 && 
-                    word.compare("the", Qt::CaseInsensitive) != 0 && 
-                    word.compare("and", Qt::CaseInsensitive) != 0 && 
-                    word.compare("for", Qt::CaseInsensitive) != 0 && 
-                    word.compare("of", Qt::CaseInsensitive) != 0) {
-                    searchWords << word;
+                QString trimmedWord = word.trimmed();
+                // 保留数字、序号词汇或长度大于2的词
+                if (trimmedWord.length() >= 1 && 
+                    (isNumberOrSequenceWord(trimmedWord) || trimmedWord.length() > 2) &&
+                    trimmedWord.compare("the", Qt::CaseInsensitive) != 0 && 
+                    trimmedWord.compare("and", Qt::CaseInsensitive) != 0 && 
+                    trimmedWord.compare("for", Qt::CaseInsensitive) != 0 && 
+                    trimmedWord.compare("of", Qt::CaseInsensitive) != 0 &&
+                    trimmedWord.compare("in", Qt::CaseInsensitive) != 0) {
+                    searchWords << trimmedWord;
                 }
             }
             qDebug() << "搜索词拆分为关键词：" << searchWords.join(", ");
@@ -125,23 +213,26 @@ QList<ModifierInfo> ModifierParser::parseModifierListHTML(const std::string& htm
                     url.contains("trainer", Qt::CaseInsensitive)) {
                     ModifierInfo modifier;
                     
-                    // 提取修改器名称 (删除末尾的"Trainer"字样)
-                    modifier.name = title;
+                    // 提取修改器名称 (删除末尾的"Trainer"字样，并解码HTML实体)
+                    modifier.name = decodeHtmlEntities(title);
                     modifier.name.replace(QRegularExpression("\\s+Trainer\\s*$", QRegularExpression::CaseInsensitiveOption), "");
                     modifier.url = url;
                     // 确保初始化optionsCount为0，避免未初始化的值
                     modifier.optionsCount = 0;
                     
+                    // 对title也进行HTML实体解码，用于后续匹配
+                    QString decodedTitle = decodeHtmlEntities(title);
+                    
                     // 特殊处理搜索词为"Red Dead Redemption 2"的情况
                     bool isRDR2Search = searchTerm.contains("Red Dead Redemption 2", Qt::CaseInsensitive);
-                    bool isRDRMatch = title.contains("Red Dead Redemption", Qt::CaseInsensitive);
+                    bool isRDRMatch = decodedTitle.contains("Red Dead Redemption", Qt::CaseInsensitive);
                     
                     // 改进的搜索词匹配逻辑
                     bool matchesSearch = false;
                     
-                    // 优先使用直接包含关系进行匹配
+                    // 优先使用直接包含关系进行匹配（使用解码后的标题）
                     if (searchTerm.isEmpty() || 
-                        title.contains(searchTerm, Qt::CaseInsensitive) || 
+                        decodedTitle.contains(searchTerm, Qt::CaseInsensitive) || 
                         modifier.name.contains(searchTerm, Qt::CaseInsensitive)) {
                         matchesSearch = true;
                         qDebug() << "  完全匹配搜索词：" << searchTerm;
@@ -149,18 +240,26 @@ QList<ModifierInfo> ModifierParser::parseModifierListHTML(const std::string& htm
                     // 如果不完全匹配，检查是否匹配所有关键词
                     else if (!searchWords.isEmpty()) {
                         int matchedWords = 0;
-                        QString titleLower = title.toLower();
+                        QString titleLower = decodedTitle.toLower();  // 使用解码后的标题
                         
-                        // 检查所有关键词是否都包含在标题中
+                        // 检查所有关键词是否都包含在标题中，支持数字序号的智能匹配
                         for (const QString& word : searchWords) {
-                            if (titleLower.contains(word.toLower())) {
+                            QString wordLower = word.toLower();
+                            if (titleLower.contains(wordLower)) {
                                 matchedWords++;
+                            }
+                            // 智能匹配数字序号和相关词汇
+                            else if (isNumberOrSequenceWord(word) && containsEquivalentNumber(titleLower, wordLower)) {
+                                matchedWords++;
+                                qDebug() << "    数字序号智能匹配：" << word << " 在 " << decodedTitle;
                             }
                         }
                         
-                        // 如果匹配了至少70%的关键词，或者匹配数大于1且匹配率大于50%，认为是匹配的
+                        // 改进匹配阈值：降低要求，支持更灵活的匹配
                         double matchRatio = static_cast<double>(matchedWords) / searchWords.size();
-                        if ((matchRatio >= 0.7) || (matchedWords > 1 && matchRatio >= 0.5)) {
+                        if ((matchRatio >= 0.6) ||                              // 60%以上匹配
+                            (matchedWords >= 1 && searchWords.size() <= 2) ||   // 2个词或以下，匹配1个即可
+                            (matchedWords >= 2 && matchRatio >= 0.4)) {         // 多词情况下，至少2个且40%以上
                             matchesSearch = true;
                             qDebug() << "  关键词匹配：" << matchedWords << "/" << searchWords.size() 
                                     << " = " << (matchRatio * 100) << "%";
@@ -172,12 +271,12 @@ QList<ModifierInfo> ModifierParser::parseModifierListHTML(const std::string& htm
                     // 特殊处理Red Dead Redemption系列
                     if (!matchesSearch && (searchTerm.contains("Red Dead", Qt::CaseInsensitive) && isRDRMatch)) {
                         matchesSearch = true;
-                        qDebug() << "  特殊匹配Red Dead系列：" << title;
+                        qDebug() << "  特殊匹配Red Dead系列：" << decodedTitle;
                     }
                     
                     // 如果不匹配搜索词且不是空搜索，跳过此条目
                     if (!matchesSearch && !searchTerm.isEmpty()) {
-                        qDebug() << "  跳过不匹配项：" << title;
+                        qDebug() << "  跳过不匹配项：" << decodedTitle;
                         continue;
                     }
                     

@@ -8,6 +8,7 @@
 #include <QStyleFactory>
 #include "ThemeManager.h"
 #include "LanguageManager.h"
+#include "GameMappingManager.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -49,12 +50,19 @@ int main(int argc, char *argv[])
         
         // 添加DLL搜索路径
         addDllSearchPaths();
-        
-        // 应用当前语言
+          // 应用当前语言
         LanguageManager::getInstance().applyCurrentLanguage(a);
         
         // 应用当前主题
         ThemeManager::getInstance().applyCurrentTheme(a);
+        
+        // 初始化游戏名映射管理器
+        qDebug() << "正在初始化游戏名映射管理器...";
+        if (GameMappingManager::getInstance().initialize()) {
+            qDebug() << "✅ 游戏名映射管理器初始化成功";
+        } else {
+            qDebug() << "⚠️ 游戏名映射管理器初始化失败，中文搜索功能可能受限";
+        }
         
         // 创建主窗口
         DownloadIntegrator w;
