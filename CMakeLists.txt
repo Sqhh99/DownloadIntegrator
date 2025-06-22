@@ -10,8 +10,12 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# 添加vcpkg库目录到CMAKE_PREFIX_PATH（用于pugixml）
-list(APPEND CMAKE_PREFIX_PATH "D:/vcpkg/installed/x64-windows")
+# 添加vcpkg库目录到CMAKE_PREFIX_PATH
+list(APPEND CMAKE_PREFIX_PATH "D:/vcpkg/installed/x64-windows-static")
+
+# 设置vcpkg为静态链接模式
+set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "")
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # 查找所需的库
 find_package(CURL REQUIRED)
@@ -102,10 +106,37 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 if(MSVC)
     set_property(TARGET ${PROJECT_NAME} PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    
-    # 解决库冲突问题
+      # 解决库冲突问题 - 排除动态运行时库
     target_link_options(${PROJECT_NAME} PRIVATE 
-        $<$<CONFIG:Debug>:/NODEFAULTLIB:msvcrt.lib>
-        $<$<CONFIG:Release>:/NODEFAULTLIB:msvcrtd.lib>
+        /NODEFAULTLIB:msvcrt.lib
+        /NODEFAULTLIB:msvcrtd.lib
+        /NODEFAULTLIB:msvcprt.lib
+        /NODEFAULTLIB:msvcprtd.lib
+    )
+    
+    # 静态链接所有库，减少动态库依赖
+    target_link_options(${PROJECT_NAME} PRIVATE 
+        /INCREMENTAL:NO
+        /LTCG
+    )
+    
+    # 启用静态链接优化
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<CONFIG:Release>:/GL>  # 全程序优化
+        $<$<CONFIG:Release>:/Oi>  # 内联函数优化
+    )
+endif()
+
+# CURL静态链接配置
+target_compile_definitions(${PROJECT_NAME} PRIVATE CURL_STATICLIB)
+
+# 确保所有第三方库使用静态链接
+if(MSVC)
+    # 添加额外的系统库，确保静态链接完整性
+    target_link_libraries(${PROJECT_NAME} PRIVATE 
+        ws2_32.lib 
+        wldap32.lib 
+        crypt32.lib 
+        normaliz.lib
     )
 endif()
