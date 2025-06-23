@@ -34,7 +34,7 @@
 
 ## 🖥️ スクリーンショット (Screenshot)
 
-![image](https://github.com/user-attachments/assets/7939aa55-7958-49bb-a076-bceef6ca682c)
+![image](https://github.com/user-attachments/assets/6ea137e3-bc5a-4b95-b55f-255389ed379a)
 
 ## 📋 システム要件 (Requirements)
 
