@@ -9,11 +9,11 @@
 </div>
 
 <p align="center">
-    <a href="https://github.com/your-username/DownloadIntegrator/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="license"></a>
-    <a href="https://github.com/your-username/DownloadIntegrator/stargazers"><img src="https://img.shields.io/github/stars/your-username/DownloadIntegrator.svg?style=flat" alt="stars"></a>
-    <a href="https://github.com/your-username/DownloadIntegrator/releases"><img src="https://img.shields.io/github/downloads/your-username/DownloadIntegrator/total.svg?style=flat" alt="downloads"></a>
-    <a href="https://github.com/your-username/DownloadIntegrator/releases/latest"><img src="https://img.shields.io/github/v/release/your-username/DownloadIntegrator.svg" alt="release"></a>
-    <a href="https://github.com/your-username/DownloadIntegrator/commits/main"><img src="https://img.shields.io/github/last-commit/your-username/DownloadIntegrator.svg" alt="last commit"></a>
+    <a href="https://github.com/Sqhh99/DownloadIntegrator/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="license"></a>
+    <a href="https://github.com/Sqhh99/DownloadIntegrator/stargazers"><img src="https://img.shields.io/github/stars/your-username/DownloadIntegrator.svg?style=flat" alt="stars"></a>
+    <a href="https://github.com/Sqhh99/DownloadIntegrator/releases"><img src="https://img.shields.io/github/downloads/your-username/DownloadIntegrator/total.svg?style=flat" alt="downloads"></a>
+    <a href="https://github.com/Sqhh99/DownloadIntegrator/releases/latest"><img src="https://img.shields.io/github/v/release/your-username/DownloadIntegrator.svg" alt="release"></a>
+    <a href="https://github.com/Sqhh99/DownloadIntegrator/commits/main"><img src="https://img.shields.io/github/last-commit/your-username/DownloadIntegrator.svg" alt="last commit"></a>
 </p>
 
 <p align="center">
