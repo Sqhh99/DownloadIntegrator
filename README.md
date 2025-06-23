@@ -17,9 +17,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Sqhh99/DownloadIntegrator/blob/main/README.md">简体中文</a> |
-  <a href="https://github.com/Sqhh99/DownloadIntegrator/blob/main/README.en.md">English</a> |
-  <a href="https://github.com/Sqhh99/DownloadIntegrator/blob/main/README.ja.md">日本語</a>
+  <a href="./README.md">简体中文</a> |
+  <a href="./README.en.md">English</a> |
+  <a href="./README.ja.md">日本語</a>
 </p>
 
 ---
