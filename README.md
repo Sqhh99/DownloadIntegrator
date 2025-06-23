@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="" alt="DownloadIntegrator Logo" width="200">
+  <img src="https://github.com/user-attachments/assets/e8aceb6b-2534-4aaf-a757-020b654aa285" alt="DownloadIntegrator Logo" width="200">
   
   <h1>DownloadIntegrator</h1>
 
