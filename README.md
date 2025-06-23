@@ -1,43 +1,68 @@
-# DownloadIntegrator
+<div align="center">
 
-基于 Qt 开发的游戏修改器下载管理工具，支持智能中文搜索。
+  <img src="" alt="DownloadIntegrator Logo" width="200">
+  
+  <h1>DownloadIntegrator</h1>
 
-## 🚀 主要功能
+  <strong>基于 Qt 开发的游戏修改器下载管理工具，支持智能中文搜索</strong>
 
-- 🔍 **中文搜索**: 支持中文游戏名搜索，自动映射为英文
-- 📥 **一键下载管理**: 自动下载、分类管理修改器文件
-- 🌍 **多语言界面**: 支持中文、英文、日文界面
-- 🎨 **多主题支持**: 浅色、Windows 11、经典、多彩主题
-- 🔄 **自动更新检测**: 实时检查修改器更新状态
+</div>
 
-## � 软件界面
+<p align="center">
+    <a href="https://github.com/your-username/DownloadIntegrator/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="license"></a>
+    <a href="https://github.com/your-username/DownloadIntegrator/stargazers"><img src="https://img.shields.io/github/stars/your-username/DownloadIntegrator.svg?style=flat" alt="stars"></a>
+    <a href="https://github.com/your-username/DownloadIntegrator/releases"><img src="https://img.shields.io/github/downloads/your-username/DownloadIntegrator/total.svg?style=flat" alt="downloads"></a>
+    <a href="https://github.com/your-username/DownloadIntegrator/releases/latest"><img src="https://img.shields.io/github/v/release/your-username/DownloadIntegrator.svg" alt="release"></a>
+    <a href="https://github.com/your-username/DownloadIntegrator/commits/main"><img src="https://img.shields.io/github/last-commit/your-username/DownloadIntegrator.svg" alt="last commit"></a>
+</p>
+
+<p align="center">
+  <a href="#">简体中文</a> |
+  <a href="#">English</a> |
+  <a href="#">日本語</a>
+</p>
+
+---
+
+## 🚀 主要功能 (Features)
+
+- 🎨 **现代化用户界面**: 支持浅色、Windows 11、经典、多彩等多种主题。
+- 🔍 **智能中文搜索**: 支持中文游戏名搜索，并能自动映射为英文进行查找。
+- 📥 **一键下载管理**: 自动下载、分类并管理所有修改器文件。
+- 🌍 **多语言界面**: 内置简体中文、英文、日文支持。
+- 🔄 **自动更新检测**: 实时检查并提示修改器的可用更新。
+
+## 🖥️ 软件界面 (Screenshot)
 
 ![image](https://github.com/user-attachments/assets/7939aa55-7958-49bb-a076-bceef6ca682c)
 
-## 📋 系统要求
+## 📋 系统要求 (Requirements)
 
 - Windows 10 或更高版本
-- 软件已静态链接所有必需库，无需额外安装依赖
+- 软件已静态链接所有必需库，无需额外安装任何依赖项
 
-## 📦 快速开始
+## 📦 快速开始 (Quick Start)
 
-1. 从 [Releases 页面](../../releases) 下载最新版本 v2.1.0
-2. 解压并运行安装程序  
-3. 启动软件，输入中文游戏名即可搜索
+1.  从 **[Releases 页面](../../releases)** 下载最新版本
+2.  解压并运行 `DownloadIntegrator.exe`
+3.  启动软件，在搜索框输入中文游戏名即可开始搜索
 
-## 🔧 开发环境
+## 🔧 开发环境 (Development)
 
-- Qt 6.6.3+
-- CMake 3.16+
-- MSVC 2019+
+- **Qt**: 6.6.3+
+- **Compiler**: MSVC 2019+
+- **Build System**: CMake 3.16+
 
-## 📄 开源协议
+## 📄 开源协议 (License)
 
-本项目基于 MIT 协议开源，详见 [LICENSE](LICENSE) 文件。
+本项目基于 MIT 协议开源，详情请参阅 [LICENSE](LICENSE) 文件。
 
-## 📞 问题反馈
+## 📞 问题反馈 (Feedback)
 
-如遇问题请在 GitHub 创建 [Issue](../../issues)
+如在使用过程中遇到任何问题，欢迎在 GitHub 创建 **[Issue](../../issues)**。
 
 ---
-**Made with ❤️ using Qt and C++**
+
+<p align="center">
+  <strong>Made with ❤️ using Qt and C++</strong>
+</p>
