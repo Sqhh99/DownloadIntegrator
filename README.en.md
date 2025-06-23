@@ -34,7 +34,8 @@
 
 ## 🖥️ Screenshot
 
-![image](https://github.com/user-attachments/assets/7939aa55-7958-49bb-a076-bceef6ca682c)
+![image](https://github.com/user-attachments/assets/df514f5d-cddc-476a-ac35-dac939eed2c0)
+
 
 ## 📋 Requirements
 
