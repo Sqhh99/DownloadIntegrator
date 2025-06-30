@@ -125,6 +125,24 @@ if(MSVC)
         $<$<CONFIG:Release>:/GL>  # 全程序优化
         $<$<CONFIG:Release>:/Oi>  # 内联函数优化
     )
+    
+    # 添加安全编译选项以减少误报
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        /GS          # 栈保护 (Buffer Security Check)
+        /guard:cf    # 控制流保护 (Control Flow Guard)
+    )
+    
+    # 添加安全链接选项
+    target_link_options(${PROJECT_NAME} PRIVATE
+        /DYNAMICBASE    # 地址空间布局随机化 (ASLR)
+        /NXCOMPAT       # 数据执行保护 (DEP)
+        /LARGEADDRESSAWARE  # 大地址感知
+    )
+    
+    # SAFESEH 仅适用于 32位 目标
+    if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+        target_link_options(${PROJECT_NAME} PRIVATE /SAFESEH)
+    endif()
 endif()
 
 # CURL静态链接配置
