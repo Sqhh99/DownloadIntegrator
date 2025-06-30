@@ -4,7 +4,7 @@
   
   <h1>DownloadIntegrator</h1>
 
-  <strong>基于 Qt 开发的游戏修改器下载管理工具，支持智能中文搜索</strong>
+  <strong>A game trainer download manager built with Qt, featuring intelligent Chinese search.</strong>
 
 </div>
 
@@ -24,42 +24,43 @@
 
 ---
 
-## 🚀 主要功能 (Features)
+## 🚀 Features
 
-- 🎨 **现代化用户界面**: 支持浅色、Windows 11、经典、多彩等多种主题。
-- 🔍 **智能中文搜索**: 支持中文游戏名搜索，并能自动映射为英文进行查找。
-- 📥 **一键下载管理**: 自动下载、分类并管理所有修改器文件。
-- 🌍 **多语言界面**: 内置简体中文、英文、日文支持。
-- 🔄 **自动更新检测**: 实时检查并提示修改器的可用更新。
+- 🎨 **Modern User Interface**: Supports multiple themes including Light, Windows 11, Classic, and Colorful.
+- 🔍 **Smart Chinese Search**: Search using Chinese game titles, which are automatically mapped to English for lookup.
+- 📥 **One-Click Download Management**: Automatically downloads, categorizes, and manages all trainer files.
+- 🌍 **Multi-language UI**: Built-in support for Simplified Chinese, English, and Japanese.
+- 🔄 **Automatic Update Detection**: Checks for and notifies about available trainer updates in real-time.
 
-## 🖥️ 软件界面 (Screenshot)
+## 🖥️ Screenshot
 
-![image](https://github.com/user-attachments/assets/7939aa55-7958-49bb-a076-bceef6ca682c)
+![image](https://github.com/user-attachments/assets/df514f5d-cddc-476a-ac35-dac939eed2c0)
 
-## 📋 系统要求 (Requirements)
 
-- Windows 10 或更高版本
-- 软件已静态链接所有必需库，无需额外安装任何依赖项
+## 📋 Requirements
 
-## 📦 快速开始 (Quick Start)
+- Windows 10 or higher
+- The software is statically linked with all necessary libraries; no additional dependencies are required.
 
-1.  从 **[Releases 页面](../../releases)** 下载最新版本
-2.  解压并运行 `DownloadIntegrator.exe`
-3.  启动软件，在搜索框输入中文游戏名即可开始搜索
+## 📦 Quick Start
 
-## 🔧 开发环境 (Development)
+1.  Download the latest version from the **[Releases Page](../../releases)**.
+2.  Unzip and run `DownloadIntegrator.exe`.
+3.  Launch the software and enter a Chinese game title in the search box to begin.
+
+## 🔧 Development
 
 - **Qt**: 6.6.3+
 - **Compiler**: MSVC 2019+
 - **Build System**: CMake 3.16+
 
-## 📄 开源协议 (License)
+## 📄 License
 
-本项目基于 MIT 协议开源，详情请参阅 [LICENSE](LICENSE) 文件。
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## 📞 问题反馈 (Feedback)
+## 📞 Feedback
 
-如在使用过程中遇到任何问题，欢迎在 GitHub 创建 **[Issue](../../issues)**。
+If you encounter any issues, please create an **[Issue](../../issues)** on GitHub.
 
 ---
 
