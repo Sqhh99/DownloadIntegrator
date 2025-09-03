@@ -66,13 +66,13 @@
       <item>
        <widget class="QPushButton" name="refreshButton">
         <property name="toolTip">
-         <string>从网站获取最新修改器列表</string>
+         <string>清除搜索结果，显示所有最新修改器列表</string>
         </property>
         <property name="text">
-         <string>最近更新</string>
+         <string>显示全部</string>
         </property>
         <property name="icon">
-         <iconset resource="../resources/resources.qrc">
+         <iconset>
           <normaloff>:/icons/refresh.png</normaloff>:/icons/refresh.png</iconset>
         </property>
        </widget>
@@ -82,7 +82,7 @@
     <item>
      <widget class="QSplitter" name="mainSplitter">
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Orientation::Horizontal</enum>
       </property>
       <widget class="QWidget" name="leftWidget" native="true">
        <layout class="QVBoxLayout" name="leftLayout">
@@ -242,8 +242,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1200</width>
-     <height>22</height>
+     <width>1133</width>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -268,6 +268,8 @@
    </property>
   </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="../resources/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

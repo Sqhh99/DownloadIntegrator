@@ -319,6 +319,16 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     // 设置信号和槽连接
     connect(ui->searchButton, &QPushButton::clicked, this, &DownloadIntegrator::onSearchClicked);
     connect(ui->searchEdit, &QLineEdit::returnPressed, this, &DownloadIntegrator::onSearchClicked);
+    
+    // 添加搜索框文本变化的监听，支持清除搜索回到初始列表
+    connect(ui->searchEdit, &QLineEdit::textChanged, this, [this](const QString& text) {
+        if (text.isEmpty()) {
+            // 当搜索框被清空时，显示初始的修改器列表
+            qDebug() << "搜索框已清空，恢复到初始修改器列表";
+            showStatusMessage(tr("正在加载初始修改器列表..."));
+            SearchManager::getInstance().fetchRecentlyUpdatedModifiers(this, &DownloadIntegrator::onSearchCompleted);
+        }
+    });
     connect(ui->modifierTable, &QTableWidget::cellClicked, this, &DownloadIntegrator::onModifierItemClicked);
     connect(ui->downloadButton, &QPushButton::clicked, this, &DownloadIntegrator::onDownloadButtonClicked);
     connect(ui->openFolderButton, &QPushButton::clicked, this, &DownloadIntegrator::onOpenFolderButtonClicked);
@@ -329,8 +339,8 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
             this, &DownloadIntegrator::onVersionSelectionChanged);
     connect(ui->sortComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &DownloadIntegrator::onSortOrderChanged);
-    // 刷新按钮连接 - 临时注释掉，直到修复UI元素问题
-    // connect(ui->refreshButton, &QPushButton::clicked, this, &DownloadIntegrator::onRefreshButtonClicked);
+    // 重新启用刷新按钮连接
+    connect(ui->refreshButton, &QPushButton::clicked, this, &DownloadIntegrator::onRefreshButtonClicked);
             
     // 连接菜单动作
     connect(ui->actionExit, &QAction::triggered, this, &QWidget::close);
@@ -2439,7 +2449,8 @@ void DownloadIntegrator::onRefreshButtonClicked()
 {
     qDebug() << "刷新按钮被点击，正在获取最新修改器列表...";
     
-    // 禁用刷新功能，直到修复UI元素问题
+    // 清空搜索框，触发回到初始列表
+    ui->searchEdit->clear();
     
     // 显示加载中状态
     QApplication::setOverrideCursor(Qt::WaitCursor);
