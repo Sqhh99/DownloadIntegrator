@@ -138,11 +138,11 @@
         </item>
         <item>
          <widget class="QGroupBox" name="coverGroup">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>200</height>
-           </size>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
           <property name="title">
            <string></string>
@@ -169,7 +169,7 @@
            <item>
             <widget class="QLabel" name="gameCoverLabel">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
@@ -178,7 +178,7 @@
               <string></string>
              </property>
              <property name="alignment">
-              <set>Qt::AlignCenter</set>
+              <set>Qt::AlignLeft|Qt::AlignTop</set>
              </property>
              <property name="styleSheet">
               <string>QLabel {

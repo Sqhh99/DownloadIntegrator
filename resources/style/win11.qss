@@ -421,4 +421,84 @@ QToolTip {
     padding: 6px 10px;
     color: #202020;
     opacity: 230;
+}
+
+/* 已下载修改器表格样式 */
+QTableWidget#downloadedTable {
+    background-color: #ffffff;
+    border: 1px solid #d9d9d9;
+    border-radius: 10px;
+    selection-background-color: #e1efff;
+    selection-color: #000000;
+}
+
+QTableWidget#downloadedTable::item {
+    padding: 8px;
+    border-bottom: 1px solid #ebebeb;
+}
+
+QTableWidget#downloadedTable::item:selected {
+    background-color: #e1efff;
+    color: #000000;
+}
+
+/* 已下载修改器按钮样式 - Win11 风格 */
+QPushButton#runButton {
+    background-color: #16c60c;
+    color: white;
+    border: 1px solid #12b408;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+QPushButton#runButton:hover {
+    background-color: #14b309;
+    border: 1px solid #12b408;
+}
+
+QPushButton#runButton:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    border: 1px solid #cccccc;
+}
+
+QPushButton#deleteButton {
+    background-color: #d13438;
+    color: white;
+    border: 1px solid #c42b1c;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+QPushButton#deleteButton:hover {
+    background-color: #c42b1c;
+    border: 1px solid #c42b1c;
+}
+
+QPushButton#deleteButton:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    border: 1px solid #cccccc;
+}
+
+QPushButton#checkUpdateButton {
+    background-color: #0078d4;
+    color: white;
+    border: 1px solid #106ebe;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+QPushButton#checkUpdateButton:hover {
+    background-color: #106ebe;
+    border: 1px solid #106ebe;
+}
+
+QPushButton#checkUpdateButton:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    border: 1px solid #cccccc;
 } 

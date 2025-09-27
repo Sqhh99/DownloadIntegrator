@@ -51,6 +51,9 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     // 设置UI
     ui->setupUi(this);
     
+    // 初始隐藏右侧详情面板，直到用户选择修改器
+    ui->rightWidget->hide();
+    
     // 设置分割条初始比例为2:1（左边比右边稍多一些）
     ui->mainSplitter->setSizes({600, 400}); // 2:1的比例
     ui->mainSplitter->setStretchFactor(0, 2); // 左侧拉伸因子为2
@@ -116,19 +119,8 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     m_downloadedTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Fixed);
     m_downloadedTable->horizontalHeader()->setDefaultAlignment(Qt::AlignCenter); // 居中对齐表头
     m_downloadedTable->horizontalHeader()->setHighlightSections(true); // 高亮显示选中的表头
-    m_downloadedTable->horizontalHeader()->setStyleSheet(
-        "QHeaderView::section {"
-        "   background-color: #3c4b64;"
-        "   color: white;"
-        "   padding: 8px;"
-        "   font-weight: bold;"
-        "   border: 1px solid #2c3e50;"
-        "   font-size: 14px;"
-        "}"
-        "QHeaderView::section:hover {"
-        "   background-color: #34495e;"
-        "}"
-    );
+    // 移除固定样式，让其跟随主题
+    m_downloadedTable->setObjectName("downloadedTable");
     
     m_downloadedTable->setColumnWidth(0, 300); // 修改器名称列宽
     m_downloadedTable->setColumnWidth(1, 150); // 版本列宽
@@ -145,30 +137,8 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     m_downloadedTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
     m_downloadedTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Fixed);
     
-    // 设置表格样式
-    m_downloadedTable->setStyleSheet(
-        "QTableWidget {"
-        "   border: 1px solid #dcdcdc;"
-        "   border-radius: 4px;"
-        "   background-color: #ffffff;"
-        "   selection-background-color: #e7f4ff;"
-        "   selection-color: #000000;"
-        "}"
-        "QTableWidget::item {"
-        "   padding: 5px;"
-        "   border-bottom: 1px solid #f0f0f0;"
-        "}"
-        "QTableWidget::item:selected {"
-        "   background-color: #e7f4ff;"
-        "   color: #000000;"
-        "}"
-        "QHeaderView::section {"
-        "   background-color: #f5f5f5;"
-        "   padding: 5px;"
-        "   border: 1px solid #dcdcdc;"
-        "   font-weight: bold;"
-        "}"
-    );
+    // 移除固定表格样式，让主题系统管理
+    // 表格样式现在由主题文件控制
     
     // 设置行高
     m_downloadedTable->verticalHeader()->setDefaultSectionSize(36); // 增加行高以提高可读性
@@ -179,71 +149,23 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     
     // 创建按钮并设置样式
     m_runButton = new QPushButton(tr("运行"), m_downloadedTab);
+    m_runButton->setObjectName("runButton");
     m_runButton->setIcon(QIcon(":/icons/play.png")); // 如果有图标资源
     m_runButton->setMinimumWidth(100);
     m_runButton->setCursor(Qt::PointingHandCursor);
-    m_runButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: #4CAF50;"
-        "   color: white;"
-        "   border: none;"
-        "   padding: 6px 12px;"
-        "   border-radius: 4px;"
-        "   font-weight: bold;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: #45a049;"
-        "}"
-        "QPushButton:disabled {"
-        "   background-color: #cccccc;"
-        "   color: #666666;"
-        "}"
-    );
     
     m_deleteButton = new QPushButton(tr("删除"), m_downloadedTab);
+    m_deleteButton->setObjectName("deleteButton");
     m_deleteButton->setIcon(QIcon(":/icons/delete.png")); // 如果有图标资源
     m_deleteButton->setMinimumWidth(100);
     m_deleteButton->setCursor(Qt::PointingHandCursor);
-    m_deleteButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: #f44336;"
-        "   color: white;"
-        "   border: none;"
-        "   padding: 6px 12px;"
-        "   border-radius: 4px;"
-        "   font-weight: bold;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: #d32f2f;"
-        "}"
-        "QPushButton:disabled {"
-        "   background-color: #cccccc;"
-        "   color: #666666;"
-        "}"
-    );
     
     // 添加"检查更新"按钮
     m_checkUpdateButton = new QPushButton(tr("检查更新"), m_downloadedTab);
+    m_checkUpdateButton->setObjectName("checkUpdateButton");
     m_checkUpdateButton->setIcon(QIcon(":/icons/update.png")); // 如果有图标资源
     m_checkUpdateButton->setMinimumWidth(100);
     m_checkUpdateButton->setCursor(Qt::PointingHandCursor);
-    m_checkUpdateButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: #2196F3;"
-        "   color: white;"
-        "   border: none;"
-        "   padding: 6px 12px;"
-        "   border-radius: 4px;"
-        "   font-weight: bold;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: #1976D2;"
-        "}"
-        "QPushButton:disabled {"
-        "   background-color: #cccccc;"
-        "   color: #666666;"
-        "}"
-    );
     
     // 初始禁用按钮
     m_runButton->setEnabled(false);
@@ -301,7 +223,7 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     ui->modifierTable->setShowGrid(false); // 隐藏网格线
     
     // 设置窗口标题和图标
-    setWindowTitle("游戏修改器下载集成工具");
+    setWindowTitle(tr("游戏修改器下载集成工具"));
     // 设置窗口图标（如果有的话）
     // setWindowIcon(QIcon(":/icons/app_icon.png"));
     
@@ -309,7 +231,7 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     setupSearchCompleter();
     
     // 优化状态栏显示
-    QLabel* statusLabel = new QLabel("就绪");
+    QLabel* statusLabel = new QLabel(tr("就绪"));
     statusLabel->setObjectName("statusLabel");
     statusLabel->setMargin(3);
     ui->statusbar->addWidget(statusLabel);
@@ -653,10 +575,11 @@ void DownloadIntegrator::updateModifierDetail()
             else {
                 // 如果没有任何类别标题但遇到了选项，创建一个默认类别
                 if (!inCategory) {
-                    optionsHtml += "<div class='category'>"
+                    optionsHtml += QString("<div class='category'>"
                                  "<h4 style='margin: 0; padding: 8px 10px; background-color: #3c4b64; color: white; "
-                                 "border-radius: 4px; font-size: 14px;'>基本选项</h4>"
-                                 "<div style='padding: 10px 5px 5px 5px;'>";
+                                 "border-radius: 4px; font-size: 14px;'>%1</h4>"
+                                 "<div style='padding: 10px 5px 5px 5px;'>")
+                                 .arg(tr("基本选项"));
                     inCategory = true;
                 }
                 
@@ -794,8 +717,13 @@ void DownloadIntegrator::setGameCoverWithAspectRatio(const QPixmap& cover)
 {
     if (cover.isNull()) {
         ui->gameCoverLabel->clear();
+        // 重置Label尺寸
         ui->gameCoverLabel->setMinimumSize(120, 160); // 设置一个默认的最小尺寸
         ui->gameCoverLabel->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+        
+        // 重置coverGroup高度为默认值
+        ui->coverGroup->setMinimumHeight(180);
+        ui->coverGroup->setMaximumHeight(QWIDGETSIZE_MAX);
         return;
     }
     
@@ -814,15 +742,20 @@ void DownloadIntegrator::setGameCoverWithAspectRatio(const QPixmap& cover)
                     .arg(finalPixmap.width()).arg(finalPixmap.height());
     }
     
-    // 设置Label的尺寸为最终图片的尺寸
-    QSize finalSize = finalPixmap.size();
-    ui->gameCoverLabel->setFixedSize(finalSize);
+    // 不再固定Label尺寸，让其根据内容自适应
+    ui->gameCoverLabel->setMinimumSize(finalPixmap.size());
+    ui->gameCoverLabel->setMaximumSize(finalPixmap.size());
     
     // 设置像素图
     ui->gameCoverLabel->setPixmap(finalPixmap);
     
-    qDebug() << QString("设置封面: 最终尺寸(%1x%2)，Label尺寸已调整为相同大小")
-                .arg(finalSize.width()).arg(finalSize.height());
+    // 调整coverGroup高度以适应封面
+    QSize finalSize = finalPixmap.size();
+    ui->coverGroup->setMinimumHeight(finalSize.height() + 20); // 加20像素的边距
+    ui->coverGroup->setMaximumHeight(finalSize.height() + 20);
+    
+    qDebug() << QString("设置封面: 最终尺寸(%1x%2)，coverGroup高度已调整为%3")
+                .arg(finalSize.width()).arg(finalSize.height()).arg(finalSize.height() + 20);
 }
 
 // 获取下载目录
@@ -1234,6 +1167,12 @@ void DownloadIntegrator::onModifierItemClicked(int row, int column)
         if (url.isEmpty()) {
             showStatusMessage("修改器URL为空，无法获取详情", 3000);
             return;
+        }
+        
+        // 显示右侧详情面板
+        if (ui->rightWidget->isHidden()) {
+            ui->rightWidget->show();
+            qDebug() << "右侧详情面板已显示";
         }
         
         // 显示加载中状态

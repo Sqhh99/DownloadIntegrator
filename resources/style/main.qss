@@ -230,4 +230,78 @@ QHBoxLayout#searchLayout {
     border-bottom: 1px solid #e6e7e8;
     padding-bottom: 5px;
     margin-bottom: 5px;
+}
+
+/* 已下载修改器表格样式 */
+QTableWidget#downloadedTable {
+    background-color: white;
+    border: 1px solid #dcdcdc;
+    border-radius: 4px;
+    selection-background-color: #e7f4ff;
+    selection-color: #000000;
+}
+
+QTableWidget#downloadedTable::item {
+    padding: 5px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+QTableWidget#downloadedTable::item:selected {
+    background-color: #e7f4ff;
+    color: #000000;
+}
+
+/* 已下载修改器按钮样式 */
+QPushButton#runButton {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+QPushButton#runButton:hover {
+    background-color: #45a049;
+}
+
+QPushButton#runButton:disabled {
+    background-color: #cccccc;
+    color: #666666;
+}
+
+QPushButton#deleteButton {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+QPushButton#deleteButton:hover {
+    background-color: #d32f2f;
+}
+
+QPushButton#deleteButton:disabled {
+    background-color: #cccccc;
+    color: #666666;
+}
+
+QPushButton#checkUpdateButton {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+QPushButton#checkUpdateButton:hover {
+    background-color: #1976D2;
+}
+
+QPushButton#checkUpdateButton:disabled {
+    background-color: #cccccc;
+    color: #666666;
 } 
