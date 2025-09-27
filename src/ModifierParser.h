@@ -4,6 +4,7 @@
 #include <QList>
 #include <QPair>
 #include <QStringList>
+#include <QPixmap>
 
 // 游戏修改器信息结构
 struct ModifierInfo {
@@ -15,6 +16,8 @@ struct ModifierInfo {
     QList<QPair<QString, QString>> versions; // <版本标识, 下载链接>
     QStringList options; // 修改器提供的功能选项
     QString url; // 详情页URL，用于加载详细信息
+    QString screenshotUrl; // 修改器截图URL，用于提取游戏封面
+    QPixmap gameCover; // 提取的游戏封面
 };
 
 class ModifierParser {

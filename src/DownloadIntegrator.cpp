@@ -26,6 +26,7 @@
 #include "SearchManager.h"
 #include "ThemeManager.h"
 #include "LanguageManager.h"
+#include "CoverExtractor.h"
 
 // HTML解析库
 #include <pugixml.hpp>
@@ -43,6 +44,7 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     , m_downloadedTable(nullptr)
     , m_runButton(nullptr)
     , m_deleteButton(nullptr)
+    , m_coverExtractor(nullptr)
 {
     qDebug() << "开始初始化界面...";
     
@@ -333,8 +335,6 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     connect(ui->downloadButton, &QPushButton::clicked, this, &DownloadIntegrator::onDownloadButtonClicked);
     connect(ui->openFolderButton, &QPushButton::clicked, this, &DownloadIntegrator::onOpenFolderButtonClicked);
     connect(ui->settingsButton, &QPushButton::clicked, this, &DownloadIntegrator::onSettingsButtonClicked);
-    connect(ui->autoUpdateVersion, &QRadioButton::toggled, this, &DownloadIntegrator::onVersionTypeChanged);
-    connect(ui->standaloneVersion, &QRadioButton::toggled, this, &DownloadIntegrator::onVersionTypeChanged);
     connect(ui->versionSelect, QOverload<int>::of(&QComboBox::currentIndexChanged), 
             this, &DownloadIntegrator::onVersionSelectionChanged);
     connect(ui->sortComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -360,10 +360,13 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     
     qDebug() << "界面初始化完成，准备加载修改器列表";
     
+    // 初始化封面提取器
+    m_coverExtractor = new CoverExtractor(this);
+    
     // 加载已下载修改器列表
     updateDownloadedModifiersList();
     
-    // 加载修改器列表 - 使用SearchManager获取最近更新的修改器列表
+    // 加载修改器列表 - 使用SearchManager获取最新修改器列表
     qDebug() << "正在调用SearchManager.fetchRecentlyUpdatedModifiers获取最新修改器列表...";
     SearchManager::getInstance().fetchRecentlyUpdatedModifiers(this, &DownloadIntegrator::onSearchCompleted);
     
@@ -736,8 +739,45 @@ void DownloadIntegrator::updateModifierDetail()
         ui->versionSelect->addItem(version.first);
     }
     
-    // 启用下载按钮
+    // 启用下载按钮和版本选择框
     ui->downloadButton->setEnabled(!currentModifier->versions.isEmpty());
+    ui->versionSelect->setEnabled(!currentModifier->versions.isEmpty());
+    
+    // 提取游戏封面
+    if (!currentModifier->screenshotUrl.isEmpty()) {
+        qDebug() << "开始提取游戏封面：" << currentModifier->screenshotUrl;
+        
+        // 生成游戏ID用于缓存
+        QString gameId = currentModifier->name.toLower().replace(QRegularExpression("[^a-z0-9]"), "_");
+        
+        // 先检查缓存
+        QPixmap cachedCover = CoverExtractor::getCachedCover(gameId);
+        if (!cachedCover.isNull()) {
+            // 设置封面并保持纵横比
+            setGameCoverWithAspectRatio(cachedCover);
+            qDebug() << "从缓存加载游戏封面";
+        } else {
+            // 异步提取封面
+            m_coverExtractor->extractCoverFromTrainerImage(currentModifier->screenshotUrl, 
+                [this, gameId](const QPixmap& cover, bool success) {
+                    if (success && !cover.isNull()) {
+                        // 设置封面并保持纵横比
+                        setGameCoverWithAspectRatio(cover);
+                        // 保存到缓存
+                        CoverExtractor::saveCoverToCache(gameId, cover);
+                        qDebug() << "游戏封面提取成功";
+                    } else {
+                        // 失败时显示空白
+                        ui->gameCoverLabel->clear();
+                        qDebug() << "游戏封面提取失败";
+                    }
+                });
+        }
+    } else {
+        // 没有截图URL时显示空白
+        ui->gameCoverLabel->clear();
+        qDebug() << "修改器没有截图URL，无法提取游戏封面";
+    }
     
     qDebug() << "修改器详情更新完成";
 }
@@ -747,6 +787,42 @@ void DownloadIntegrator::showStatusMessage(const QString& message, int timeout)
 {
     // 使用UIHelper显示状态消息
     UIHelper::showStatusMessage(ui->statusbar, message, timeout);
+}
+
+// 设置游戏封面并保持图片原始大小
+void DownloadIntegrator::setGameCoverWithAspectRatio(const QPixmap& cover)
+{
+    if (cover.isNull()) {
+        ui->gameCoverLabel->clear();
+        ui->gameCoverLabel->setMinimumSize(120, 160); // 设置一个默认的最小尺寸
+        ui->gameCoverLabel->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+        return;
+    }
+    
+    // 设置合理的最大尺寸限制（进一步缩小）
+    const int MAX_WIDTH = 160;
+    const int MAX_HEIGHT = 240;
+    
+    QPixmap finalPixmap = cover;
+    QSize originalSize = cover.size();
+    
+    // 如果图片超过最大尺寸，按比例缩放
+    if (originalSize.width() > MAX_WIDTH || originalSize.height() > MAX_HEIGHT) {
+        finalPixmap = cover.scaled(MAX_WIDTH, MAX_HEIGHT, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        qDebug() << QString("封面过大，已缩放: 原始尺寸(%1x%2) -> 缩放后(%3x%4)")
+                    .arg(originalSize.width()).arg(originalSize.height())
+                    .arg(finalPixmap.width()).arg(finalPixmap.height());
+    }
+    
+    // 设置Label的尺寸为最终图片的尺寸
+    QSize finalSize = finalPixmap.size();
+    ui->gameCoverLabel->setFixedSize(finalSize);
+    
+    // 设置像素图
+    ui->gameCoverLabel->setPixmap(finalPixmap);
+    
+    qDebug() << QString("设置封面: 最终尺寸(%1x%2)，Label尺寸已调整为相同大小")
+                .arg(finalSize.width()).arg(finalSize.height());
 }
 
 // 获取下载目录
@@ -1169,6 +1245,9 @@ void DownloadIntegrator::onModifierItemClicked(int row, int column)
         ui->modifierOptions->clear();
         ui->modifierOptions->setPlainText("加载中...");
         
+        // 设置游戏封面加载状态
+        ui->gameCoverLabel->clear();
+        
         // 加载详细信息
         ModifierManager::getInstance().getModifierDetail(url, [this](ModifierInfo* modifier) {
             // 替换旧的详情
@@ -1223,17 +1302,10 @@ void DownloadIntegrator::onDownloadButtonClicked()
     QString fileName = sanitizedName + "_v";
     
     // 添加版本号
-    if (ui->autoUpdateVersion->isChecked() && !currentModifier->versions.isEmpty()) {
-        // 使用最新版本
-        fileName += currentModifier->versions.first().first;
-    } else if (ui->standaloneVersion->isChecked() && ui->versionSelect->currentIndex() >= 0) {
+    if (ui->versionSelect->currentIndex() >= 0 && ui->versionSelect->currentIndex() < currentModifier->versions.size()) {
         // 使用选定版本
         int index = ui->versionSelect->currentIndex();
-        if (index < currentModifier->versions.size()) {
-            fileName += currentModifier->versions[index].first;
-        } else {
-            fileName += "unknown";
-        }
+        fileName += currentModifier->versions[index].first;
     } else {
         fileName += "latest";
     }
@@ -1241,15 +1313,13 @@ void DownloadIntegrator::onDownloadButtonClicked()
     // 确定下载URL
     QString downloadUrl;
     
-    if (ui->autoUpdateVersion->isChecked() && !currentModifier->versions.isEmpty()) {
-        // 使用最新版本的URL
-        downloadUrl = currentModifier->versions.first().second;
-    } else if (ui->standaloneVersion->isChecked() && ui->versionSelect->currentIndex() >= 0) {
+    if (ui->versionSelect->currentIndex() >= 0 && ui->versionSelect->currentIndex() < currentModifier->versions.size()) {
         // 使用选定版本的URL
         int index = ui->versionSelect->currentIndex();
-        if (index < currentModifier->versions.size()) {
-            downloadUrl = currentModifier->versions[index].second;
-        }
+        downloadUrl = currentModifier->versions[index].second;
+    } else if (!currentModifier->versions.isEmpty()) {
+        // 默认使用最新版本的URL
+        downloadUrl = currentModifier->versions.first().second;
     }
     
     // 检查URL是否有效
@@ -1370,10 +1440,10 @@ void DownloadIntegrator::onDownloadButtonClicked()
                                                
                         // 获取版本信息
                         QString version;
-                        if (ui->autoUpdateVersion->isChecked() && !modifier.versions.isEmpty()) {
-                            version = modifier.versions.first().first;
-                        } else if (ui->standaloneVersion->isChecked() && ui->versionSelect->currentIndex() >= 0) {
+                        if (ui->versionSelect->currentIndex() >= 0 && ui->versionSelect->currentIndex() < modifier.versions.size()) {
                             version = ui->versionSelect->currentText();
+                        } else if (!modifier.versions.isEmpty()) {
+                            version = modifier.versions.first().first;
                         }
                         
                         // 添加到已下载修改器列表 - 使用实际的文件路径
@@ -1495,14 +1565,15 @@ void DownloadIntegrator::onSettingsButtonClicked()
 // 版本类型改变
 void DownloadIntegrator::onVersionTypeChanged(bool checked)
 {
-    ui->versionSelect->setEnabled(ui->standaloneVersion->isChecked());
-    qDebug() << "版本类型更改：" << (ui->standaloneVersion->isChecked() ? "独立版本" : "自动更新版本");
+    // 版本选择框总是启用的
+    ui->versionSelect->setEnabled(true);
+    qDebug() << "版本选择框已启用";
 }
 
 // 版本选择改变
 void DownloadIntegrator::onVersionSelectionChanged(int index)
 {
-    if (index >= 0 && ui->standaloneVersion->isChecked()) {
+    if (index >= 0) {
         qDebug() << "版本选择更改为索引：" << index;
     }
 }
@@ -2121,10 +2192,10 @@ void DownloadIntegrator::downloadModifier(const QString& url, const QString& fil
                                            
                     // 获取版本信息
                     QString version;
-                    if (ui->autoUpdateVersion->isChecked() && !modifier.versions.isEmpty()) {
-                        version = modifier.versions.first().first;
-                    } else if (ui->standaloneVersion->isChecked() && ui->versionSelect->currentIndex() >= 0) {
+                    if (ui->versionSelect->currentIndex() >= 0 && ui->versionSelect->currentIndex() < modifier.versions.size()) {
                         version = ui->versionSelect->currentText();
+                    } else if (!modifier.versions.isEmpty()) {
+                        version = modifier.versions.first().first;
                     }
                     
                     // 添加到已下载修改器列表 - 使用实际的文件路径
@@ -2384,16 +2455,13 @@ void DownloadIntegrator::retranslateUi() {
     QTableWidgetItem *item3 = ui->modifierTable->horizontalHeaderItem(3);
     if (item3) item3->setText(tr("选项数量"));
     
-    // 更新版本信息区
-    ui->versionGroup->setTitle(tr("版本信息"));
+    // 更新版本信息标签（现在在封面组中）
     ui->versionInfo->setText(tr("游戏版本："));
     ui->optionsCount->setText(tr("修改器选项："));
     ui->lastUpdate->setText(tr("最后更新："));
     
     // 更新下载选项区
-    ui->downloadGroup->setTitle(tr("下载选项"));
-    ui->autoUpdateVersion->setText(tr("自动更新版本"));
-    ui->standaloneVersion->setText(tr("独立版本"));
+    ui->downloadGroup->setTitle(tr("版本选择"));
     
     // 更新修改器选项文本
     ui->modifierOptions->setPlaceholderText(tr("修改器功能选项列表..."));

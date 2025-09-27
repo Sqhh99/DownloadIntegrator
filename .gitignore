@@ -71,6 +71,7 @@ release/
 build/
 bin/
 release-package/
+GameModMaster/
 
 # User-specific files
 *.user

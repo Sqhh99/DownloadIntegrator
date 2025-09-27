@@ -220,6 +220,15 @@ QList<ModifierInfo> ModifierParser::parseModifierListHTML(const std::string& htm
                     // 确保初始化optionsCount为0，避免未初始化的值
                     modifier.optionsCount = 0;
                     
+                    // 提取修改器截图URL用于封面提取
+                    QRegularExpression screenshotRegex("<img[^>]*src=\"([^\"]*\\.(?:jpg|png|gif))\"[^>]*>", 
+                                                      QRegularExpression::CaseInsensitiveOption);
+                    QRegularExpressionMatch screenshotMatch = screenshotRegex.match(articleHtml);
+                    if (screenshotMatch.hasMatch()) {
+                        modifier.screenshotUrl = screenshotMatch.captured(1);
+                        qDebug() << "  找到截图URL：" << modifier.screenshotUrl;
+                    }
+                    
                     // 对title也进行HTML实体解码，用于后续匹配
                     QString decodedTitle = decodeHtmlEntities(title);
                     
@@ -771,6 +780,37 @@ ModifierInfo* ModifierParser::parseModifierDetailHTML(const std::string& html, c
             qDebug() << "未找到选项数量标记，使用示例选项数量：" << modifier->optionsCount;
         }
         
+        // 提取修改器截图URL用于游戏封面提取
+        qDebug() << "开始搜索修改器截图URL，HTML长度：" << htmlQt.length();
+        QRegularExpression screenshotRegex("<img[^>]*src\\s*=\\s*[\"']([^\"']*\\.(jpg|jpeg|png|gif))[\"'][^>]*>", 
+                                          QRegularExpression::CaseInsensitiveOption);
+        QRegularExpressionMatch screenshotMatch = screenshotRegex.match(htmlQt);
+        if (screenshotMatch.hasMatch()) {
+            modifier->screenshotUrl = screenshotMatch.captured(1);
+            qDebug() << "找到修改器截图URL：" << modifier->screenshotUrl;
+        } else {
+            qDebug() << "未找到修改器截图，尝试查找所有图片标签...";
+            // 尝试查找更通用的图片模式
+            QRegularExpression imgRegex("<img[^>]+src\\s*=\\s*[\"']([^\"']+)[\"'][^>]*>", 
+                                       QRegularExpression::CaseInsensitiveOption);
+            QRegularExpressionMatchIterator imgMatches = imgRegex.globalMatch(htmlQt);
+            while (imgMatches.hasNext()) {
+                QRegularExpressionMatch imgMatch = imgMatches.next();
+                QString imgUrl = imgMatch.captured(1);
+                // 排除小图标，选择可能是游戏截图的大图
+                if (!imgUrl.contains("icon", Qt::CaseInsensitive) && 
+                    !imgUrl.contains("logo", Qt::CaseInsensitive) && 
+                    (imgUrl.contains("screenshot", Qt::CaseInsensitive) || 
+                     imgUrl.contains("image", Qt::CaseInsensitive) ||
+                     imgUrl.endsWith(".jpg", Qt::CaseInsensitive) ||
+                     imgUrl.endsWith(".png", Qt::CaseInsensitive))) {
+                    modifier->screenshotUrl = imgUrl;
+                    qDebug() << "找到候选游戏截图URL：" << modifier->screenshotUrl;
+                    break;
+                }
+            }
+        }
+
         qDebug() << "修改器详情解析完成，提取了 " << modifier->options.size() << " 个选项";
         
     } catch (const std::exception& e) {
@@ -781,9 +821,7 @@ ModifierInfo* ModifierParser::parseModifierDetailHTML(const std::string& html, c
     if (modifier->name.isEmpty() && !modifierName.isEmpty()) {
         modifier->name = modifierName;
         qDebug() << "使用传入的名称更新修改器名称：" << modifier->name;
-    }
-    
-    qDebug() << "修改器详情解析完成：" << modifier->name << "，提取了" << modifier->options.size() << "个选项"
+    }    qDebug() << "修改器详情解析完成：" << modifier->name << "，提取了" << modifier->options.size() << "个选项"
              << "，官方标记选项数量：" << modifier->optionsCount;
     
     return modifier;

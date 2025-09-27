@@ -21,6 +21,21 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 find_package(CURL REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 
+# 直接设置 OpenCV 库路径和包含目录
+set(VCPKG_ROOT "D:/vcpkg")
+set(OPENCV_INCLUDE_DIR "${VCPKG_ROOT}/installed/x64-windows-static/include/opencv4")
+set(OPENCV_LIB_DIR "${VCPKG_ROOT}/installed/x64-windows-static/lib")
+
+# 添加 OpenCV 包含目录
+include_directories(${OPENCV_INCLUDE_DIR})
+
+# 设置我们需要的 OpenCV 静态库（最小化引用）
+set(OPENCV_LIBS
+    ${OPENCV_LIB_DIR}/opencv_core4.lib
+    ${OPENCV_LIB_DIR}/opencv_imgproc4.lib  
+    ${OPENCV_LIB_DIR}/opencv_imgcodecs4.lib
+)
+
 # Qt组件
 find_package(Qt6 COMPONENTS Widgets Network Core Concurrent REQUIRED)
 
@@ -45,6 +60,7 @@ set(SOURCES
     src/LanguageManager.cpp
     src/GameMappingManager.cpp
     src/translator.cpp
+    src/CoverExtractor.cpp
 )
 
 # Define header files
@@ -64,6 +80,7 @@ set(HEADERS
     src/LanguageManager.h
     src/GameMappingManager.h
     src/translator.h
+    src/CoverExtractor.h
 )
 
 # Define UI files
@@ -100,6 +117,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     pugixml::pugixml
     CURL::libcurl
     nlohmann_json::nlohmann_json
+    ${OPENCV_LIBS}
 ) # Qt6 Shared Library
 
 # 静态链接运行时库，避免VCRUNTIME140_1.dll等依赖问题

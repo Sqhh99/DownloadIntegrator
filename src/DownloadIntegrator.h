@@ -54,6 +54,8 @@
 #include "ThemeManager.h"
 // 添加语言管理器
 #include "LanguageManager.h"
+// 添加封面提取器
+#include "CoverExtractor.h"
 
 // 使用自动生成的UI类
 namespace Ui {
@@ -92,7 +94,6 @@ struct DownloadIntegratorUI {
     QLabel* lastUpdate;
     
     // 版本选择区
-    QRadioButton* autoUpdateVersion;
     QRadioButton* standaloneVersion;
     QComboBox* versionSelect;
     
@@ -203,6 +204,7 @@ private:
     QString detectFileFormat(const QString& filePath);
     bool isArchiveFile(const QString& filePath);
     bool isExecutableFile(const QString& filePath);
+    void setGameCoverWithAspectRatio(const QPixmap& cover);
     
     // 网络操作方法 - 通过ModifierManager实现
     void simulateDownload(const QString& url, const QString& fileName);
@@ -245,4 +247,7 @@ private:
     QPushButton* m_runButton;
     QPushButton* m_deleteButton;
     QPushButton* m_checkUpdateButton;
+    
+    // 封面提取器
+    CoverExtractor* m_coverExtractor;
 };
