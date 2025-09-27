@@ -247,8 +247,11 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     // 添加搜索框文本变化的监听，支持清除搜索回到初始列表
     connect(ui->searchEdit, &QLineEdit::textChanged, this, [this](const QString& text) {
         if (text.isEmpty()) {
+            // 隐藏右侧详情面板
+            ui->rightWidget->hide();
+            qDebug() << "搜索框已清空，隐藏右侧详情面板并恢复到初始修改器列表";
+            
             // 当搜索框被清空时，显示初始的修改器列表
-            qDebug() << "搜索框已清空，恢复到初始修改器列表";
             showStatusMessage(tr("正在加载初始修改器列表..."));
             SearchManager::getInstance().fetchRecentlyUpdatedModifiers(this, &DownloadIntegrator::onSearchCompleted);
         }
@@ -291,6 +294,9 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     // 加载修改器列表 - 使用SearchManager获取最新修改器列表
     qDebug() << "正在调用SearchManager.fetchRecentlyUpdatedModifiers获取最新修改器列表...";
     SearchManager::getInstance().fetchRecentlyUpdatedModifiers(this, &DownloadIntegrator::onSearchCompleted);
+    
+    // 设置gameTitle样式，移除底部边距并减少padding
+    ui->gameTitle->setStyleSheet("QLabel { margin-bottom: -5px; padding-bottom: 0px; }");
     
     // 初始化翻译
     retranslateUi();
@@ -1137,6 +1143,10 @@ void DownloadIntegrator::onSearchCompleted(const QList<ModifierInfo>& modifiers)
     // 保存到本地修改器列表
     modifierList = modifiers;
     
+    // 隐藏右侧详情面板（无论搜索是否有结果）
+    ui->rightWidget->hide();
+    qDebug() << "搜索完成，隐藏右侧详情面板";
+    
     // 更新UI
     updateModifierList(modifiers);
     
@@ -1176,13 +1186,13 @@ void DownloadIntegrator::onModifierItemClicked(int row, int column)
         }
         
         // 显示加载中状态
-        showStatusMessage("正在加载修改器详情...");
+        showStatusMessage(tr("正在加载修改器详情..."));
         ui->gameTitle->setText(selectedModifier.name);
-        ui->versionInfo->setText("游戏版本：加载中...");
-        ui->optionsCount->setText("修改器选项：加载中...");
-        ui->lastUpdate->setText("最后更新：加载中...");
+        ui->versionInfo->setText(tr("游戏版本：加载中..."));
+        ui->optionsCount->setText(tr("修改器选项：加载中..."));
+        ui->lastUpdate->setText(tr("最后更新：加载中..."));
         ui->modifierOptions->clear();
-        ui->modifierOptions->setPlainText("加载中...");
+        ui->modifierOptions->setPlainText(tr("加载中..."));
         
         // 设置游戏封面加载状态
         ui->gameCoverLabel->clear();
@@ -1295,12 +1305,12 @@ void DownloadIntegrator::onDownloadButtonClicked()
     fileName += fileExtension;
     
     // 确认下载
-    QString message = QString("确认下载以下修改器？\n\n名称: %1\n版本: %2\n存储位置: %3")
+    QString message = QString(tr("确认下载以下修改器？\n\n名称: %1\n版本: %2\n存储位置: %3"))
                     .arg(modifierName)
                     .arg(ui->versionSelect->currentText())
                     .arg(downloadPath + "/" + fileName);
     
-    if (QMessageBox::question(this, "下载确认", message, 
+    if (QMessageBox::question(this, tr("下载确认"), message, 
                             QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
         // 完整下载路径
         QString fullDownloadPath = downloadPath + "/" + fileName;
@@ -1391,16 +1401,16 @@ void DownloadIntegrator::onDownloadButtonClicked()
                         // 切换到已下载标签页
                         m_tabWidget->setCurrentIndex(1);
                     } else {
-                        showStatusMessage(QString("下载失败: %1").arg(errorMsg), 5000);
-                        QMessageBox::warning(this, "下载失败", 
-                                           QString("下载修改器 %1 时发生错误: %2").arg(fileName).arg(errorMsg));
+                        showStatusMessage(QString(tr("下载失败: %1")).arg(errorMsg), 5000);
+                        QMessageBox::warning(this, tr("下载失败"), 
+                                           QString(tr("下载修改器 %1 时发生错误: %2")).arg(fileName).arg(errorMsg));
                     }
                 },
                 // 进度回调
                 [this](int progress) {
                     ui->downloadProgress->setValue(progress);
                     ui->downloadProgress->setFormat("%p%");
-                    showStatusMessage(QString("下载中... %1%").arg(progress));
+                    showStatusMessage(QString(tr("下载中... %1%")).arg(progress));
                 }
             );
         }
@@ -1432,7 +1442,7 @@ void DownloadIntegrator::simulateDownload(const QString& url, const QString& fil
         "}"
     );
     
-    showStatusMessage("正在下载 " + fileName + "...");
+    showStatusMessage(QString(tr("正在下载 %1...")).arg(fileName));
     ui->downloadButton->setEnabled(false);
     
     // 创建一个定时器来模拟下载进度
@@ -1444,7 +1454,7 @@ void DownloadIntegrator::simulateDownload(const QString& url, const QString& fil
         progress += 5;
         if (progress <= 100) {
             ui->downloadProgress->setValue(progress);
-            showStatusMessage(QString("下载中... %1%").arg(progress));
+            showStatusMessage(QString(tr("下载中... %1%")).arg(progress));
         } else {
             // 下载完成
             timer->stop();
@@ -1452,11 +1462,10 @@ void DownloadIntegrator::simulateDownload(const QString& url, const QString& fil
             
             ui->downloadProgress->setVisible(false);
             ui->downloadButton->setEnabled(true);
-            showStatusMessage("下载完成", 5000);
+            showStatusMessage(tr("下载完成"), 5000);
             
-            QMessageBox::information(this, "下载完成", 
-                                   "修改器 " + fileName + " 下载完成。\n\n" + 
-                                   "注意：这只是一个模拟下载，没有实际下载文件。");
+            QMessageBox::information(this, tr("下载完成"), 
+                                   QString(tr("修改器 %1 下载完成。\n\n注意：这只是一个模拟下载，没有实际下载文件。")).arg(fileName));
         }
     });
     
@@ -2143,19 +2152,19 @@ void DownloadIntegrator::downloadModifier(const QString& url, const QString& fil
                     // 切换到已下载标签页
                     m_tabWidget->setCurrentIndex(1);
             } else {
-                    showStatusMessage(QString("下载失败: %1").arg(errorMsg), 5000);
-                    QMessageBox::warning(this, "下载失败", 
-                                       QString("下载修改器 %1 时发生错误: %2").arg(fileName).arg(errorMsg));
+                    showStatusMessage(QString(tr("下载失败: %1")).arg(errorMsg), 5000);
+                    QMessageBox::warning(this, tr("下载失败"), 
+                                       QString(tr("下载修改器 %1 时发生错误: %2")).arg(fileName).arg(errorMsg));
                 }
             },
             // 进度回调
             [this](int progress) {
                 ui->downloadProgress->setValue(progress);
-                showStatusMessage(QString("下载中... %1%").arg(progress));
+                showStatusMessage(QString(tr("下载中... %1%")).arg(progress));
             }
         );
     } else {
-        QMessageBox::warning(this, "下载失败", "未选择有效的修改器");
+        QMessageBox::warning(this, tr("下载失败"), tr("未选择有效的修改器"));
         ui->downloadProgress->setVisible(false);
         ui->downloadButton->setEnabled(true);
     }
@@ -2175,7 +2184,7 @@ void DownloadIntegrator::setupThemeMenu() {
     QMenuBar* menuBar = this->menuBar();
     
     // 创建主题菜单
-    QMenu* themeMenu = menuBar->addMenu("主题");
+    QMenu* themeMenu = menuBar->addMenu(tr("主题"));
     
     // 创建动作组，确保只有一个主题被选中
     QActionGroup* themeGroup = new QActionGroup(this);
@@ -2233,23 +2242,23 @@ void DownloadIntegrator::setupThemeMenu() {
 // 添加主题切换槽函数
 void DownloadIntegrator::onLightThemeSelected() {
     ThemeManager::getInstance().switchTheme(*qApp, ConfigManager::Theme::Light);
-    showStatusMessage("已切换到浅色主题");
+    showStatusMessage(tr("已切换到浅色主题"));
 }
 
 void DownloadIntegrator::onWin11ThemeSelected() {
     ThemeManager::getInstance().switchTheme(*qApp, ConfigManager::Theme::Win11);
-    showStatusMessage("已切换到Windows 11主题");
+    showStatusMessage(tr("已切换到Windows 11主题"));
 }
 
 // 实现新主题的槽函数
 void DownloadIntegrator::onClassicThemeSelected() {
     ThemeManager::getInstance().switchTheme(*qApp, ConfigManager::Theme::Classic);
-    showStatusMessage("已切换到经典主题");
+    showStatusMessage(tr("已切换到经典主题"));
 }
 
 void DownloadIntegrator::onColorfulThemeSelected() {
     ThemeManager::getInstance().switchTheme(*qApp, ConfigManager::Theme::Colorful);
-    showStatusMessage("已切换到多彩主题");
+    showStatusMessage(tr("已切换到多彩主题"));
 }
 
 // 设置语言菜单
@@ -2304,6 +2313,9 @@ void DownloadIntegrator::setupLanguageMenu() {
 
 // 语言切换槽函数
 void DownloadIntegrator::onChineseLanguageSelected() {
+    // 隐藏右侧详情面板
+    ui->rightWidget->hide();
+    
     LanguageManager::getInstance().switchLanguage(*qApp, LanguageManager::Language::Chinese);
     retranslateUi(); // 重新翻译UI
     qApp->processEvents(); // 确保UI更新
@@ -2311,6 +2323,9 @@ void DownloadIntegrator::onChineseLanguageSelected() {
 }
 
 void DownloadIntegrator::onEnglishLanguageSelected() {
+    // 隐藏右侧详情面板
+    ui->rightWidget->hide();
+    
     LanguageManager::getInstance().switchLanguage(*qApp, LanguageManager::Language::English);
     retranslateUi(); // 重新翻译UI
     qApp->processEvents(); // 确保UI更新
@@ -2318,6 +2333,9 @@ void DownloadIntegrator::onEnglishLanguageSelected() {
 }
 
 void DownloadIntegrator::onJapaneseLanguageSelected() {
+    // 隐藏右侧详情面板
+    ui->rightWidget->hide();
+    
     LanguageManager::getInstance().switchLanguage(*qApp, LanguageManager::Language::Japanese);
     retranslateUi(); // 重新翻译UI
     qApp->processEvents(); // 确保UI更新
@@ -2410,6 +2428,10 @@ void DownloadIntegrator::retranslateUi() {
     ui->openFolderButton->setText(tr("打开下载目录"));
     ui->settingsButton->setText(tr("设置"));
     
+    // 更新刷新按钮
+    ui->refreshButton->setText(tr("显示全部"));
+    ui->refreshButton->setToolTip(tr("清除搜索结果，显示所有最新修改器列表"));
+    
     // 更新已下载标签页
     QLabel* titleLabel = m_downloadedTab->findChild<QLabel*>();
     if (titleLabel) {
@@ -2455,6 +2477,9 @@ void DownloadIntegrator::retranslateUi() {
 void DownloadIntegrator::onRefreshButtonClicked()
 {
     qDebug() << "刷新按钮被点击，正在获取最新修改器列表...";
+    
+    // 隐藏右侧详情面板
+    ui->rightWidget->hide();
     
     // 清空搜索框，触发回到初始列表
     ui->searchEdit->clear();

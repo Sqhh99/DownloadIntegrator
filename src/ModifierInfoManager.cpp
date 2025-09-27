@@ -41,13 +41,29 @@ ModifierInfo* ModifierInfoManager::cloneModifierInfo(const ModifierInfo& other)
 QString ModifierInfoManager::extractNameFromUrl(const QString& url)
 {
     // 从URL中提取修改器名称
-    QRegularExpression re("/([^/]+)-trainer/?$");
-    QRegularExpressionMatch match = re.match(url);
+    // 尝试多种URL格式
+    QStringList patterns = {
+        "/([^/]+)-trainer/?$",          // 原有格式: game-name-trainer
+        "/trainer/([^/]+)-trainer/?$",  // FLiNG格式: /trainer/game-name-trainer
+        "/trainer/([^/]+)/?$"           // 简化格式: /trainer/game-name
+    };
     
-    if (match.hasMatch()) {
-        QString name = match.captured(1);
-        name.replace('-', ' ');
-        return formatModifierName(name);
+    for (const QString& pattern : patterns) {
+        QRegularExpression re(pattern);
+        QRegularExpressionMatch match = re.match(url);
+        
+        if (match.hasMatch()) {
+            QString name = match.captured(1);
+            name.replace('-', ' ');
+            name.replace('_', ' ');
+            
+            // 移除可能的 "trainer" 后缀
+            if (name.endsWith(" trainer", Qt::CaseInsensitive)) {
+                name.chop(8); // 移除 " trainer"
+            }
+            
+            return formatModifierName(name.trimmed());
+        }
     }
     
     return QString();

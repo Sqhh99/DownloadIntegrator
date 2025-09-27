@@ -66,10 +66,10 @@
       <item>
        <widget class="QPushButton" name="refreshButton">
         <property name="toolTip">
-         <string>清除搜索结果，显示所有最新修改器列表</string>
+         <string/>
         </property>
         <property name="text">
-         <string>显示全部</string>
+         <string/>
         </property>
         <property name="icon">
          <iconset>
@@ -115,7 +115,7 @@
       <widget class="QWidget" name="rightWidget" native="true">
        <layout class="QVBoxLayout" name="rightLayout">
         <property name="spacing">
-         <number>5</number>
+         <number>0</number>
         </property>
         <property name="topMargin">
          <number>5</number>
@@ -144,11 +144,11 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <property name="title">
-           <string></string>
-          </property>
           <property name="styleSheet">
            <string>QGroupBox { border: none; }</string>
+          </property>
+          <property name="title">
+           <string/>
           </property>
           <layout class="QHBoxLayout" name="coverLayout">
            <property name="spacing">
@@ -174,12 +174,6 @@
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
-             <property name="text">
-              <string></string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignLeft|Qt::AlignTop</set>
-             </property>
              <property name="styleSheet">
               <string>QLabel {
                 border: 1px solid #ddd;
@@ -187,8 +181,14 @@
                 color: #666;
               }</string>
              </property>
+             <property name="text">
+              <string/>
+             </property>
              <property name="scaledContents">
               <bool>false</bool>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
              </property>
             </widget>
            </item>
@@ -203,7 +203,7 @@
                 <string>游戏版本：</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignTop</set>
+                <set>Qt::AlignmentFlag::AlignTop</set>
                </property>
               </widget>
              </item>
@@ -213,7 +213,7 @@
                 <string>修改器选项：</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignTop</set>
+                <set>Qt::AlignmentFlag::AlignTop</set>
                </property>
               </widget>
              </item>
@@ -223,14 +223,14 @@
                 <string>最后更新：</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignTop</set>
+                <set>Qt::AlignmentFlag::AlignTop</set>
                </property>
               </widget>
              </item>
              <item>
               <spacer name="verticalSpacer_2">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -245,11 +245,10 @@
           </layout>
          </widget>
         </item>
-
         <item>
          <widget class="QGroupBox" name="downloadGroup">
           <property name="title">
-           <string>版本选择</string>
+           <string/>
           </property>
           <layout class="QVBoxLayout" name="downloadLayout">
            <item>
@@ -264,7 +263,7 @@
            <bool>true</bool>
           </property>
           <property name="placeholderText">
-           <string>修改器功能选项列表...</string>
+           <string/>
           </property>
          </widget>
         </item>
@@ -280,6 +279,9 @@
         </item>
         <item>
          <layout class="QHBoxLayout" name="buttonLayout">
+          <property name="spacing">
+           <number>15</number>
+          </property>
           <item>
            <widget class="QPushButton" name="downloadButton">
             <property name="text">
@@ -290,7 +292,7 @@
           <item>
            <widget class="QPushButton" name="openFolderButton">
             <property name="text">
-             <string>打开下载目录</string>
+             <string/>
             </property>
            </widget>
           </item>
@@ -314,7 +316,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1133</width>
+     <width>1200</width>
      <height>25</height>
     </rect>
    </property>

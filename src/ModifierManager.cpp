@@ -81,7 +81,7 @@ void ModifierManager::getModifierDetail(const QString& url, ModifierDetailCallba
     // 从URL中提取修改器名称 - 使用ModifierInfoManager
     QString modifierName = ModifierInfoManager::getInstance().extractNameFromUrl(url);
     if (modifierName.isEmpty()) {
-        modifierName = "Unknown Modifier";
+        modifierName = QObject::tr("未知修改器");
     }
     
     // 使用NetworkManager发送请求
