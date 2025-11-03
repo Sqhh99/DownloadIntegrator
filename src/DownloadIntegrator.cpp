@@ -319,12 +319,16 @@ void DownloadIntegratorUI::setupUi(QMainWindow* window)
     m_actionExit->setObjectName(QStringLiteral("actionExit"));
     m_menuFile->addAction(m_actionExit);
 
+    // 主题菜单
     m_menuTheme = m_menubar->addMenu(QString());
     m_menuTheme->setObjectName(QStringLiteral("menuTheme"));
+    
+    // 创建主题 ActionGroup
     m_themeActionGroup = new QActionGroup(window);
     m_themeActionGroup->setObjectName(QStringLiteral("themeActionGroup"));
     m_themeActionGroup->setExclusive(true);
 
+    // 创建主题 Actions
     m_actionLightTheme = new QAction(window);
     m_actionLightTheme->setObjectName(QStringLiteral("actionLightTheme"));
     m_actionLightTheme->setCheckable(true);
@@ -349,12 +353,16 @@ void DownloadIntegratorUI::setupUi(QMainWindow* window)
     m_themeActionGroup->addAction(m_actionColorfulTheme);
     m_menuTheme->addAction(m_actionColorfulTheme);
 
+    // 语言菜单
     m_menuLanguage = m_menubar->addMenu(QString());
     m_menuLanguage->setObjectName(QStringLiteral("menuLanguage"));
+    
+    // 创建语言 ActionGroup
     m_languageActionGroup = new QActionGroup(window);
     m_languageActionGroup->setObjectName(QStringLiteral("languageActionGroup"));
     m_languageActionGroup->setExclusive(true);
 
+    // 创建语言 Actions
     m_actionChineseLanguage = new QAction(window);
     m_actionChineseLanguage->setObjectName(QStringLiteral("actionChineseLanguage"));
     m_actionChineseLanguage->setCheckable(true);
@@ -2548,68 +2556,73 @@ void DownloadIntegrator::setupThemeMenu() {
         return;
     }
 
-    themeMenu->clear();
+    qDebug() << "设置主题菜单，ActionGroup exclusive:" << themeGroup->isExclusive();
+    qDebug() << "ActionGroup 包含的 actions 数量:" << themeGroup->actions().size();
 
     QAction* lightThemeAction = ui->actionLightTheme();
     QAction* win11ThemeAction = ui->actionWin11Theme();
     QAction* classicThemeAction = ui->actionClassicTheme();
     QAction* colorfulThemeAction = ui->actionColorfulTheme();
 
-    const QList<QAction*> themeActions = {
-        lightThemeAction,
-        win11ThemeAction,
-        classicThemeAction,
-        colorfulThemeAction
-    };
-
-    for (QAction* action : themeActions) {
-        if (!action) {
-            continue;
-        }
-        action->setCheckable(true);
-        themeMenu->addAction(action);
-        if (action->parent() != this) {
-            action->setParent(this);
-        }
-    }
-
+    // 确保ActionGroup是独占模式
     themeGroup->setExclusive(true);
+    
+    // 先取消所有选项的选中状态
+    if (lightThemeAction) lightThemeAction->setChecked(false);
+    if (win11ThemeAction) win11ThemeAction->setChecked(false);
+    if (classicThemeAction) classicThemeAction->setChecked(false);
+    if (colorfulThemeAction) colorfulThemeAction->setChecked(false);
 
+    // 连接信号
     if (lightThemeAction) {
-        QObject::disconnect(lightThemeAction, nullptr, nullptr, nullptr);
+        QObject::disconnect(lightThemeAction, &QAction::triggered, this, nullptr);
         connect(lightThemeAction, &QAction::triggered, this, &DownloadIntegrator::onLightThemeSelected);
     }
     if (win11ThemeAction) {
-        QObject::disconnect(win11ThemeAction, nullptr, nullptr, nullptr);
+        QObject::disconnect(win11ThemeAction, &QAction::triggered, this, nullptr);
         connect(win11ThemeAction, &QAction::triggered, this, &DownloadIntegrator::onWin11ThemeSelected);
     }
     if (classicThemeAction) {
-        QObject::disconnect(classicThemeAction, nullptr, nullptr, nullptr);
+        QObject::disconnect(classicThemeAction, &QAction::triggered, this, nullptr);
         connect(classicThemeAction, &QAction::triggered, this, &DownloadIntegrator::onClassicThemeSelected);
     }
     if (colorfulThemeAction) {
-        QObject::disconnect(colorfulThemeAction, nullptr, nullptr, nullptr);
+        QObject::disconnect(colorfulThemeAction, &QAction::triggered, this, nullptr);
         connect(colorfulThemeAction, &QAction::triggered, this, &DownloadIntegrator::onColorfulThemeSelected);
     }
 
+    // 根据当前主题设置选中状态
     ConfigManager::Theme currentTheme = ConfigManager::getInstance().getCurrentTheme();
+    qDebug() << "当前主题:" << static_cast<int>(currentTheme);
+    
     switch (currentTheme) {
         case ConfigManager::Theme::Light:
             if (lightThemeAction) lightThemeAction->setChecked(true);
+            qDebug() << "设置 Light Theme 为选中";
             break;
         case ConfigManager::Theme::Win11:
             if (win11ThemeAction) win11ThemeAction->setChecked(true);
+            qDebug() << "设置 Win11 Theme 为选中";
             break;
         case ConfigManager::Theme::Classic:
             if (classicThemeAction) classicThemeAction->setChecked(true);
+            qDebug() << "设置 Classic Theme 为选中";
             break;
         case ConfigManager::Theme::Colorful:
             if (colorfulThemeAction) colorfulThemeAction->setChecked(true);
+            qDebug() << "设置 Colorful Theme 为选中";
             break;
         default:
             if (lightThemeAction) lightThemeAction->setChecked(true);
+            qDebug() << "设置默认 Light Theme 为选中";
             break;
     }
+    
+    // 验证设置结果
+    qDebug() << "Light checked:" << (lightThemeAction ? lightThemeAction->isChecked() : false);
+    qDebug() << "Win11 checked:" << (win11ThemeAction ? win11ThemeAction->isChecked() : false);
+    qDebug() << "Classic checked:" << (classicThemeAction ? classicThemeAction->isChecked() : false);
+    qDebug() << "Colorful checked:" << (colorfulThemeAction ? colorfulThemeAction->isChecked() : false);
 }
 
 // 添加主题切换槽函数
@@ -2644,44 +2657,33 @@ void DownloadIntegrator::setupLanguageMenu() {
         return;
     }
 
-    languageMenu->clear();
-
     QAction* chineseAction = ui->actionChineseLanguage();
     QAction* englishAction = ui->actionEnglishLanguage();
     QAction* japaneseAction = ui->actionJapaneseLanguage();
 
-    const QList<QAction*> languageActions = {
-        chineseAction,
-        englishAction,
-        japaneseAction
-    };
-
-    for (QAction* action : languageActions) {
-        if (!action) {
-            continue;
-        }
-        action->setCheckable(true);
-        languageMenu->addAction(action);
-        if (action->parent() != this) {
-            action->setParent(this);
-        }
-    }
-
+    // 确保ActionGroup是独占模式
     languageGroup->setExclusive(true);
+    
+    // 先取消所有选项的选中状态
+    if (chineseAction) chineseAction->setChecked(false);
+    if (englishAction) englishAction->setChecked(false);
+    if (japaneseAction) japaneseAction->setChecked(false);
 
+    // 连接信号
     if (chineseAction) {
-        QObject::disconnect(chineseAction, nullptr, nullptr, nullptr);
+        QObject::disconnect(chineseAction, &QAction::triggered, this, nullptr);
         connect(chineseAction, &QAction::triggered, this, &DownloadIntegrator::onChineseLanguageSelected);
     }
     if (englishAction) {
-        QObject::disconnect(englishAction, nullptr, nullptr, nullptr);
+        QObject::disconnect(englishAction, &QAction::triggered, this, nullptr);
         connect(englishAction, &QAction::triggered, this, &DownloadIntegrator::onEnglishLanguageSelected);
     }
     if (japaneseAction) {
-        QObject::disconnect(japaneseAction, nullptr, nullptr, nullptr);
+        QObject::disconnect(japaneseAction, &QAction::triggered, this, nullptr);
         connect(japaneseAction, &QAction::triggered, this, &DownloadIntegrator::onJapaneseLanguageSelected);
     }
 
+    // 根据当前语言设置选中状态
     ConfigManager::Language currentLanguage = ConfigManager::getInstance().getCurrentLanguage();
     switch (currentLanguage) {
         case ConfigManager::Language::Chinese:
