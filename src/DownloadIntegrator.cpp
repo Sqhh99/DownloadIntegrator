@@ -686,6 +686,11 @@ void DownloadIntegrator::updateModifierDetail()
             setGameCoverWithAspectRatio(cachedCover);
             qDebug() << "从缓存加载游戏封面";
         } else {
+            // 显示加载提示
+            ui->gameCoverLabel->setText(tr("正在加载封面..."));
+            ui->gameCoverLabel->setAlignment(Qt::AlignCenter);
+            ui->gameCoverLabel->setStyleSheet("QLabel { color: #666; font-size: 12px; }");
+            
             // 异步提取封面
             m_coverExtractor->extractCoverFromTrainerImage(currentModifier->screenshotUrl, 
                 [this, gameId](const QPixmap& cover, bool success) {
@@ -696,8 +701,10 @@ void DownloadIntegrator::updateModifierDetail()
                         CoverExtractor::saveCoverToCache(gameId, cover);
                         qDebug() << "游戏封面提取成功";
                     } else {
-                        // 失败时显示空白
-                        ui->gameCoverLabel->clear();
+                        // 失败时显示提示
+                        ui->gameCoverLabel->setText(tr("封面加载失败"));
+                        ui->gameCoverLabel->setAlignment(Qt::AlignCenter);
+                        ui->gameCoverLabel->setStyleSheet("QLabel { color: #999; font-size: 11px; }");
                         qDebug() << "游戏封面提取失败";
                     }
                 });
