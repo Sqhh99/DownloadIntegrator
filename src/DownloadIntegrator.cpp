@@ -1,5 +1,4 @@
 #include "DownloadIntegrator.h"
-#include "ui_DownloadIntegrator.h"
 #include <QDebug>
 #include <QFileDialog>
 #include <QStandardPaths>
@@ -17,6 +16,12 @@
 #include <QProgressDialog>
 #include <QScrollBar>
 #include <QClipboard>
+#include <QCoreApplication>
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QMenuBar>
+#include <QStatusBar>
+#include <QStyle>
 // 添加ModifierParser类引用
 #include "ModifierParser.h"
 #include "ModifierManager.h"
@@ -31,10 +36,572 @@
 // HTML解析库
 #include <pugixml.hpp>
 
+namespace {
+constexpr int kDefaultModifierTableRows = 10;
+constexpr int kDefaultDownloadedTableRows = 10;
+}
+
+void DownloadIntegratorUI::setupUi(QMainWindow* window)
+{
+    if (!window) {
+        return;
+    }
+
+    window->setObjectName(QStringLiteral("DownloadIntegrator"));
+    window->resize(1200, 800);
+
+    // 中央标签页
+    m_tabWidget = new QTabWidget(window);
+    m_tabWidget->setObjectName(QStringLiteral("tabWidget"));
+    window->setCentralWidget(m_tabWidget);
+
+    // 搜索页
+    m_searchTab = new QWidget(m_tabWidget);
+    m_searchTab->setObjectName(QStringLiteral("searchTab"));
+    m_tabWidget->addTab(m_searchTab, QString());
+
+    auto* mainLayout = new QVBoxLayout(m_searchTab);
+    mainLayout->setObjectName(QStringLiteral("mainLayout"));
+
+    auto* searchLayout = new QHBoxLayout();
+    searchLayout->setObjectName(QStringLiteral("searchLayout"));
+
+    m_searchEdit = new QLineEdit(m_searchTab);
+    m_searchEdit->setObjectName(QStringLiteral("searchEdit"));
+    m_searchEdit->setClearButtonEnabled(true);
+    searchLayout->addWidget(m_searchEdit);
+
+    m_searchButton = new QPushButton(m_searchTab);
+    m_searchButton->setObjectName(QStringLiteral("searchButton"));
+    m_searchButton->setIcon(QIcon(QStringLiteral(":/icons/search.png")));
+    searchLayout->addWidget(m_searchButton);
+
+    m_sortComboBox = new QComboBox(m_searchTab);
+    m_sortComboBox->setObjectName(QStringLiteral("sortComboBox"));
+    m_sortComboBox->setMinimumWidth(120);
+    m_sortComboBox->addItems(QStringList() << QString() << QString() << QString());
+    searchLayout->addWidget(m_sortComboBox);
+
+    m_refreshButton = new QPushButton(m_searchTab);
+    m_refreshButton->setObjectName(QStringLiteral("refreshButton"));
+    m_refreshButton->setIcon(QIcon(QStringLiteral(":/icons/refresh.png")));
+    searchLayout->addWidget(m_refreshButton);
+
+    mainLayout->addLayout(searchLayout);
+
+    // 主分割器
+    m_mainSplitter = new QSplitter(Qt::Horizontal, m_searchTab);
+    m_mainSplitter->setObjectName(QStringLiteral("mainSplitter"));
+    mainLayout->addWidget(m_mainSplitter);
+
+    // 左侧 - 修改器列表
+    QWidget* leftWidget = new QWidget(m_mainSplitter);
+    leftWidget->setObjectName(QStringLiteral("leftWidget"));
+    auto* leftLayout = new QVBoxLayout(leftWidget);
+    leftLayout->setObjectName(QStringLiteral("leftLayout"));
+    leftLayout->setContentsMargins(0, 0, 0, 0);
+
+    m_modifierTable = new QTableWidget(leftWidget);
+    m_modifierTable->setObjectName(QStringLiteral("modifierTable"));
+    m_modifierTable->setColumnCount(4);
+    m_modifierTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_modifierTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_modifierTable->setAlternatingRowColors(true);
+    m_modifierTable->verticalHeader()->setVisible(false);
+    m_modifierTable->setShowGrid(false);
+    m_modifierTable->horizontalHeader()->setStretchLastSection(true);
+    m_modifierTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Interactive);
+    m_modifierTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
+    m_modifierTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
+    m_modifierTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Fixed);
+    m_modifierTable->horizontalHeader()->setDefaultSectionSize(150);
+    m_modifierTable->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_modifierTable->setMinimumHeight(300);
+    m_modifierTable->horizontalHeader()->setMinimumHeight(30);
+    m_modifierTable->horizontalHeader()->setFixedHeight(30);
+    m_modifierTable->setHorizontalHeaderLabels(QStringList(4, QString()));
+    m_modifierTable->setColumnWidth(0, 250);
+    m_modifierTable->setColumnWidth(1, 100);
+    m_modifierTable->setColumnWidth(2, 150);
+    m_modifierTable->setColumnWidth(3, 80);
+    leftLayout->addWidget(m_modifierTable);
+    m_mainSplitter->addWidget(leftWidget);
+
+    // 右侧 - 详情面板
+    m_rightWidget = new QWidget(m_mainSplitter);
+    m_rightWidget->setObjectName(QStringLiteral("rightWidget"));
+    auto* rightLayout = new QVBoxLayout(m_rightWidget);
+    rightLayout->setObjectName(QStringLiteral("rightLayout"));
+    rightLayout->setSpacing(0);
+    rightLayout->setContentsMargins(0, 5, 0, 5);
+
+    m_gameTitle = new QLabel(m_rightWidget);
+    m_gameTitle->setObjectName(QStringLiteral("gameTitle"));
+    QFont titleFont = m_gameTitle->font();
+    titleFont.setPointSize(12);
+    titleFont.setBold(true);
+    m_gameTitle->setFont(titleFont);
+    rightLayout->addWidget(m_gameTitle);
+
+    auto* coverGroup = new QGroupBox(m_rightWidget);
+    coverGroup->setObjectName(QStringLiteral("coverGroup"));
+    coverGroup->setStyleSheet(QStringLiteral("QGroupBox { border: none; }"));
+    m_coverGroup = coverGroup;
+
+    auto* coverLayout = new QHBoxLayout(coverGroup);
+    coverLayout->setObjectName(QStringLiteral("coverLayout"));
+    coverLayout->setSpacing(10);
+    coverLayout->setContentsMargins(5, 5, 5, 5);
+
+    m_gameCoverLabel = new QLabel(coverGroup);
+    m_gameCoverLabel->setObjectName(QStringLiteral("gameCoverLabel"));
+    m_gameCoverLabel->setStyleSheet(QStringLiteral(
+        "QLabel {\n"
+        "    border: 1px solid #ddd;\n"
+        "    background-color: #f9f9f9;\n"
+        "    color: #666;\n"
+        "}"));
+    m_gameCoverLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    m_gameCoverLabel->setMinimumSize(120, 160);
+    coverLayout->addWidget(m_gameCoverLabel);
+
+    auto* versionInfoLayout = new QVBoxLayout();
+    versionInfoLayout->setObjectName(QStringLiteral("versionInfoLayout"));
+    versionInfoLayout->setSpacing(8);
+
+    m_versionInfo = new QLabel(coverGroup);
+    m_versionInfo->setObjectName(QStringLiteral("versionInfo"));
+    versionInfoLayout->addWidget(m_versionInfo);
+
+    m_optionsCount = new QLabel(coverGroup);
+    m_optionsCount->setObjectName(QStringLiteral("optionsCount"));
+    versionInfoLayout->addWidget(m_optionsCount);
+
+    m_lastUpdate = new QLabel(coverGroup);
+    m_lastUpdate->setObjectName(QStringLiteral("lastUpdate"));
+    versionInfoLayout->addWidget(m_lastUpdate);
+
+    versionInfoLayout->addStretch();
+    coverLayout->addLayout(versionInfoLayout);
+    rightLayout->addWidget(coverGroup);
+
+    m_downloadGroup = new QGroupBox(m_rightWidget);
+    m_downloadGroup->setObjectName(QStringLiteral("downloadGroup"));
+    auto* downloadLayout = new QVBoxLayout(m_downloadGroup);
+    downloadLayout->setObjectName(QStringLiteral("downloadLayout"));
+
+    m_versionSelect = new QComboBox(m_downloadGroup);
+    m_versionSelect->setObjectName(QStringLiteral("versionSelect"));
+    downloadLayout->addWidget(m_versionSelect);
+    rightLayout->addWidget(m_downloadGroup);
+
+    m_modifierOptions = new QTextEdit(m_rightWidget);
+    m_modifierOptions->setObjectName(QStringLiteral("modifierOptions"));
+    m_modifierOptions->setReadOnly(true);
+    rightLayout->addWidget(m_modifierOptions);
+
+    m_downloadProgress = new QProgressBar(m_rightWidget);
+    m_downloadProgress->setObjectName(QStringLiteral("downloadProgress"));
+    m_downloadProgress->setVisible(false);
+    m_downloadProgress->setValue(0);
+    rightLayout->addWidget(m_downloadProgress);
+
+    auto* buttonLayout = new QHBoxLayout();
+    buttonLayout->setObjectName(QStringLiteral("buttonLayout"));
+    buttonLayout->setSpacing(15);
+
+    m_downloadButton = new QPushButton(m_rightWidget);
+    m_downloadButton->setObjectName(QStringLiteral("downloadButton"));
+    buttonLayout->addWidget(m_downloadButton);
+
+    m_openFolderButton = new QPushButton(m_rightWidget);
+    m_openFolderButton->setObjectName(QStringLiteral("openFolderButton"));
+    buttonLayout->addWidget(m_openFolderButton);
+
+    m_settingsButton = new QPushButton(m_rightWidget);
+    m_settingsButton->setObjectName(QStringLiteral("settingsButton"));
+    buttonLayout->addWidget(m_settingsButton);
+    buttonLayout->addStretch();
+
+    rightLayout->addLayout(buttonLayout);
+    m_mainSplitter->addWidget(m_rightWidget);
+    m_rightWidget->hide();
+
+    // 已下载标签页
+    m_downloadedTab = new QWidget(m_tabWidget);
+    m_downloadedTab->setObjectName(QStringLiteral("downloadedTab"));
+    auto* downloadedLayout = new QVBoxLayout(m_downloadedTab);
+    downloadedLayout->setContentsMargins(9, 9, 9, 9);
+
+    QLabel* downloadedTitle = new QLabel(m_downloadedTab);
+    downloadedTitle->setObjectName(QStringLiteral("downloadedTitleLabel"));
+    downloadedTitle->setStyleSheet(
+        QStringLiteral("QLabel {"
+                       "   font-size: 16px;"
+                       "   font-weight: bold;"
+                       "   color: #333333;"
+                       "   padding: 5px 0px 10px 0px;"
+                       "}"));
+    downloadedLayout->addWidget(downloadedTitle);
+
+    m_downloadedTable = new QTableWidget(m_downloadedTab);
+    m_downloadedTable->setObjectName(QStringLiteral("downloadedTable"));
+    m_downloadedTable->setColumnCount(4);
+    m_downloadedTable->setHorizontalHeaderLabels(QStringList(4, QString()));
+    m_downloadedTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_downloadedTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_downloadedTable->setAlternatingRowColors(true);
+    m_downloadedTable->verticalHeader()->setVisible(false);
+    m_downloadedTable->setShowGrid(true);
+    m_downloadedTable->setGridStyle(Qt::DotLine);
+    m_downloadedTable->horizontalHeader()->setStretchLastSection(true);
+    m_downloadedTable->horizontalHeader()->setDefaultAlignment(Qt::AlignCenter);
+    m_downloadedTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Interactive);
+    m_downloadedTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
+    m_downloadedTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
+    m_downloadedTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Fixed);
+    m_downloadedTable->setColumnWidth(0, 300);
+    m_downloadedTable->setColumnWidth(1, 150);
+    m_downloadedTable->setColumnWidth(2, 200);
+    m_downloadedTable->setColumnWidth(3, 200);
+    m_downloadedTable->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_downloadedTable->setMinimumHeight(300);
+    m_downloadedTable->horizontalHeader()->setMinimumHeight(30);
+    m_downloadedTable->horizontalHeader()->setFixedHeight(30);
+    m_downloadedTable->verticalHeader()->setDefaultSectionSize(36);
+    downloadedLayout->addWidget(m_downloadedTable);
+
+    auto* downloadedButtonLayout = new QHBoxLayout();
+    downloadedButtonLayout->setSpacing(10);
+
+    m_runButton = new QPushButton(m_downloadedTab);
+    m_runButton->setObjectName(QStringLiteral("runButton"));
+    m_runButton->setIcon(QIcon(QStringLiteral(":/icons/play.png")));
+    m_runButton->setMinimumWidth(100);
+    m_runButton->setCursor(Qt::PointingHandCursor);
+    downloadedButtonLayout->addWidget(m_runButton);
+
+    m_deleteButton = new QPushButton(m_downloadedTab);
+    m_deleteButton->setObjectName(QStringLiteral("deleteButton"));
+    m_deleteButton->setIcon(QIcon(QStringLiteral(":/icons/delete.png")));
+    m_deleteButton->setMinimumWidth(100);
+    m_deleteButton->setCursor(Qt::PointingHandCursor);
+    downloadedButtonLayout->addWidget(m_deleteButton);
+
+    m_checkUpdateButton = new QPushButton(m_downloadedTab);
+    m_checkUpdateButton->setObjectName(QStringLiteral("checkUpdateButton"));
+    m_checkUpdateButton->setIcon(QIcon(QStringLiteral(":/icons/update.png")));
+    m_checkUpdateButton->setMinimumWidth(100);
+    m_checkUpdateButton->setCursor(Qt::PointingHandCursor);
+    downloadedButtonLayout->addWidget(m_checkUpdateButton);
+    downloadedButtonLayout->addStretch();
+
+    downloadedLayout->addLayout(downloadedButtonLayout);
+    m_tabWidget->addTab(m_searchTab, QString());
+    m_tabWidget->addTab(m_downloadedTab, QString());
+
+    // 菜单栏
+    m_menubar = window->menuBar();
+    if (!m_menubar) {
+        m_menubar = new QMenuBar(window);
+        window->setMenuBar(m_menubar);
+    }
+
+    m_menuFile = m_menubar->addMenu(QString());
+    m_menuFile->setObjectName(QStringLiteral("menuFile"));
+
+    m_actionSettings = new QAction(window);
+    m_actionSettings->setObjectName(QStringLiteral("actionSettings"));
+    m_menuFile->addAction(m_actionSettings);
+    m_menuFile->addSeparator();
+
+    m_actionExit = new QAction(window);
+    m_actionExit->setObjectName(QStringLiteral("actionExit"));
+    m_menuFile->addAction(m_actionExit);
+
+    m_menuTheme = m_menubar->addMenu(QString());
+    m_menuTheme->setObjectName(QStringLiteral("menuTheme"));
+    m_themeActionGroup = new QActionGroup(window);
+    m_themeActionGroup->setObjectName(QStringLiteral("themeActionGroup"));
+    m_themeActionGroup->setExclusive(true);
+
+    m_actionLightTheme = new QAction(window);
+    m_actionLightTheme->setObjectName(QStringLiteral("actionLightTheme"));
+    m_actionLightTheme->setCheckable(true);
+    m_themeActionGroup->addAction(m_actionLightTheme);
+    m_menuTheme->addAction(m_actionLightTheme);
+
+    m_actionWin11Theme = new QAction(window);
+    m_actionWin11Theme->setObjectName(QStringLiteral("actionWin11Theme"));
+    m_actionWin11Theme->setCheckable(true);
+    m_themeActionGroup->addAction(m_actionWin11Theme);
+    m_menuTheme->addAction(m_actionWin11Theme);
+
+    m_actionClassicTheme = new QAction(window);
+    m_actionClassicTheme->setObjectName(QStringLiteral("actionClassicTheme"));
+    m_actionClassicTheme->setCheckable(true);
+    m_themeActionGroup->addAction(m_actionClassicTheme);
+    m_menuTheme->addAction(m_actionClassicTheme);
+
+    m_actionColorfulTheme = new QAction(window);
+    m_actionColorfulTheme->setObjectName(QStringLiteral("actionColorfulTheme"));
+    m_actionColorfulTheme->setCheckable(true);
+    m_themeActionGroup->addAction(m_actionColorfulTheme);
+    m_menuTheme->addAction(m_actionColorfulTheme);
+
+    m_menuLanguage = m_menubar->addMenu(QString());
+    m_menuLanguage->setObjectName(QStringLiteral("menuLanguage"));
+    m_languageActionGroup = new QActionGroup(window);
+    m_languageActionGroup->setObjectName(QStringLiteral("languageActionGroup"));
+    m_languageActionGroup->setExclusive(true);
+
+    m_actionChineseLanguage = new QAction(window);
+    m_actionChineseLanguage->setObjectName(QStringLiteral("actionChineseLanguage"));
+    m_actionChineseLanguage->setCheckable(true);
+    m_languageActionGroup->addAction(m_actionChineseLanguage);
+    m_menuLanguage->addAction(m_actionChineseLanguage);
+
+    m_actionEnglishLanguage = new QAction(window);
+    m_actionEnglishLanguage->setObjectName(QStringLiteral("actionEnglishLanguage"));
+    m_actionEnglishLanguage->setCheckable(true);
+    m_languageActionGroup->addAction(m_actionEnglishLanguage);
+    m_menuLanguage->addAction(m_actionEnglishLanguage);
+
+    m_actionJapaneseLanguage = new QAction(window);
+    m_actionJapaneseLanguage->setObjectName(QStringLiteral("actionJapaneseLanguage"));
+    m_actionJapaneseLanguage->setCheckable(true);
+    m_languageActionGroup->addAction(m_actionJapaneseLanguage);
+    m_menuLanguage->addAction(m_actionJapaneseLanguage);
+
+    // 状态栏
+    m_statusbar = window->statusBar();
+    if (!m_statusbar) {
+        m_statusbar = new QStatusBar(window);
+        window->setStatusBar(m_statusbar);
+    }
+
+    m_statusLabel = new QLabel(m_statusbar);
+    m_statusLabel->setObjectName(QStringLiteral("statusLabel"));
+    m_statusLabel->setMargin(3);
+    m_statusbar->addWidget(m_statusLabel);
+
+    // 初始按钮状态
+    m_downloadButton->setEnabled(false);
+    m_versionSelect->setEnabled(false);
+    m_runButton->setEnabled(false);
+    m_deleteButton->setEnabled(false);
+    m_checkUpdateButton->setEnabled(true);
+
+    // 分割布局默认比例
+    m_mainSplitter->setSizes({600, 400});
+    m_mainSplitter->setStretchFactor(0, 2);
+    m_mainSplitter->setStretchFactor(1, 1);
+
+    retranslateUi(window);
+}
+
+void DownloadIntegratorUI::retranslateUi(QMainWindow* window)
+{
+    const char* context = "DownloadIntegrator";
+    if (!window) {
+        return;
+    }
+
+    window->setWindowTitle(QCoreApplication::translate(context, "游戏修改器下载集成工具"));
+
+    if (m_tabWidget) {
+        m_tabWidget->setTabText(0, QCoreApplication::translate(context, "搜索修改器"));
+        m_tabWidget->setTabText(1, QCoreApplication::translate(context, "已下载修改器"));
+    }
+
+    if (m_searchEdit) {
+        m_searchEdit->setPlaceholderText(QCoreApplication::translate(context, "搜索游戏..."));
+    }
+    if (m_searchButton) {
+        m_searchButton->setText(QCoreApplication::translate(context, "搜索"));
+    }
+    if (m_sortComboBox && m_sortComboBox->count() >= 3) {
+        m_sortComboBox->setItemText(0, QCoreApplication::translate(context, "最近更新"));
+        m_sortComboBox->setItemText(1, QCoreApplication::translate(context, "按名称"));
+        m_sortComboBox->setItemText(2, QCoreApplication::translate(context, "下载次数"));
+    }
+    if (m_refreshButton) {
+        m_refreshButton->setText(QCoreApplication::translate(context, "显示全部"));
+        m_refreshButton->setToolTip(QCoreApplication::translate(context, "清除搜索结果，显示所有最新修改器列表"));
+    }
+
+    if (m_modifierTable && m_modifierTable->columnCount() >= 4) {
+        QStringList headers;
+        headers << QCoreApplication::translate(context, "游戏名称")
+                << QCoreApplication::translate(context, "更新日期")
+                << QCoreApplication::translate(context, "支持版本")
+                << QCoreApplication::translate(context, "选项数量");
+        m_modifierTable->setHorizontalHeaderLabels(headers);
+    }
+
+    if (m_versionInfo) {
+        m_versionInfo->setText(QCoreApplication::translate(context, "游戏版本："));
+    }
+    if (m_optionsCount) {
+        m_optionsCount->setText(QCoreApplication::translate(context, "修改器选项："));
+    }
+    if (m_lastUpdate) {
+        m_lastUpdate->setText(QCoreApplication::translate(context, "最后更新："));
+    }
+    if (m_downloadGroup) {
+        m_downloadGroup->setTitle(QCoreApplication::translate(context, "版本选择"));
+    }
+    if (m_modifierOptions) {
+        m_modifierOptions->setPlaceholderText(QCoreApplication::translate(context, "修改器功能选项列表..."));
+    }
+
+    if (m_downloadButton) {
+        m_downloadButton->setText(QCoreApplication::translate(context, "下载"));
+    }
+    if (m_openFolderButton) {
+        m_openFolderButton->setText(QCoreApplication::translate(context, "打开下载目录"));
+    }
+    if (m_settingsButton) {
+        m_settingsButton->setText(QCoreApplication::translate(context, "设置"));
+    }
+
+    if (m_downloadedTab) {
+        QLabel* titleLabel = m_downloadedTab->findChild<QLabel*>(QStringLiteral("downloadedTitleLabel"));
+        if (titleLabel) {
+            titleLabel->setText(QCoreApplication::translate(context, "已下载的游戏修改器"));
+        }
+    }
+
+    if (m_downloadedTable && m_downloadedTable->columnCount() >= 4) {
+        QStringList headers;
+        headers << QCoreApplication::translate(context, "修改器名称")
+                << QCoreApplication::translate(context, "版本")
+                << QCoreApplication::translate(context, "游戏版本")
+                << QCoreApplication::translate(context, "下载日期");
+        m_downloadedTable->setHorizontalHeaderLabels(headers);
+    }
+
+    if (m_runButton) {
+        m_runButton->setText(QCoreApplication::translate(context, "运行"));
+    }
+    if (m_deleteButton) {
+        m_deleteButton->setText(QCoreApplication::translate(context, "删除"));
+    }
+    if (m_checkUpdateButton) {
+        m_checkUpdateButton->setText(QCoreApplication::translate(context, "检查更新"));
+    }
+
+    if (m_menuFile) {
+        m_menuFile->setTitle(QCoreApplication::translate(context, "文件"));
+    }
+    if (m_actionSettings) {
+        m_actionSettings->setText(QCoreApplication::translate(context, "设置"));
+    }
+    if (m_actionExit) {
+        m_actionExit->setText(QCoreApplication::translate(context, "退出"));
+    }
+    if (m_menuTheme) {
+        m_menuTheme->setTitle(QCoreApplication::translate(context, "主题"));
+    }
+    if (m_actionLightTheme) {
+        m_actionLightTheme->setText(QCoreApplication::translate(context, "浅色主题"));
+    }
+    if (m_actionWin11Theme) {
+        m_actionWin11Theme->setText(QCoreApplication::translate(context, "Windows 11主题"));
+    }
+    if (m_actionClassicTheme) {
+        m_actionClassicTheme->setText(QCoreApplication::translate(context, "经典主题"));
+    }
+    if (m_actionColorfulTheme) {
+        m_actionColorfulTheme->setText(QCoreApplication::translate(context, "多彩主题"));
+    }
+    if (m_menuLanguage) {
+        m_menuLanguage->setTitle(QCoreApplication::translate(context, "语言"));
+    }
+    if (m_actionChineseLanguage) {
+        m_actionChineseLanguage->setText(QCoreApplication::translate(context, "中文"));
+    }
+    if (m_actionEnglishLanguage) {
+        m_actionEnglishLanguage->setText(QCoreApplication::translate(context, "English"));
+    }
+    if (m_actionJapaneseLanguage) {
+        m_actionJapaneseLanguage->setText(QCoreApplication::translate(context, "日本語"));
+    }
+    if (m_statusLabel) {
+        m_statusLabel->setText(QCoreApplication::translate(context, "就绪"));
+    }
+}
+
+void DownloadIntegratorUI::resetModifierDetails()
+{
+    if (m_gameTitle) {
+        m_gameTitle->clear();
+    }
+    if (m_versionInfo) {
+        m_versionInfo->clear();
+    }
+    if (m_optionsCount) {
+        m_optionsCount->clear();
+    }
+    if (m_lastUpdate) {
+        m_lastUpdate->clear();
+    }
+    if (m_modifierOptions) {
+        m_modifierOptions->clear();
+    }
+    if (m_downloadButton) {
+        m_downloadButton->setEnabled(false);
+    }
+    if (m_versionSelect) {
+        m_versionSelect->setEnabled(false);
+        m_versionSelect->clear();
+    }
+    if (m_downloadProgress) {
+        m_downloadProgress->setVisible(false);
+        m_downloadProgress->setValue(0);
+    }
+    if (m_gameCoverLabel) {
+        m_gameCoverLabel->clear();
+    }
+}
+
+void DownloadIntegratorUI::populateModifierList(const QList<ModifierInfo>& modifiers)
+{
+    if (!m_modifierTable) {
+        return;
+    }
+
+    int scrollValue = m_modifierTable->verticalScrollBar()->value();
+    m_modifierTable->setUpdatesEnabled(false);
+    m_modifierTable->clearContents();
+    m_modifierTable->setRowCount(modifiers.size());
+
+    for (int i = 0; i < modifiers.size(); ++i) {
+        const ModifierInfo& info = modifiers.at(i);
+
+        auto* nameItem = new QTableWidgetItem(info.name);
+        auto* versionItem = new QTableWidgetItem(info.gameVersion);
+        auto* updateItem = new QTableWidgetItem(info.lastUpdate);
+        auto* optionsItem = new QTableWidgetItem(QString::number(info.optionsCount));
+
+        m_modifierTable->setItem(i, 0, nameItem);
+        m_modifierTable->setItem(i, 1, versionItem);
+        m_modifierTable->setItem(i, 2, updateItem);
+        m_modifierTable->setItem(i, 3, optionsItem);
+    }
+
+    if (modifiers.isEmpty()) {
+        m_modifierTable->setRowCount(kDefaultModifierTableRows);
+    }
+
+    m_modifierTable->setUpdatesEnabled(true);
+    m_modifierTable->verticalScrollBar()->setValue(scrollValue);
+}
+
 // 构造函数
 DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     : QMainWindow(parent)
-    , ui(new Ui::DownloadIntegrator)
+    , ui(std::make_unique<DownloadIntegratorUI>())
     , currentModifier(nullptr)
     , currentDownloadId("")
     , currentDownloadedModifier(nullptr)
@@ -44,265 +611,101 @@ DownloadIntegrator::DownloadIntegrator(QWidget* parent)
     , m_downloadedTable(nullptr)
     , m_runButton(nullptr)
     , m_deleteButton(nullptr)
+    , m_checkUpdateButton(nullptr)
     , m_coverExtractor(nullptr)
 {
     qDebug() << "开始初始化界面...";
-    
-    // 设置UI
+
     ui->setupUi(this);
-    
-    // 初始隐藏右侧详情面板，直到用户选择修改器
-    ui->rightWidget->hide();
-    
-    // 设置分割条初始比例为2:1（左边比右边稍多一些）
-    ui->mainSplitter->setSizes({600, 400}); // 2:1的比例
-    ui->mainSplitter->setStretchFactor(0, 2); // 左侧拉伸因子为2
-    ui->mainSplitter->setStretchFactor(1, 1); // 右侧拉伸因子为1
-    
-    // 设置主题菜单
+
+    m_tabWidget = ui->tabWidget();
+    m_searchTab = ui->searchTab();
+    m_downloadedTab = ui->downloadedTab();
+    m_downloadedTable = ui->downloadedTable();
+    m_runButton = ui->runButton();
+    m_deleteButton = ui->deleteButton();
+    m_checkUpdateButton = ui->checkUpdateButton();
+
     setupThemeMenu();
     setupLanguageMenu();
-    
-    // 添加工具菜单
+
     QMenu* toolsMenu = menuBar()->addMenu(tr("工具"));
-    
-    // 如果工具菜单现在为空，删除它
     if (toolsMenu->actions().isEmpty()) {
         menuBar()->removeAction(toolsMenu->menuAction());
     }
-    
-    // 添加标签页
-    m_tabWidget = new QTabWidget(this);
-    setCentralWidget(m_tabWidget);
-    
-    // 创建搜索标签页
-    m_searchTab = new QWidget(m_tabWidget);
-    m_tabWidget->addTab(m_searchTab, tr("搜索修改器"));
-    m_searchTab->setLayout(ui->centralwidget->layout());
-    ui->centralwidget->setParent(nullptr);
-    
-    // 创建已下载标签页
-    m_downloadedTab = new QWidget(m_tabWidget);
-    m_tabWidget->addTab(m_downloadedTab, tr("已下载修改器"));
-    
-    // 设置已下载标签页布局
-    QVBoxLayout* downloadedLayout = new QVBoxLayout(m_downloadedTab);
-    
-    // 添加标题标签
-    QLabel* titleLabel = new QLabel(tr("已下载的游戏修改器"), m_downloadedTab);
-    titleLabel->setStyleSheet(
-        "QLabel {"
-        "   font-size: 16px;"
-        "   font-weight: bold;"
-        "   color: #333333;"
-        "   padding: 5px 0px 10px 0px;"
-        "}"
-    );
-    downloadedLayout->addWidget(titleLabel);
-    
-    // 创建已下载修改器表格
-    m_downloadedTable = new QTableWidget(m_downloadedTab);
-    m_downloadedTable->setColumnCount(4);
-    QStringList headers;
-    headers << tr("修改器名称") << tr("版本") << tr("游戏版本") << tr("下载日期");
-    m_downloadedTable->setHorizontalHeaderLabels(headers);
-    m_downloadedTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-    m_downloadedTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    m_downloadedTable->setAlternatingRowColors(true);
-    m_downloadedTable->verticalHeader()->setVisible(false);
-    m_downloadedTable->setShowGrid(true); // 显示网格线以提高可读性
-    m_downloadedTable->setGridStyle(Qt::DotLine); // 使用点线样式的网格，看起来更现代
-    m_downloadedTable->horizontalHeader()->setStretchLastSection(true);
-    m_downloadedTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Interactive); // 第一列可交互调整
-    m_downloadedTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed); // 其他列固定大小
-    m_downloadedTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
-    m_downloadedTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Fixed);
-    m_downloadedTable->horizontalHeader()->setDefaultAlignment(Qt::AlignCenter); // 居中对齐表头
-    m_downloadedTable->horizontalHeader()->setHighlightSections(true); // 高亮显示选中的表头
-    // 移除固定样式，让其跟随主题
-    m_downloadedTable->setObjectName("downloadedTable");
-    
-    m_downloadedTable->setColumnWidth(0, 300); // 修改器名称列宽
-    m_downloadedTable->setColumnWidth(1, 150); // 版本列宽
-    m_downloadedTable->setColumnWidth(2, 200); // 游戏版本列宽
-    m_downloadedTable->setColumnWidth(3, 200); // 下载日期列宽
-    
-    // 固定表格大小策略，防止忽大忽小
-    m_downloadedTable->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    m_downloadedTable->setMinimumHeight(300); // 设置最小高度
-    m_downloadedTable->horizontalHeader()->setMinimumHeight(30); // 设置表头最小高度
-    m_downloadedTable->horizontalHeader()->setFixedHeight(30); // 固定表头高度
-    m_downloadedTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Interactive); // 第一列可交互调整
-    m_downloadedTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed); // 其他列固定大小
-    m_downloadedTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
-    m_downloadedTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Fixed);
-    
-    // 移除固定表格样式，让主题系统管理
-    // 表格样式现在由主题文件控制
-    
-    // 设置行高
-    m_downloadedTable->verticalHeader()->setDefaultSectionSize(36); // 增加行高以提高可读性
-    
-    // 创建按钮区域
-    QHBoxLayout* buttonLayout = new QHBoxLayout();
-    buttonLayout->setContentsMargins(0, 10, 0, 0); // 增加上边距，使按钮与表格分隔开
-    
-    // 创建按钮并设置样式
-    m_runButton = new QPushButton(tr("运行"), m_downloadedTab);
-    m_runButton->setObjectName("runButton");
-    m_runButton->setIcon(QIcon(":/icons/play.png")); // 如果有图标资源
-    m_runButton->setMinimumWidth(100);
-    m_runButton->setCursor(Qt::PointingHandCursor);
-    
-    m_deleteButton = new QPushButton(tr("删除"), m_downloadedTab);
-    m_deleteButton->setObjectName("deleteButton");
-    m_deleteButton->setIcon(QIcon(":/icons/delete.png")); // 如果有图标资源
-    m_deleteButton->setMinimumWidth(100);
-    m_deleteButton->setCursor(Qt::PointingHandCursor);
-    
-    // 添加"检查更新"按钮
-    m_checkUpdateButton = new QPushButton(tr("检查更新"), m_downloadedTab);
-    m_checkUpdateButton->setObjectName("checkUpdateButton");
-    m_checkUpdateButton->setIcon(QIcon(":/icons/update.png")); // 如果有图标资源
-    m_checkUpdateButton->setMinimumWidth(100);
-    m_checkUpdateButton->setCursor(Qt::PointingHandCursor);
-    
-    // 初始禁用按钮
-    m_runButton->setEnabled(false);
-    m_deleteButton->setEnabled(false);
-    m_checkUpdateButton->setEnabled(true); // 始终启用"检查更新"按钮
-    
-    // 添加按钮到布局
-    buttonLayout->addWidget(m_runButton);
-    buttonLayout->addSpacing(10); // 按钮之间的间距
-    buttonLayout->addWidget(m_deleteButton);
-    buttonLayout->addSpacing(10); // 按钮之间的间距
-    buttonLayout->addWidget(m_checkUpdateButton);
-    buttonLayout->addStretch();
-    
-    // 添加到布局
-    downloadedLayout->addWidget(m_downloadedTable);
-    downloadedLayout->addLayout(buttonLayout);
-    
-    // 注释掉重复的样式表加载，由ThemeManager统一管理
-    // 如果需要特定样式，应该在CSS中使用objectName选择器
-    /*
-    QFile styleFile(":/style/main.qss");
-    if (styleFile.open(QFile::ReadOnly)) {
-        QString style = QLatin1String(styleFile.readAll());
-        setStyleSheet(style);
-        styleFile.close();
-        qDebug() << "已加载样式表";
-    } else {
-        qDebug() << "无法加载样式表文件: " << styleFile.errorString();
-    }
-    */
-    
-    // 设置表格属性
-    ui->modifierTable->setColumnCount(4);
-    ui->modifierTable->setColumnWidth(0, 250); // 游戏名称列宽
-    ui->modifierTable->setColumnWidth(1, 100); // 更新日期列宽
-    ui->modifierTable->setColumnWidth(2, 150); // 支持版本列宽
-    ui->modifierTable->setColumnWidth(3, 80);  // 选项数量列宽
-    
-    // 固定表格大小策略，防止忽大忽小
-    ui->modifierTable->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    ui->modifierTable->setMinimumHeight(300); // 设置最小高度
-    ui->modifierTable->horizontalHeader()->setMinimumHeight(30); // 设置表头最小高度
-    ui->modifierTable->horizontalHeader()->setFixedHeight(30); // 固定表头高度
-    ui->modifierTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Interactive); // 第一列可交互调整
-    ui->modifierTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed); // 其余列固定大小
-    ui->modifierTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
-    ui->modifierTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Fixed);
-    
-    ui->modifierTable->horizontalHeader()->setStretchLastSection(true);
-    ui->modifierTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->modifierTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    ui->modifierTable->setAlternatingRowColors(true); // 交替行颜色
-    ui->modifierTable->verticalHeader()->setVisible(false); // 隐藏行号
-    ui->modifierTable->setShowGrid(false); // 隐藏网格线
-    
-    // 设置窗口标题和图标
-    setWindowTitle(tr("游戏修改器下载集成工具"));
-    // 设置窗口图标（如果有的话）
-    // setWindowIcon(QIcon(":/icons/app_icon.png"));
-    
-    // 设置搜索框自动完成功能
+
     setupSearchCompleter();
-    
-    // 优化状态栏显示
-    QLabel* statusLabel = new QLabel(tr("就绪"));
-    statusLabel->setObjectName("statusLabel");
-    statusLabel->setMargin(3);
-    ui->statusbar->addWidget(statusLabel);
-    
-    // 初始禁用下载按钮
-    ui->downloadButton->setEnabled(false);
-    ui->versionSelect->setEnabled(false);
-    
-    // 设置信号和槽连接
-    connect(ui->searchButton, &QPushButton::clicked, this, &DownloadIntegrator::onSearchClicked);
-    connect(ui->searchEdit, &QLineEdit::returnPressed, this, &DownloadIntegrator::onSearchClicked);
-    
-    // 添加搜索框文本变化的监听，支持清除搜索回到初始列表
-    connect(ui->searchEdit, &QLineEdit::textChanged, this, [this](const QString& text) {
+
+    connect(ui->searchButton(), &QPushButton::clicked, this, &DownloadIntegrator::onSearchClicked);
+    connect(ui->searchEdit(), &QLineEdit::returnPressed, this, &DownloadIntegrator::onSearchClicked);
+
+    connect(ui->searchEdit(), &QLineEdit::textChanged, this, [this](const QString& text) {
         if (text.isEmpty()) {
-            // 隐藏右侧详情面板
-            ui->rightWidget->hide();
+            if (auto* panel = ui->rightWidget()) {
+                panel->hide();
+            }
             qDebug() << "搜索框已清空，隐藏右侧详情面板并恢复到初始修改器列表";
-            
-            // 当搜索框被清空时，显示初始的修改器列表
             showStatusMessage(tr("正在加载初始修改器列表..."));
             SearchManager::getInstance().fetchRecentlyUpdatedModifiers(this, &DownloadIntegrator::onSearchCompleted);
         }
     });
-    connect(ui->modifierTable, &QTableWidget::cellClicked, this, &DownloadIntegrator::onModifierItemClicked);
-    connect(ui->downloadButton, &QPushButton::clicked, this, &DownloadIntegrator::onDownloadButtonClicked);
-    connect(ui->openFolderButton, &QPushButton::clicked, this, &DownloadIntegrator::onOpenFolderButtonClicked);
-    connect(ui->settingsButton, &QPushButton::clicked, this, &DownloadIntegrator::onSettingsButtonClicked);
-    connect(ui->versionSelect, QOverload<int>::of(&QComboBox::currentIndexChanged), 
+
+    connect(ui->modifierTable(), &QTableWidget::cellClicked, this, &DownloadIntegrator::onModifierItemClicked);
+    connect(ui->downloadButton(), &QPushButton::clicked, this, &DownloadIntegrator::onDownloadButtonClicked);
+    connect(ui->openFolderButton(), &QPushButton::clicked, this, &DownloadIntegrator::onOpenFolderButtonClicked);
+    connect(ui->settingsButton(), &QPushButton::clicked, this, &DownloadIntegrator::onSettingsButtonClicked);
+    connect(ui->versionSelect(), QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &DownloadIntegrator::onVersionSelectionChanged);
-    connect(ui->sortComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+    connect(ui->sortComboBox(), QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &DownloadIntegrator::onSortOrderChanged);
-    // 重新启用刷新按钮连接
-    connect(ui->refreshButton, &QPushButton::clicked, this, &DownloadIntegrator::onRefreshButtonClicked);
-            
-    // 连接菜单动作
-    connect(ui->actionExit, &QAction::triggered, this, &QWidget::close);
-    connect(ui->actionSettings, &QAction::triggered, this, &DownloadIntegrator::onSettingsButtonClicked);
-    
-    // 连接已下载修改器管理相关信号
-    connect(m_downloadedTable, &QTableWidget::cellDoubleClicked, this, &DownloadIntegrator::onDownloadedModifierDoubleClicked);
-    connect(m_runButton, &QPushButton::clicked, this, &DownloadIntegrator::onRunButtonClicked);
-    connect(m_deleteButton, &QPushButton::clicked, this, &DownloadIntegrator::onDeleteButtonClicked);
-    connect(m_checkUpdateButton, &QPushButton::clicked, this, &DownloadIntegrator::onCheckUpdateButtonClicked);
-    connect(m_tabWidget, &QTabWidget::currentChanged, this, &DownloadIntegrator::onTabChanged);
-    connect(m_downloadedTable, &QTableWidget::itemSelectionChanged, this, [this]() {
-        bool hasSelection = !m_downloadedTable->selectedItems().isEmpty();
-        m_runButton->setEnabled(hasSelection);
-        m_deleteButton->setEnabled(hasSelection);
-    });
-    
+    connect(ui->refreshButton(), &QPushButton::clicked, this, &DownloadIntegrator::onRefreshButtonClicked);
+
+    connect(ui->actionExit(), &QAction::triggered, this, &QWidget::close);
+    connect(ui->actionSettings(), &QAction::triggered, this, &DownloadIntegrator::onSettingsButtonClicked);
+
+    if (m_downloadedTable) {
+        connect(m_downloadedTable, &QTableWidget::cellDoubleClicked, this, &DownloadIntegrator::onDownloadedModifierDoubleClicked);
+        connect(m_downloadedTable, &QTableWidget::itemSelectionChanged, this, [this]() {
+            bool hasSelection = m_downloadedTable && !m_downloadedTable->selectedItems().isEmpty();
+            if (m_runButton) {
+                m_runButton->setEnabled(hasSelection);
+            }
+            if (m_deleteButton) {
+                m_deleteButton->setEnabled(hasSelection);
+            }
+        });
+    }
+    if (m_runButton) {
+        connect(m_runButton, &QPushButton::clicked, this, &DownloadIntegrator::onRunButtonClicked);
+    }
+    if (m_deleteButton) {
+        connect(m_deleteButton, &QPushButton::clicked, this, &DownloadIntegrator::onDeleteButtonClicked);
+    }
+    if (m_checkUpdateButton) {
+        connect(m_checkUpdateButton, &QPushButton::clicked, this, &DownloadIntegrator::onCheckUpdateButtonClicked);
+    }
+    if (m_tabWidget) {
+        connect(m_tabWidget, &QTabWidget::currentChanged, this, &DownloadIntegrator::onTabChanged);
+    }
+
     qDebug() << "界面初始化完成，准备加载修改器列表";
-    
-    // 初始化封面提取器
+
     m_coverExtractor = new CoverExtractor(this);
-    
-    // 加载已下载修改器列表
+
     updateDownloadedModifiersList();
-    
-    // 加载修改器列表 - 使用SearchManager获取最新修改器列表
+
     qDebug() << "正在调用SearchManager.fetchRecentlyUpdatedModifiers获取最新修改器列表...";
     SearchManager::getInstance().fetchRecentlyUpdatedModifiers(this, &DownloadIntegrator::onSearchCompleted);
-    
-    // 设置gameTitle样式，移除底部边距并减少padding
-    ui->gameTitle->setStyleSheet("QLabel { margin-bottom: -5px; padding-bottom: 0px; }");
-    
-    // 初始化翻译
+
+    if (auto* titleLabel = ui->gameTitle()) {
+        titleLabel->setStyleSheet(QStringLiteral("QLabel { margin-bottom: -5px; padding-bottom: 0px; }"));
+    }
+
     retranslateUi();
-    
+
     qDebug() << "DownloadIntegrator构造函数执行完毕";
 }
+
 
 // 设置搜索框自动完成功能
 void DownloadIntegrator::setupSearchCompleter()
@@ -354,10 +757,10 @@ void DownloadIntegrator::setupSearchCompleter()
     }
     
     // 应用到搜索框
-    ui->searchEdit->setCompleter(completer);
+    ui->searchEdit()->setCompleter(completer);
     
     // 连接搜索框文本变化信号和搜索框获取焦点信号
-    connect(ui->searchEdit, &QLineEdit::textChanged, this, [this, popup, completer](const QString &text) {
+    connect(ui->searchEdit(), &QLineEdit::textChanged, this, [this, popup, completer](const QString &text) {
         // 如果文本长度大于等于1，显示建议
         if (text.length() >= 1) {
             // 显示自动完成弹出框
@@ -378,9 +781,9 @@ void DownloadIntegrator::setupSearchCompleter()
             }
             
             // 设置最佳宽度，但不小于搜索框宽度
-            int bestWidth = qMax(ui->searchEdit->width(), 
+            int bestWidth = qMax(ui->searchEdit()->width(), 
                               qMax(contentWidth, 
-                                 static_cast<int>(ui->searchEdit->width() * 1.5)));
+                                 static_cast<int>(ui->searchEdit()->width() * 1.5)));
             
             // 限制最大宽度，避免太宽
             int maxWidth = static_cast<int>(this->width() * 3/4); // 使用主窗口宽度的3/4
@@ -390,15 +793,15 @@ void DownloadIntegrator::setupSearchCompleter()
             popup->resize(bestWidth, popup->height());
             
             // 调整位置，使其水平居中于搜索框
-            QPoint globalPos = ui->searchEdit->mapToGlobal(QPoint(0, ui->searchEdit->height()));
-            int x = globalPos.x() + (ui->searchEdit->width() - popup->width()) / 2;
+            QPoint globalPos = ui->searchEdit()->mapToGlobal(QPoint(0, ui->searchEdit()->height()));
+            int x = globalPos.x() + (ui->searchEdit()->width() - popup->width()) / 2;
             popup->move(x, globalPos.y());
         }
     });
     
     // 搜索框获得焦点时直接显示建议
-    connect(ui->searchEdit, &QLineEdit::cursorPositionChanged, this, [this, completer]() {
-        if (ui->searchEdit->hasFocus() && !ui->searchEdit->text().isEmpty()) {
+    connect(ui->searchEdit(), &QLineEdit::cursorPositionChanged, this, [this, completer]() {
+        if (ui->searchEdit()->hasFocus() && !ui->searchEdit()->text().isEmpty()) {
             completer->complete();
         }
     });
@@ -410,7 +813,6 @@ void DownloadIntegrator::setupSearchCompleter()
 DownloadIntegrator::~DownloadIntegrator()
 {
     delete currentModifier;
-    delete ui;
 }
 
 // 更新修改器列表
@@ -421,58 +823,8 @@ void DownloadIntegrator::updateModifierList(const QList<ModifierInfo>& modifiers
     // 更新内部修改器列表
     modifierList = modifiers;
     
-    // 记录当前表格滚动位置
-    int scrollValue = ui->modifierTable->verticalScrollBar()->value();
-    
-    // 关闭表格重排功能，防止在填充时频繁布局
-    ui->modifierTable->setUpdatesEnabled(false);
-    
-    // 清空现有表格
-    ui->modifierTable->clearContents();
-    ui->modifierTable->setRowCount(modifierList.size());
-    
-    // 填充数据
-    for (int i = 0; i < modifierList.size(); i++) {
-        const ModifierInfo& info = modifierList[i];
-        
-        // 设置修改器名称
-        QTableWidgetItem* nameItem = new QTableWidgetItem(info.name);
-        ui->modifierTable->setItem(i, 0, nameItem);
-        
-        // 设置游戏版本
-        QTableWidgetItem* versionItem = new QTableWidgetItem(info.gameVersion);
-        ui->modifierTable->setItem(i, 1, versionItem);
-        
-        // 设置最后更新时间
-        QTableWidgetItem* updateItem = new QTableWidgetItem(info.lastUpdate);
-        ui->modifierTable->setItem(i, 2, updateItem);
-        
-        // 设置选项数量
-        QTableWidgetItem* optionsItem = new QTableWidgetItem(QString::number(info.optionsCount));
-        ui->modifierTable->setItem(i, 3, optionsItem);
-        
-        qDebug() << "  添加修改器到表格: " << info.name << " (" << info.gameVersion << ")";
-    }
-    
-    // 仅在数据为空时添加空行以保持表格高度
-    if (modifierList.isEmpty()) {
-        ui->modifierTable->setRowCount(10); // 添加10个空行
-    }
-    
-    // 重新启用表格更新
-    ui->modifierTable->setUpdatesEnabled(true);
-    
-    // 恢复滚动位置
-    ui->modifierTable->verticalScrollBar()->setValue(scrollValue);
-    
-    // 清空详情区域
-    ui->gameTitle->clear();
-    ui->versionInfo->clear();
-    ui->optionsCount->clear();
-    ui->lastUpdate->clear();
-    ui->modifierOptions->clear();
-    ui->downloadButton->setEnabled(false);
-    
+    ui->populateModifierList(modifierList);
+    ui->resetModifierDetails();
     qDebug() << "修改器列表UI更新完成";
 }
 
@@ -491,17 +843,17 @@ void DownloadIntegrator::updateModifierDetail()
     }
     
     // 更新界面
-    ui->gameTitle->setText(currentModifier->name);
-    ui->versionInfo->setText(QString("<b>%1</b> %2").arg(tr("游戏版本:")).arg(currentModifier->gameVersion));
-    ui->optionsCount->setText(QString("<b>%1</b> %2").arg(tr("修改器选项:")).arg(currentModifier->options.size()));
-    ui->lastUpdate->setText(QString("<b>%1</b> %2").arg(tr("最后更新:")).arg(currentModifier->lastUpdate));
+    ui->gameTitle()->setText(currentModifier->name);
+    ui->versionInfo()->setText(QString("<b>%1</b> %2").arg(tr("游戏版本:")).arg(currentModifier->gameVersion));
+    ui->optionsCount()->setText(QString("<b>%1</b> %2").arg(tr("修改器选项:")).arg(currentModifier->options.size()));
+    ui->lastUpdate()->setText(QString("<b>%1</b> %2").arg(tr("最后更新:")).arg(currentModifier->lastUpdate));
     
     // 更新修改器选项列表
-    ui->modifierOptions->clear();
+    ui->modifierOptions()->clear();
     
     // 检查是否有选项
     if (currentModifier->options.isEmpty()) {
-        ui->modifierOptions->setHtml(QString("<div style='padding: 15px;'>"
+        ui->modifierOptions()->setHtml(QString("<div style='padding: 15px;'>"
                                            "<h3 style='color: #3c4b64; margin-top: 0;'>%1</h3>"
                                            "<p style='color: #666; font-style: italic;'>%2</p></div>")
                                     .arg(tr("可用功能:"))
@@ -509,7 +861,7 @@ void DownloadIntegrator::updateModifierDetail()
         
         // 添加获取信息中的提示，如果选项数计数不为0但没有实际选项
         if (currentModifier->optionsCount > 0) {
-            ui->modifierOptions->append(QString("<div style='text-align: center; padding: 20px;'>"
+            ui->modifierOptions()->append(QString("<div style='text-align: center; padding: 20px;'>"
                                              "<p style='color: #666;'>%1</p>"
                                              "<img src=':/resources/loading.gif' width='32' height='32'/>"
                                              "</div>")
@@ -646,7 +998,7 @@ void DownloadIntegrator::updateModifierDetail()
         
         optionsHtml += "</div></div>"; // 关闭选项容器和主容器
         
-        ui->modifierOptions->setHtml(optionsHtml);
+        ui->modifierOptions()->setHtml(optionsHtml);
         
         // 如果实际提取的选项数量小于网站标称的选项数量，显示提示信息
         if (currentModifier->optionsCount > 0 && actualOptionCount < currentModifier->optionsCount * 0.5) {
@@ -658,19 +1010,19 @@ void DownloadIntegrator::updateModifierDetail()
                                  .arg(tr("个选项，但仅提取到"))
                                  .arg(actualOptionCount)
                                  .arg(tr("个，可能有部分选项未能正确识别。"));
-            ui->modifierOptions->append(warningInfo);
+            ui->modifierOptions()->append(warningInfo);
         }
     }
     
     // 更新版本选择下拉框
-    ui->versionSelect->clear();
+    ui->versionSelect()->clear();
     for (const auto& version : currentModifier->versions) {
-        ui->versionSelect->addItem(version.first);
+        ui->versionSelect()->addItem(version.first);
     }
     
     // 启用下载按钮和版本选择框
-    ui->downloadButton->setEnabled(!currentModifier->versions.isEmpty());
-    ui->versionSelect->setEnabled(!currentModifier->versions.isEmpty());
+    ui->downloadButton()->setEnabled(!currentModifier->versions.isEmpty());
+    ui->versionSelect()->setEnabled(!currentModifier->versions.isEmpty());
     
     // 提取游戏封面
     if (!currentModifier->screenshotUrl.isEmpty()) {
@@ -687,9 +1039,9 @@ void DownloadIntegrator::updateModifierDetail()
             qDebug() << "从缓存加载游戏封面";
         } else {
             // 显示加载提示
-            ui->gameCoverLabel->setText(tr("正在加载封面..."));
-            ui->gameCoverLabel->setAlignment(Qt::AlignCenter);
-            ui->gameCoverLabel->setStyleSheet("QLabel { color: #666; font-size: 12px; }");
+            ui->gameCoverLabel()->setText(tr("正在加载封面..."));
+            ui->gameCoverLabel()->setAlignment(Qt::AlignCenter);
+            ui->gameCoverLabel()->setStyleSheet("QLabel { color: #666; font-size: 12px; }");
             
             // 异步提取封面
             m_coverExtractor->extractCoverFromTrainerImage(currentModifier->screenshotUrl, 
@@ -702,16 +1054,16 @@ void DownloadIntegrator::updateModifierDetail()
                         qDebug() << "游戏封面提取成功";
                     } else {
                         // 失败时显示提示
-                        ui->gameCoverLabel->setText(tr("封面加载失败"));
-                        ui->gameCoverLabel->setAlignment(Qt::AlignCenter);
-                        ui->gameCoverLabel->setStyleSheet("QLabel { color: #999; font-size: 11px; }");
+                        ui->gameCoverLabel()->setText(tr("封面加载失败"));
+                        ui->gameCoverLabel()->setAlignment(Qt::AlignCenter);
+                        ui->gameCoverLabel()->setStyleSheet("QLabel { color: #999; font-size: 11px; }");
                         qDebug() << "游戏封面提取失败";
                     }
                 });
         }
     } else {
         // 没有截图URL时显示空白
-        ui->gameCoverLabel->clear();
+        ui->gameCoverLabel()->clear();
         qDebug() << "修改器没有截图URL，无法提取游戏封面";
     }
     
@@ -722,21 +1074,21 @@ void DownloadIntegrator::updateModifierDetail()
 void DownloadIntegrator::showStatusMessage(const QString& message, int timeout)
 {
     // 使用UIHelper显示状态消息
-    UIHelper::showStatusMessage(ui->statusbar, message, timeout);
+    UIHelper::showStatusMessage(ui->statusbar(), message, timeout);
 }
 
 // 设置游戏封面并保持图片原始大小
 void DownloadIntegrator::setGameCoverWithAspectRatio(const QPixmap& cover)
 {
     if (cover.isNull()) {
-        ui->gameCoverLabel->clear();
+        ui->gameCoverLabel()->clear();
         // 重置Label尺寸
-        ui->gameCoverLabel->setMinimumSize(120, 160); // 设置一个默认的最小尺寸
-        ui->gameCoverLabel->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+        ui->gameCoverLabel()->setMinimumSize(120, 160); // 设置一个默认的最小尺寸
+        ui->gameCoverLabel()->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
         
         // 重置coverGroup高度为默认值
-        ui->coverGroup->setMinimumHeight(180);
-        ui->coverGroup->setMaximumHeight(QWIDGETSIZE_MAX);
+        ui->coverGroup()->setMinimumHeight(180);
+        ui->coverGroup()->setMaximumHeight(QWIDGETSIZE_MAX);
         return;
     }
     
@@ -756,16 +1108,16 @@ void DownloadIntegrator::setGameCoverWithAspectRatio(const QPixmap& cover)
     }
     
     // 不再固定Label尺寸，让其根据内容自适应
-    ui->gameCoverLabel->setMinimumSize(finalPixmap.size());
-    ui->gameCoverLabel->setMaximumSize(finalPixmap.size());
+    ui->gameCoverLabel()->setMinimumSize(finalPixmap.size());
+    ui->gameCoverLabel()->setMaximumSize(finalPixmap.size());
     
     // 设置像素图
-    ui->gameCoverLabel->setPixmap(finalPixmap);
+    ui->gameCoverLabel()->setPixmap(finalPixmap);
     
     // 调整coverGroup高度以适应封面
     QSize finalSize = finalPixmap.size();
-    ui->coverGroup->setMinimumHeight(finalSize.height() + 20); // 加20像素的边距
-    ui->coverGroup->setMaximumHeight(finalSize.height() + 20);
+    ui->coverGroup()->setMinimumHeight(finalSize.height() + 20); // 加20像素的边距
+    ui->coverGroup()->setMaximumHeight(finalSize.height() + 20);
     
     qDebug() << QString("设置封面: 最终尺寸(%1x%2)，coverGroup高度已调整为%3")
                 .arg(finalSize.width()).arg(finalSize.height()).arg(finalSize.height() + 20);
@@ -1077,16 +1429,16 @@ void DownloadIntegrator::onCheckUpdateButtonClicked()
 // 搜索按钮点击
 void DownloadIntegrator::onSearchClicked()
 {
-    QString searchTerm = ui->searchEdit->text().trimmed();
+    QString searchTerm = ui->searchEdit()->text().trimmed();
     
     if (searchTerm.isEmpty()) {
         // 如果搜索框为空，提示用户输入搜索内容
-        ui->searchEdit->setFocus();
-        ui->searchEdit->setStyleSheet("border: 1px solid #e74c3c;");
+        ui->searchEdit()->setFocus();
+        ui->searchEdit()->setStyleSheet("border: 1px solid #e74c3c;");
         
         // 2秒后恢复样式
         QTimer::singleShot(2000, this, [this]() {
-            ui->searchEdit->setStyleSheet("");
+            ui->searchEdit()->setStyleSheet("");
         });
         
         showStatusMessage(tr("请输入要搜索的游戏名称"), 2000);
@@ -1096,15 +1448,15 @@ void DownloadIntegrator::onSearchClicked()
     qDebug() << "执行搜索：" << searchTerm;
     
     // 显示搜索中的动画或提示
-    ui->modifierTable->setRowCount(0);
-    ui->modifierTable->setEnabled(false);
+    ui->modifierTable()->setRowCount(0);
+    ui->modifierTable()->setEnabled(false);
     showStatusMessage(tr("正在搜索 \"%1\"...").arg(searchTerm));
     
     // 显示进度条
-    ui->downloadProgress->setValue(0);
-    ui->downloadProgress->setVisible(true);
-    ui->downloadProgress->setFormat(tr("搜索中..."));
-    ui->downloadProgress->setStyleSheet(
+    ui->downloadProgress()->setValue(0);
+    ui->downloadProgress()->setVisible(true);
+    ui->downloadProgress()->setFormat(tr("搜索中..."));
+    ui->downloadProgress()->setStyleSheet(
         "QProgressBar {"
         "   border: 1px solid #bdc3c7;"
         "   border-radius: 5px;"
@@ -1121,8 +1473,8 @@ void DownloadIntegrator::onSearchClicked()
     );
     
     // 禁用搜索按钮，防止重复点击
-    ui->searchButton->setEnabled(false);
-    ui->searchEdit->setEnabled(false);
+    ui->searchButton()->setEnabled(false);
+    ui->searchEdit()->setEnabled(false);
     
     // 创建一个定时器来模拟搜索进度
     QTimer* searchTimer = new QTimer(this);
@@ -1131,7 +1483,7 @@ void DownloadIntegrator::onSearchClicked()
     connect(searchTimer, &QTimer::timeout, [this, searchTimer, progress]() mutable {
         progress += 10;
         if (progress <= 90) {
-            ui->downloadProgress->setValue(progress);
+            ui->downloadProgress()->setValue(progress);
         } else {
             searchTimer->stop();
             searchTimer->deleteLater();
@@ -1151,17 +1503,17 @@ void DownloadIntegrator::onSearchCompleted(const QList<ModifierInfo>& modifiers)
     modifierList = modifiers;
     
     // 隐藏右侧详情面板（无论搜索是否有结果）
-    ui->rightWidget->hide();
+    ui->rightWidget()->hide();
     qDebug() << "搜索完成，隐藏右侧详情面板";
     
     // 更新UI
     updateModifierList(modifiers);
     
     // 恢复UI状态
-    ui->searchButton->setEnabled(true);
-    ui->searchEdit->setEnabled(true);
-    ui->modifierTable->setEnabled(true);
-    ui->downloadProgress->setVisible(false);
+    ui->searchButton()->setEnabled(true);
+    ui->searchEdit()->setEnabled(true);
+    ui->modifierTable()->setEnabled(true);
+    ui->downloadProgress()->setVisible(false);
     
     // 显示搜索结果提示
     if (modifiers.isEmpty()) {
@@ -1187,22 +1539,22 @@ void DownloadIntegrator::onModifierItemClicked(int row, int column)
         }
         
         // 显示右侧详情面板
-        if (ui->rightWidget->isHidden()) {
-            ui->rightWidget->show();
+        if (ui->rightWidget()->isHidden()) {
+            ui->rightWidget()->show();
             qDebug() << "右侧详情面板已显示";
         }
         
         // 显示加载中状态
         showStatusMessage(tr("正在加载修改器详情..."));
-        ui->gameTitle->setText(selectedModifier.name);
-        ui->versionInfo->setText(tr("游戏版本：加载中..."));
-        ui->optionsCount->setText(tr("修改器选项：加载中..."));
-        ui->lastUpdate->setText(tr("最后更新：加载中..."));
-        ui->modifierOptions->clear();
-        ui->modifierOptions->setPlainText(tr("加载中..."));
+        ui->gameTitle()->setText(selectedModifier.name);
+        ui->versionInfo()->setText(tr("游戏版本：加载中..."));
+        ui->optionsCount()->setText(tr("修改器选项：加载中..."));
+        ui->lastUpdate()->setText(tr("最后更新：加载中..."));
+        ui->modifierOptions()->clear();
+        ui->modifierOptions()->setPlainText(tr("加载中..."));
         
         // 设置游戏封面加载状态
-        ui->gameCoverLabel->clear();
+        ui->gameCoverLabel()->clear();
         
         // 加载详细信息
         ModifierManager::getInstance().getModifierDetail(url, [this](ModifierInfo* modifier) {
@@ -1258,9 +1610,9 @@ void DownloadIntegrator::onDownloadButtonClicked()
     QString fileName = sanitizedName + "_v";
     
     // 添加版本号
-    if (ui->versionSelect->currentIndex() >= 0 && ui->versionSelect->currentIndex() < currentModifier->versions.size()) {
+    if (ui->versionSelect()->currentIndex() >= 0 && ui->versionSelect()->currentIndex() < currentModifier->versions.size()) {
         // 使用选定版本
-        int index = ui->versionSelect->currentIndex();
+        int index = ui->versionSelect()->currentIndex();
         fileName += currentModifier->versions[index].first;
     } else {
         fileName += "latest";
@@ -1269,9 +1621,9 @@ void DownloadIntegrator::onDownloadButtonClicked()
     // 确定下载URL
     QString downloadUrl;
     
-    if (ui->versionSelect->currentIndex() >= 0 && ui->versionSelect->currentIndex() < currentModifier->versions.size()) {
+    if (ui->versionSelect()->currentIndex() >= 0 && ui->versionSelect()->currentIndex() < currentModifier->versions.size()) {
         // 使用选定版本的URL
-        int index = ui->versionSelect->currentIndex();
+        int index = ui->versionSelect()->currentIndex();
         downloadUrl = currentModifier->versions[index].second;
     } else if (!currentModifier->versions.isEmpty()) {
         // 默认使用最新版本的URL
@@ -1314,7 +1666,7 @@ void DownloadIntegrator::onDownloadButtonClicked()
     // 确认下载
     QString message = QString(tr("确认下载以下修改器？\n\n名称: %1\n版本: %2\n存储位置: %3"))
                     .arg(modifierName)
-                    .arg(ui->versionSelect->currentText())
+                    .arg(ui->versionSelect()->currentText())
                     .arg(downloadPath + "/" + fileName);
     
     if (QMessageBox::question(this, tr("下载确认"), message, 
@@ -1323,9 +1675,9 @@ void DownloadIntegrator::onDownloadButtonClicked()
         QString fullDownloadPath = downloadPath + "/" + fileName;
         
         // 确保进度条可见并设置初始值
-        ui->downloadProgress->setValue(0);
-        ui->downloadProgress->setVisible(true);
-        ui->downloadProgress->setStyleSheet(
+        ui->downloadProgress()->setValue(0);
+        ui->downloadProgress()->setVisible(true);
+        ui->downloadProgress()->setStyleSheet(
             "QProgressBar {"
             "   border: 1px solid #bdc3c7;"
             "   border-radius: 5px;"
@@ -1349,12 +1701,12 @@ void DownloadIntegrator::onDownloadButtonClicked()
             // 使用ModifierManager下载修改器
             ModifierManager::getInstance().downloadModifier(
                 *currentModifier,
-                ui->versionSelect->currentText(),
+                ui->versionSelect()->currentText(),
                 fullDownloadPath,
                 // 下载完成回调
                 [this, fileName, fullDownloadPath](bool success, const QString& errorMsg, const QString& actualPath, const ModifierInfo& modifier, bool isArchive) {
-                    ui->downloadProgress->setVisible(false);
-                    ui->downloadButton->setEnabled(true);
+                    ui->downloadProgress()->setVisible(false);
+                    ui->downloadButton()->setEnabled(true);
                     
                     if (success) {
                         showStatusMessage("下载完成", 5000);
@@ -1396,8 +1748,8 @@ void DownloadIntegrator::onDownloadButtonClicked()
                                                
                         // 获取版本信息
                         QString version;
-                        if (ui->versionSelect->currentIndex() >= 0 && ui->versionSelect->currentIndex() < modifier.versions.size()) {
-                            version = ui->versionSelect->currentText();
+                        if (ui->versionSelect()->currentIndex() >= 0 && ui->versionSelect()->currentIndex() < modifier.versions.size()) {
+                            version = ui->versionSelect()->currentText();
                         } else if (!modifier.versions.isEmpty()) {
                             version = modifier.versions.first().first;
                         }
@@ -1415,8 +1767,8 @@ void DownloadIntegrator::onDownloadButtonClicked()
                 },
                 // 进度回调
                 [this](int progress) {
-                    ui->downloadProgress->setValue(progress);
-                    ui->downloadProgress->setFormat("%p%");
+                    ui->downloadProgress()->setValue(progress);
+                    ui->downloadProgress()->setFormat("%p%");
                     showStatusMessage(QString(tr("下载中... %1%")).arg(progress));
                 }
             );
@@ -1430,10 +1782,10 @@ void DownloadIntegrator::simulateDownload(const QString& url, const QString& fil
     qDebug() << "模拟下载：" << fileName << "，URL：" << url;
     
     // 显示进度条
-    ui->downloadProgress->setValue(0);
-    ui->downloadProgress->setVisible(true);
-    ui->downloadProgress->setFormat("%p%");
-    ui->downloadProgress->setStyleSheet(
+    ui->downloadProgress()->setValue(0);
+    ui->downloadProgress()->setVisible(true);
+    ui->downloadProgress()->setFormat("%p%");
+    ui->downloadProgress()->setStyleSheet(
         "QProgressBar {"
         "   border: 1px solid #bdc3c7;"
         "   border-radius: 5px;"
@@ -1450,7 +1802,7 @@ void DownloadIntegrator::simulateDownload(const QString& url, const QString& fil
     );
     
     showStatusMessage(QString(tr("正在下载 %1...")).arg(fileName));
-    ui->downloadButton->setEnabled(false);
+    ui->downloadButton()->setEnabled(false);
     
     // 创建一个定时器来模拟下载进度
     QTimer* timer = new QTimer(this);
@@ -1460,15 +1812,15 @@ void DownloadIntegrator::simulateDownload(const QString& url, const QString& fil
     connect(timer, &QTimer::timeout, [this, timer, progress, fileName]() mutable {
         progress += 5;
         if (progress <= 100) {
-            ui->downloadProgress->setValue(progress);
+            ui->downloadProgress()->setValue(progress);
             showStatusMessage(QString(tr("下载中... %1%")).arg(progress));
         } else {
             // 下载完成
             timer->stop();
             timer->deleteLater();
             
-            ui->downloadProgress->setVisible(false);
-            ui->downloadButton->setEnabled(true);
+            ui->downloadProgress()->setVisible(false);
+            ui->downloadButton()->setEnabled(true);
             showStatusMessage(tr("下载完成"), 5000);
             
             QMessageBox::information(this, tr("下载完成"), 
@@ -1521,7 +1873,7 @@ void DownloadIntegrator::onSettingsButtonClicked()
 void DownloadIntegrator::onVersionTypeChanged(bool checked)
 {
     // 版本选择框总是启用的
-    ui->versionSelect->setEnabled(true);
+    ui->versionSelect()->setEnabled(true);
     qDebug() << "版本选择框已启用";
 }
 
@@ -2071,9 +2423,9 @@ void DownloadIntegrator::onDownloadedModifierDoubleClicked(int row, int column)
 void DownloadIntegrator::downloadModifier(const QString& url, const QString& fileName)
 {
     showStatusMessage("正在下载 " + fileName + "...");
-    ui->downloadProgress->setValue(0);
-    ui->downloadProgress->setVisible(true);
-    ui->downloadButton->setEnabled(false);
+    ui->downloadProgress()->setValue(0);
+    ui->downloadProgress()->setVisible(true);
+    ui->downloadButton()->setEnabled(false);
     
     // 清理URL，移除末尾的逗号
     QString cleanUrl = url;
@@ -2088,8 +2440,8 @@ void DownloadIntegrator::downloadModifier(const QString& url, const QString& fil
     if (cleanUrl.isEmpty() || !cleanUrl.startsWith("http")) {
         QMessageBox::warning(this, "下载失败", 
                            "无效的下载链接: " + cleanUrl);
-        ui->downloadProgress->setVisible(false);
-        ui->downloadButton->setEnabled(true);
+        ui->downloadProgress()->setVisible(false);
+        ui->downloadButton()->setEnabled(true);
         return;
     }
     
@@ -2101,12 +2453,12 @@ void DownloadIntegrator::downloadModifier(const QString& url, const QString& fil
         // 使用ModifierManager下载
         ModifierManager::getInstance().downloadModifier(
             *currentModifier,
-            ui->versionSelect->currentText(),
+            ui->versionSelect()->currentText(),
             downloadPath,
             // 下载完成回调 - 修复捕获
             [this, fileName, downloadPath](bool success, const QString& errorMsg, const QString& actualPath, const ModifierInfo& modifier, bool isArchive) {
-                ui->downloadProgress->setVisible(false);
-                ui->downloadButton->setEnabled(true);
+                ui->downloadProgress()->setVisible(false);
+                ui->downloadButton()->setEnabled(true);
                 
                 if (success) {
                     showStatusMessage("下载完成", 5000);
@@ -2147,8 +2499,8 @@ void DownloadIntegrator::downloadModifier(const QString& url, const QString& fil
                                            
                     // 获取版本信息
                     QString version;
-                    if (ui->versionSelect->currentIndex() >= 0 && ui->versionSelect->currentIndex() < modifier.versions.size()) {
-                        version = ui->versionSelect->currentText();
+                    if (ui->versionSelect()->currentIndex() >= 0 && ui->versionSelect()->currentIndex() < modifier.versions.size()) {
+                        version = ui->versionSelect()->currentText();
                     } else if (!modifier.versions.isEmpty()) {
                         version = modifier.versions.first().first;
                     }
@@ -2166,14 +2518,14 @@ void DownloadIntegrator::downloadModifier(const QString& url, const QString& fil
             },
             // 进度回调
             [this](int progress) {
-                ui->downloadProgress->setValue(progress);
+                ui->downloadProgress()->setValue(progress);
                 showStatusMessage(QString(tr("下载中... %1%")).arg(progress));
             }
         );
     } else {
         QMessageBox::warning(this, tr("下载失败"), tr("未选择有效的修改器"));
-        ui->downloadProgress->setVisible(false);
-        ui->downloadButton->setEnabled(true);
+        ui->downloadProgress()->setVisible(false);
+        ui->downloadButton()->setEnabled(true);
     }
 }
 
@@ -2188,60 +2540,74 @@ void DownloadIntegrator::onNetworkError(QNetworkReply::NetworkError code)
 
 // 在DownloadIntegrator构造函数中添加主题菜单设置
 void DownloadIntegrator::setupThemeMenu() {
-    QMenuBar* menuBar = this->menuBar();
-    
-    // 创建主题菜单
-    QMenu* themeMenu = menuBar->addMenu(tr("主题"));
-    
-    // 创建动作组，确保只有一个主题被选中
-    QActionGroup* themeGroup = new QActionGroup(this);
+    QMenu* themeMenu = ui->themeMenu();
+    QActionGroup* themeGroup = ui->themeActionGroup();
+
+    if (!themeMenu || !themeGroup) {
+        qWarning() << "主题菜单组件未正确初始化";
+        return;
+    }
+
+    themeMenu->clear();
+
+    QAction* lightThemeAction = ui->actionLightTheme();
+    QAction* win11ThemeAction = ui->actionWin11Theme();
+    QAction* classicThemeAction = ui->actionClassicTheme();
+    QAction* colorfulThemeAction = ui->actionColorfulTheme();
+
+    const QList<QAction*> themeActions = {
+        lightThemeAction,
+        win11ThemeAction,
+        classicThemeAction,
+        colorfulThemeAction
+    };
+
+    for (QAction* action : themeActions) {
+        if (!action) {
+            continue;
+        }
+        action->setCheckable(true);
+        themeMenu->addAction(action);
+        if (action->parent() != this) {
+            action->setParent(this);
+        }
+    }
+
     themeGroup->setExclusive(true);
-    
-    // 创建浅色主题动作
-    QAction* lightThemeAction = new QAction("浅色主题", this);
-    lightThemeAction->setCheckable(true);
-    connect(lightThemeAction, &QAction::triggered, this, &DownloadIntegrator::onLightThemeSelected);
-    themeGroup->addAction(lightThemeAction);
-    themeMenu->addAction(lightThemeAction);
-    
-    // 创建Windows 11主题动作
-    QAction* win11ThemeAction = new QAction("Windows 11主题", this);
-    win11ThemeAction->setCheckable(true);
-    connect(win11ThemeAction, &QAction::triggered, this, &DownloadIntegrator::onWin11ThemeSelected);
-    themeGroup->addAction(win11ThemeAction);
-    themeMenu->addAction(win11ThemeAction);
-    
-    // 创建经典主题动作
-    QAction* classicThemeAction = new QAction("经典主题", this);
-    classicThemeAction->setCheckable(true);
-    connect(classicThemeAction, &QAction::triggered, this, &DownloadIntegrator::onClassicThemeSelected);
-    themeGroup->addAction(classicThemeAction);
-    themeMenu->addAction(classicThemeAction);
-    
-    // 创建多彩主题动作
-    QAction* colorfulThemeAction = new QAction("多彩主题", this);
-    colorfulThemeAction->setCheckable(true);
-    connect(colorfulThemeAction, &QAction::triggered, this, &DownloadIntegrator::onColorfulThemeSelected);
-    themeGroup->addAction(colorfulThemeAction);
-    themeMenu->addAction(colorfulThemeAction);
-    
-    // 根据当前设置选中对应主题
+
+    if (lightThemeAction) {
+        QObject::disconnect(lightThemeAction, nullptr, nullptr, nullptr);
+        connect(lightThemeAction, &QAction::triggered, this, &DownloadIntegrator::onLightThemeSelected);
+    }
+    if (win11ThemeAction) {
+        QObject::disconnect(win11ThemeAction, nullptr, nullptr, nullptr);
+        connect(win11ThemeAction, &QAction::triggered, this, &DownloadIntegrator::onWin11ThemeSelected);
+    }
+    if (classicThemeAction) {
+        QObject::disconnect(classicThemeAction, nullptr, nullptr, nullptr);
+        connect(classicThemeAction, &QAction::triggered, this, &DownloadIntegrator::onClassicThemeSelected);
+    }
+    if (colorfulThemeAction) {
+        QObject::disconnect(colorfulThemeAction, nullptr, nullptr, nullptr);
+        connect(colorfulThemeAction, &QAction::triggered, this, &DownloadIntegrator::onColorfulThemeSelected);
+    }
+
     ConfigManager::Theme currentTheme = ConfigManager::getInstance().getCurrentTheme();
     switch (currentTheme) {
         case ConfigManager::Theme::Light:
-            lightThemeAction->setChecked(true);
+            if (lightThemeAction) lightThemeAction->setChecked(true);
             break;
         case ConfigManager::Theme::Win11:
-            win11ThemeAction->setChecked(true);
+            if (win11ThemeAction) win11ThemeAction->setChecked(true);
             break;
         case ConfigManager::Theme::Classic:
-            classicThemeAction->setChecked(true);
+            if (classicThemeAction) classicThemeAction->setChecked(true);
             break;
         case ConfigManager::Theme::Colorful:
-            colorfulThemeAction->setChecked(true);
+            if (colorfulThemeAction) colorfulThemeAction->setChecked(true);
             break;
         default:
-            lightThemeAction->setChecked(true);
+            if (lightThemeAction) lightThemeAction->setChecked(true);
             break;
     }
 }
@@ -2270,50 +2636,65 @@ void DownloadIntegrator::onColorfulThemeSelected() {
 
 // 设置语言菜单
 void DownloadIntegrator::setupLanguageMenu() {
-    QMenuBar* menuBar = this->menuBar();
-    
-    // 创建语言菜单
-    QMenu* languageMenu = menuBar->addMenu(tr("语言"));
-    
-    // 创建动作组，确保只有一种语言被选中
-    QActionGroup* languageGroup = new QActionGroup(this);
+    QMenu* languageMenu = ui->languageMenu();
+    QActionGroup* languageGroup = ui->languageActionGroup();
+
+    if (!languageMenu || !languageGroup) {
+        qWarning() << "语言菜单组件未正确初始化";
+        return;
+    }
+
+    languageMenu->clear();
+
+    QAction* chineseAction = ui->actionChineseLanguage();
+    QAction* englishAction = ui->actionEnglishLanguage();
+    QAction* japaneseAction = ui->actionJapaneseLanguage();
+
+    const QList<QAction*> languageActions = {
+        chineseAction,
+        englishAction,
+        japaneseAction
+    };
+
+    for (QAction* action : languageActions) {
+        if (!action) {
+            continue;
+        }
+        action->setCheckable(true);
+        languageMenu->addAction(action);
+        if (action->parent() != this) {
+            action->setParent(this);
+        }
+    }
+
     languageGroup->setExclusive(true);
-    
-    // 创建中文选项
-    QAction* chineseAction = new QAction("中文", this);
-    chineseAction->setCheckable(true);
-    connect(chineseAction, &QAction::triggered, this, &DownloadIntegrator::onChineseLanguageSelected);
-    languageGroup->addAction(chineseAction);
-    languageMenu->addAction(chineseAction);
-    
-    // 创建英文选项
-    QAction* englishAction = new QAction("English", this);
-    englishAction->setCheckable(true);
-    connect(englishAction, &QAction::triggered, this, &DownloadIntegrator::onEnglishLanguageSelected);
-    languageGroup->addAction(englishAction);
-    languageMenu->addAction(englishAction);
-    
-    // 创建日文选项
-    QAction* japaneseAction = new QAction("日本語", this);
-    japaneseAction->setCheckable(true);
-    connect(japaneseAction, &QAction::triggered, this, &DownloadIntegrator::onJapaneseLanguageSelected);
-    languageGroup->addAction(japaneseAction);
-    languageMenu->addAction(japaneseAction);
-    
-    // 根据当前设置选中对应语言
+
+    if (chineseAction) {
+        QObject::disconnect(chineseAction, nullptr, nullptr, nullptr);
+        connect(chineseAction, &QAction::triggered, this, &DownloadIntegrator::onChineseLanguageSelected);
+    }
+    if (englishAction) {
+        QObject::disconnect(englishAction, nullptr, nullptr, nullptr);
+        connect(englishAction, &QAction::triggered, this, &DownloadIntegrator::onEnglishLanguageSelected);
+    }
+    if (japaneseAction) {
+        QObject::disconnect(japaneseAction, nullptr, nullptr, nullptr);
+        connect(japaneseAction, &QAction::triggered, this, &DownloadIntegrator::onJapaneseLanguageSelected);
+    }
+
     ConfigManager::Language currentLanguage = ConfigManager::getInstance().getCurrentLanguage();
     switch (currentLanguage) {
         case ConfigManager::Language::Chinese:
-            chineseAction->setChecked(true);
+            if (chineseAction) chineseAction->setChecked(true);
             break;
         case ConfigManager::Language::English:
-            englishAction->setChecked(true);
+            if (englishAction) englishAction->setChecked(true);
             break;
         case ConfigManager::Language::Japanese:
-            japaneseAction->setChecked(true);
+            if (japaneseAction) japaneseAction->setChecked(true);
             break;
         default:
-            chineseAction->setChecked(true);
+            if (chineseAction) chineseAction->setChecked(true);
             break;
     }
 }
@@ -2321,7 +2702,7 @@ void DownloadIntegrator::setupLanguageMenu() {
 // 语言切换槽函数
 void DownloadIntegrator::onChineseLanguageSelected() {
     // 隐藏右侧详情面板
-    ui->rightWidget->hide();
+    ui->rightWidget()->hide();
     
     LanguageManager::getInstance().switchLanguage(*qApp, LanguageManager::Language::Chinese);
     retranslateUi(); // 重新翻译UI
@@ -2331,7 +2712,7 @@ void DownloadIntegrator::onChineseLanguageSelected() {
 
 void DownloadIntegrator::onEnglishLanguageSelected() {
     // 隐藏右侧详情面板
-    ui->rightWidget->hide();
+    ui->rightWidget()->hide();
     
     LanguageManager::getInstance().switchLanguage(*qApp, LanguageManager::Language::English);
     retranslateUi(); // 重新翻译UI
@@ -2341,7 +2722,7 @@ void DownloadIntegrator::onEnglishLanguageSelected() {
 
 void DownloadIntegrator::onJapaneseLanguageSelected() {
     // 隐藏右侧详情面板
-    ui->rightWidget->hide();
+    ui->rightWidget()->hide();
     
     LanguageManager::getInstance().switchLanguage(*qApp, LanguageManager::Language::Japanese);
     retranslateUi(); // 重新翻译UI
@@ -2351,132 +2732,11 @@ void DownloadIntegrator::onJapaneseLanguageSelected() {
 
 // 添加UI重新翻译方法
 void DownloadIntegrator::retranslateUi() {
-    // 更新窗口标题
-    this->setWindowTitle(tr("游戏修改器下载集成工具"));
-    
-    // 更新菜单项
-    QList<QMenu*> menus = this->menuBar()->findChildren<QMenu*>();
-    for (QMenu* menu : menus) {
-        if (menu->title() == "主题" || menu->title() == "Theme" || menu->title() == "テーマ") {
-            menu->setTitle(tr("主题"));
-        }
-        else if (menu->title() == "语言" || menu->title() == "Language" || menu->title() == "言語") {
-            menu->setTitle(tr("语言"));
-        }
-        else if (menu->objectName() == "menuFile") {
-            menu->setTitle(tr("文件"));
-        }
-    }
-    
-    // 更新主题菜单项
-    QList<QAction*> themeActions = this->menuBar()->findChildren<QAction*>();
-    for (QAction* action : themeActions) {
-        if (action->text() == "浅色主题" || action->text() == "Light Theme" || action->text() == "ライトテーマ") {
-            action->setText(tr("浅色主题"));
-        }
-        else if (action->text() == "Windows 11主题" || action->text() == "Windows 11 Theme" || action->text() == "Windows 11テーマ") {
-            action->setText(tr("Windows 11主题"));
-        }
-        else if (action->text() == "经典主题" || action->text() == "Classic Theme" || action->text() == "クラシックテーマ") {
-            action->setText(tr("经典主题"));
-        }
-        else if (action->text() == "多彩主题" || action->text() == "Colorful Theme" || action->text() == "カラフルテーマ") {
-            action->setText(tr("多彩主题"));
-        }
-        else if (action->objectName() == "actionSettings") {
-            action->setText(tr("设置"));
-        }
-        else if (action->objectName() == "actionExit") {
-            action->setText(tr("退出"));
-        }
-    }
-    
-    // 更新标签页标题
-    if (m_tabWidget) {
-        m_tabWidget->setTabText(0, tr("搜索修改器"));
-        m_tabWidget->setTabText(1, tr("已下载修改器"));
-    }
-    
-    // 更新搜索页面
-    ui->searchEdit->setPlaceholderText(tr("搜索游戏..."));
-    ui->searchButton->setText(tr("搜索"));
-    
-    // 更新排序下拉框
-    ui->sortComboBox->setItemText(0, tr("最近更新"));
-    ui->sortComboBox->setItemText(1, tr("按名称"));
-    ui->sortComboBox->setItemText(2, tr("下载次数"));
-    
-    // 更新表格列标题
-    QTableWidgetItem *item0 = ui->modifierTable->horizontalHeaderItem(0);
-    if (item0) item0->setText(tr("游戏名称"));
-    
-    QTableWidgetItem *item1 = ui->modifierTable->horizontalHeaderItem(1);
-    if (item1) item1->setText(tr("更新日期"));
-    
-    QTableWidgetItem *item2 = ui->modifierTable->horizontalHeaderItem(2);
-    if (item2) item2->setText(tr("支持版本"));
-    
-    QTableWidgetItem *item3 = ui->modifierTable->horizontalHeaderItem(3);
-    if (item3) item3->setText(tr("选项数量"));
-    
-    // 更新版本信息标签（现在在封面组中）
-    ui->versionInfo->setText(tr("游戏版本："));
-    ui->optionsCount->setText(tr("修改器选项："));
-    ui->lastUpdate->setText(tr("最后更新："));
-    
-    // 更新下载选项区
-    ui->downloadGroup->setTitle(tr("版本选择"));
-    
-    // 更新修改器选项文本
-    ui->modifierOptions->setPlaceholderText(tr("修改器功能选项列表..."));
-    
-    // 更新按钮
-    ui->downloadButton->setText(tr("下载"));
-    ui->openFolderButton->setText(tr("打开下载目录"));
-    ui->settingsButton->setText(tr("设置"));
-    
-    // 更新刷新按钮
-    ui->refreshButton->setText(tr("显示全部"));
-    ui->refreshButton->setToolTip(tr("清除搜索结果，显示所有最新修改器列表"));
-    
-    // 更新已下载标签页
-    QLabel* titleLabel = m_downloadedTab->findChild<QLabel*>();
-    if (titleLabel) {
-        titleLabel->setText(tr("已下载的游戏修改器"));
-    }
-    
-    // 更新已下载表格
-    if (m_downloadedTable) {
-        QStringList headers;
-        headers << tr("修改器名称") << tr("版本") << tr("游戏版本") << tr("下载日期");
-        m_downloadedTable->setHorizontalHeaderLabels(headers);
-    }
-    
-    // 更新按钮
-    if (m_runButton) {
-        m_runButton->setText(tr("运行"));
-    }
-    
-    if (m_deleteButton) {
-        m_deleteButton->setText(tr("删除"));
-    }
-    
-    if (m_checkUpdateButton) {
-        m_checkUpdateButton->setText(tr("检查更新"));
-    }
+    ui->retranslateUi(this);
 
-    // 刷新表格数据，以更新表格中的内容
-    // 重新加载修改器列表和已下载修改器列表
     updateModifierList();
     updateDownloadedModifiersList();
-    
-    // 更新状态栏
-    QLabel* statusLabel = statusBar()->findChild<QLabel*>("statusLabel");
-    if(statusLabel) {
-        statusLabel->setText(tr("就绪"));
-    }
-    
-    // 强制更新布局
+
     this->update();
 }
 
@@ -2486,10 +2746,10 @@ void DownloadIntegrator::onRefreshButtonClicked()
     qDebug() << "刷新按钮被点击，正在获取最新修改器列表...";
     
     // 隐藏右侧详情面板
-    ui->rightWidget->hide();
+    ui->rightWidget()->hide();
     
     // 清空搜索框，触发回到初始列表
-    ui->searchEdit->clear();
+    ui->searchEdit()->clear();
     
     // 显示加载中状态
     QApplication::setOverrideCursor(Qt::WaitCursor);

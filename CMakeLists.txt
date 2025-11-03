@@ -83,11 +83,6 @@ set(HEADERS
     src/CoverExtractor.h
 )
 
-# Define UI files
-set(UI_FILES
-    src/DownloadIntegrator.ui
-)
-
 # Define resource files
 set(RESOURCE_FILES
     resources/resources.qrc
@@ -105,7 +100,6 @@ add_executable(${PROJECT_NAME}
     ${app_icon_resource_windows}
     ${SOURCES}
     ${HEADERS}
-    ${UI_FILES}
     ${RESOURCE_FILES}
 ) 
 

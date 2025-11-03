@@ -1,6 +1,5 @@
 #pragma once
-// 移除对ui_DownloadIntegrator.h的依赖
-#include "ui_DownloadIntegrator.h"
+#include <memory>
 #include <QMainWindow>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -57,81 +56,159 @@
 // 添加封面提取器
 #include "CoverExtractor.h"
 
-// 使用自动生成的UI类
-namespace Ui {
-class DownloadIntegrator;
-}
+#include <QAction>
+#include <QActionGroup>
+#include <QMenu>
+#include <QMenuBar>
+#include <QSplitter>
 
 // 游戏修改器信息结构体已移动到ModifierParser.h
 
 // DownloadedModifierInfo已在ModifierManager.h中定义，这里删除重复定义
 
-// 创建UI相关结构体，代替ui_DownloadIntegrator.h
-struct DownloadIntegratorUI {
+class DownloadIntegratorUI {
+public:
+    void setupUi(QMainWindow* window);
+    void retranslateUi(QMainWindow* window);
+
+    // UI 更新接口
+    void resetModifierDetails();
+    void populateModifierList(const QList<ModifierInfo>& modifiers);
+    void populateModifierListPlaceholder();
+    void displayModifierDetail(const ModifierInfo& modifier);
+    void setModifierOptionsHtml(const QString& html);
+    void clearModifierOptions();
+    void showModifierCoverLoading(const QString& message);
+    void showModifierCoverPixmap(const QPixmap& pixmap);
+    void showModifierCoverError(const QString& message);
+    void clearModifierCover();
+    void updateDownloadedModifiersTable(const QList<DownloadedModifierInfo>& modifiers);
+    void setDownloadedModifiersPlaceholder(int minimumRows = 10);
+    void setDownloadProgressVisible(bool visible);
+    void setDownloadProgressValue(int value, const QString& format = QString());
+    void setDownloadProgressStyle(const QString& stylesheet);
+    void setDownloadButtonEnabled(bool enabled);
+    void setVersionSelectEnabled(bool enabled);
+    void setRightPanelVisible(bool visible);
+    void setStatusMessage(const QString& message, int timeout = 0);
+
+    // Widget 访问接口（用于信号连接）
+    QTabWidget* tabWidget() const { return m_tabWidget; }
+    QWidget* searchTab() const { return m_searchTab; }
+    QWidget* downloadedTab() const { return m_downloadedTab; }
+    QLineEdit* searchEdit() const { return m_searchEdit; }
+    QPushButton* searchButton() const { return m_searchButton; }
+    QComboBox* sortComboBox() const { return m_sortComboBox; }
+    QPushButton* refreshButton() const { return m_refreshButton; }
+    QSplitter* mainSplitter() const { return m_mainSplitter; }
+    QTableWidget* modifierTable() const { return m_modifierTable; }
+    QWidget* rightWidget() const { return m_rightWidget; }
+    QLabel* gameTitle() const { return m_gameTitle; }
+    QLabel* versionInfo() const { return m_versionInfo; }
+    QLabel* optionsCount() const { return m_optionsCount; }
+    QLabel* lastUpdate() const { return m_lastUpdate; }
+    QLabel* gameCoverLabel() const { return m_gameCoverLabel; }
+    QGroupBox* coverGroup() const { return m_coverGroup; }
+    QGroupBox* downloadGroup() const { return m_downloadGroup; }
+    QComboBox* versionSelect() const { return m_versionSelect; }
+    QTextEdit* modifierOptions() const { return m_modifierOptions; }
+    QProgressBar* downloadProgress() const { return m_downloadProgress; }
+    QPushButton* downloadButton() const { return m_downloadButton; }
+    QPushButton* openFolderButton() const { return m_openFolderButton; }
+    QPushButton* settingsButton() const { return m_settingsButton; }
+    QTableWidget* downloadedTable() const { return m_downloadedTable; }
+    QPushButton* runButton() const { return m_runButton; }
+    QPushButton* deleteButton() const { return m_deleteButton; }
+    QPushButton* checkUpdateButton() const { return m_checkUpdateButton; }
+    QAction* actionExit() const { return m_actionExit; }
+    QAction* actionSettings() const { return m_actionSettings; }
+    QMenu* fileMenu() const { return m_menuFile; }
+    QMenu* themeMenu() const { return m_menuTheme; }
+    QActionGroup* themeActionGroup() const { return m_themeActionGroup; }
+    QAction* actionLightTheme() const { return m_actionLightTheme; }
+    QAction* actionWin11Theme() const { return m_actionWin11Theme; }
+    QAction* actionClassicTheme() const { return m_actionClassicTheme; }
+    QAction* actionColorfulTheme() const { return m_actionColorfulTheme; }
+    QMenu* languageMenu() const { return m_menuLanguage; }
+    QActionGroup* languageActionGroup() const { return m_languageActionGroup; }
+    QAction* actionChineseLanguage() const { return m_actionChineseLanguage; }
+    QAction* actionEnglishLanguage() const { return m_actionEnglishLanguage; }
+    QAction* actionJapaneseLanguage() const { return m_actionJapaneseLanguage; }
+    QStatusBar* statusbar() const { return m_statusbar; }
+    QLabel* statusLabel() const { return m_statusLabel; }
+
+private:
     // 主布局
-    QVBoxLayout* mainLayout;
-    
-    // 标签页控件
-    QTabWidget* tabWidget;
-    QWidget* searchTab;
-    QWidget* downloadedTab;
-    
+    QTabWidget* m_tabWidget = nullptr;
+    QWidget* m_searchTab = nullptr;
+    QWidget* m_downloadedTab = nullptr;
+
     // 搜索区域
-    QLineEdit* searchEdit;
-    QPushButton* searchButton;
-    QComboBox* sortComboBox;
-    
+    QLineEdit* m_searchEdit = nullptr;
+    QPushButton* m_searchButton = nullptr;
+    QComboBox* m_sortComboBox = nullptr;
+    QPushButton* m_refreshButton = nullptr;
+
     // 主分割区
-    QSplitter* mainSplitter;
-    
+    QSplitter* m_mainSplitter = nullptr;
+
     // 左侧修改器列表
-    QTableWidget* modifierTable;
-    
+    QTableWidget* m_modifierTable = nullptr;
+
     // 右侧详细信息区
-    QLabel* gameTitle;
-    QLabel* versionInfo;
-    QLabel* optionsCount;
-    QLabel* lastUpdate;
-    
+    QWidget* m_rightWidget = nullptr;
+    QLabel* m_gameTitle = nullptr;
+    QLabel* m_versionInfo = nullptr;
+    QLabel* m_optionsCount = nullptr;
+    QLabel* m_lastUpdate = nullptr;
+    QLabel* m_gameCoverLabel = nullptr;
+    QGroupBox* m_coverGroup = nullptr;
+    QGroupBox* m_downloadGroup = nullptr;
+
     // 版本选择区
-    QRadioButton* standaloneVersion;
-    QComboBox* versionSelect;
-    
+    QComboBox* m_versionSelect = nullptr;
+
     // 修改器选项显示区
-    QTextEdit* modifierOptions;
-    
+    QTextEdit* m_modifierOptions = nullptr;
+
     // 下载进度条
-    QProgressBar* downloadProgress;
-    
+    QProgressBar* m_downloadProgress = nullptr;
+
     // 按钮区
-    QPushButton* downloadButton;
-    QPushButton* openFolderButton;
-    QPushButton* settingsButton;
-    
+    QPushButton* m_downloadButton = nullptr;
+    QPushButton* m_openFolderButton = nullptr;
+    QPushButton* m_settingsButton = nullptr;
+
     // 已下载修改器管理
-    QTableWidget* downloadedTable;
-    QPushButton* runButton;
-    QPushButton* deleteButton;
-    
+    QTableWidget* m_downloadedTable = nullptr;
+    QPushButton* m_runButton = nullptr;
+    QPushButton* m_deleteButton = nullptr;
+    QPushButton* m_checkUpdateButton = nullptr;
+
     // 菜单操作
-    QAction* actionExit;
-    QAction* actionSettings;
-    
+    QMenuBar* m_menubar = nullptr;
+    QMenu* m_menuFile = nullptr;
+    QAction* m_actionExit = nullptr;
+    QAction* m_actionSettings = nullptr;
+
     // 主题菜单
-    QMenu* menuTheme;
-    QAction* actionLightTheme;
-    QAction* actionWin11Theme;
-    QActionGroup* themeActionGroup;
-    
+    QMenu* m_menuTheme = nullptr;
+    QAction* m_actionLightTheme = nullptr;
+    QAction* m_actionWin11Theme = nullptr;
+    QAction* m_actionClassicTheme = nullptr;
+    QAction* m_actionColorfulTheme = nullptr;
+    QActionGroup* m_themeActionGroup = nullptr;
+
     // 语言菜单
-    QMenu* menuLanguage;
-    QAction* actionChineseLanguage;
-    QAction* actionEnglishLanguage;
-    QAction* actionJapaneseLanguage;
-    QActionGroup* languageActionGroup;
-    
+    QMenu* m_menuLanguage = nullptr;
+    QAction* m_actionChineseLanguage = nullptr;
+    QAction* m_actionEnglishLanguage = nullptr;
+    QAction* m_actionJapaneseLanguage = nullptr;
+    QActionGroup* m_languageActionGroup = nullptr;
+
     // 状态栏
-    QStatusBar* statusbar;
+    QStatusBar* m_statusbar = nullptr;
+    QLabel* m_statusLabel = nullptr;
 };
 
 class DownloadIntegrator : public QMainWindow {
@@ -224,7 +301,7 @@ private:
     void saveDownloadedModifiers();
     
 private:
-    Ui::DownloadIntegrator* ui;
+    std::unique_ptr<DownloadIntegratorUI> ui;
     
     // 当前选中的修改器
     ModifierInfo* currentModifier;

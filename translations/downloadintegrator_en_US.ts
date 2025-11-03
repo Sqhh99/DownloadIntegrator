@@ -344,109 +344,67 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="14"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="287"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="285"/>
         <source>FLiNG修改器下载器</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="23"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="290"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="288"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2376"/>
         <source>搜索游戏...</source>
         <translation>Search games...</translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="33"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="291"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="289"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2377"/>
         <source>搜索</source>
         <translation>Search</translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="51"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="292"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="290"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2380"/>
         <source>最近更新</source>
         <translation>Latest Updates</translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="56"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="293"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="291"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2381"/>
         <source>按名称</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="61"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="294"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="292"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2382"/>
         <source>下载次数</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="69"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="297"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="295"/>
         <source>清除搜索结果，显示所有最新修改器列表</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="72"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="299"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="297"/>
         <source>显示全部</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="93"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="301"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="299"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2386"/>
         <source>游戏名称</source>
         <translation>Game Name</translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="98"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="303"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="301"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2389"/>
         <source>更新日期</source>
         <translation>Update Date</translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="103"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="305"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="303"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2392"/>
         <source>支持版本</source>
         <translation>Supported Version</translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="108"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="307"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="305"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2395"/>
         <source>选项数量</source>
         <translation>Number of Options</translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="151"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="310"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="308"/>
         <source>QGroupBox { border: none; }</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="184"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="312"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="310"/>
         <source>QLabel {
                 border: 1px solid #ddd;
                 background-color: #f9f9f9;
@@ -455,9 +413,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="252"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="320"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="318"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2403"/>
         <source>版本选择</source>
         <translation type="unfinished"></translation>
@@ -467,25 +422,16 @@
         <translation type="vanished">Version Information</translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="203"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="317"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="315"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2398"/>
         <source>游戏版本：</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="213"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="318"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="316"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2399"/>
         <source>修改器选项：</source>
         <translation>Mod Options:</translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="223"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="319"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="317"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2400"/>
         <source>最后更新：</source>
         <translation>Last Update:</translation>
@@ -503,41 +449,26 @@
         <translation type="vanished">Independent Version</translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="267"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="321"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="319"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2406"/>
         <source>修改器功能选项列表...</source>
         <translation>Mod Feature Option List...</translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="286"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="322"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="320"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2409"/>
         <source>下载</source>
         <translation>Download</translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="293"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="323"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="321"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2410"/>
         <source>打开下载目录</source>
         <translation>Open Download Folder</translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="323"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="325"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="323"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2342"/>
         <source>文件</source>
         <translation>File</translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="339"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="289"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="287"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2365"/>
         <source>退出</source>
         <translation>Exit</translation>
@@ -547,12 +478,6 @@
         <translation type="vanished">Open Folder</translation>
     </message>
     <message>
-        <location filename="../src/DownloadIntegrator.ui" line="300"/>
-        <location filename="../src/DownloadIntegrator.ui" line="334"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="288"/>
-        <location filename="../build/Desktop_Qt_6_6_3_MSVC2019_64bit-Release/DownloadIntegrator_autogen/include/ui_DownloadIntegrator.h" line="324"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="286"/>
-        <location filename="../build/DownloadIntegrator_autogen/include_Release/ui_DownloadIntegrator.h" line="322"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2362"/>
         <location filename="../src/DownloadIntegrator.cpp" line="2411"/>
         <source>设置</source>
