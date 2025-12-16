@@ -60,6 +60,8 @@ private:
     
     // 辅助分析方法
     static std::vector<CoverCandidate> findCoverCandidates(const cv::Mat& roi);
+    static std::vector<CoverCandidate> findCoverByColorSegmentation(const cv::Mat& roi);
+    static int detectCoverRightBoundary(const cv::Mat& roi);
     static cv::Mat applyRobustEdgeDetection(const cv::Mat& gray);
     static double calculateRegionQuality(const cv::Mat& region);
     

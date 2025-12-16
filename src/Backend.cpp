@@ -266,22 +266,34 @@ void Backend::extractCover()
         return;
     }
     
+    // 生成游戏ID用于缓存
+    QString gameId = m_selectedModifier.name;
+    gameId.replace(QRegularExpression("[^a-zA-Z0-9]"), "_");
+    
+    // 首先检查缓存
+    QPixmap cachedCover = CoverExtractor::getCachedCover(gameId);
+    if (!cachedCover.isNull()) {
+        // 使用缓存的封面
+        QString cachePath = CoverExtractor::getCacheDirectory();
+        QString coverFilePath = cachePath + "/" + gameId + ".png";
+        m_currentCoverPath = "file:///" + coverFilePath;
+        emit coverExtracted();
+        qDebug() << "使用缓存封面:" << m_currentCoverPath;
+        return;
+    }
+    
     qDebug() << "开始提取封面:" << m_selectedModifier.screenshotUrl;
     emit statusMessage(tr("正在提取游戏封面..."));
     
     m_coverExtractor->extractCoverFromTrainerImage(
         m_selectedModifier.screenshotUrl,
-        [this](const QPixmap& cover, bool success) {
+        [this, gameId](const QPixmap& cover, bool success) {
             if (success && !cover.isNull()) {
-                // 缓存封面到文件
-                QString gameId = m_selectedModifier.name;
-                gameId.replace(QRegularExpression("[^a-zA-Z0-9]"), "_");
-                
-                // 保存到缓存目录
-                QString cachePath = CoverExtractor::getCacheDirectory();
-                QString coverFilePath = cachePath + "/" + gameId + ".png";
-                
-                if (cover.save(coverFilePath, "PNG")) {
+                // 保存到缓存
+                if (CoverExtractor::saveCoverToCache(gameId, cover)) {
+                    QString cachePath = CoverExtractor::getCacheDirectory();
+                    QString coverFilePath = cachePath + "/" + gameId + ".png";
+                    
                     // 使用 file:// URL 格式供 QML Image 使用
                     m_currentCoverPath = "file:///" + coverFilePath;
                     emit coverExtracted();
@@ -289,7 +301,7 @@ void Backend::extractCover()
                     
                     qDebug() << "封面提取成功，保存到:" << m_currentCoverPath << "尺寸:" << cover.size();
                 } else {
-                    qDebug() << "封面保存失败:" << coverFilePath;
+                    qDebug() << "封面保存失败";
                     emit statusMessage(tr("封面保存失败"));
                 }
             } else {

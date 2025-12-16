@@ -107,99 +107,222 @@ cv::Mat CoverExtractor::extractCoverByShapeAnalysis(const cv::Mat& image)
         int width = image.cols;
         qDebug() << QString("开始形状分析，图片尺寸: %1 x %2").arg(width).arg(height);
         
-        // 优化1：如果图片太大，先缩小处理，提升速度（不影响检测效果）
+        // 智能缩放处理
         cv::Mat processImage = image;
         float scale = 1.0f;
-        const int MAX_PROCESS_WIDTH = 800;
+        const int MAX_PROCESS_WIDTH = 600;
         if (width > MAX_PROCESS_WIDTH) {
             scale = static_cast<float>(MAX_PROCESS_WIDTH) / width;
-            cv::resize(image, processImage, cv::Size(), scale, scale, cv::INTER_LINEAR);
-            qDebug() << QString("图片缩放: %1 -> 速度提升约 %2 倍").arg(scale).arg(1.0/scale);
+            cv::resize(image, processImage, cv::Size(), scale, scale, cv::INTER_AREA);
         }
         
-        // 专注于左上角区域（游戏封面通常在此位置）
-        int roiWidth = static_cast<int>(processImage.cols * 0.4);
-        int roiHeight = static_cast<int>(processImage.rows * 0.8);
+        // 关键优化：封面通常在左侧30-35%的区域内，限制搜索范围避免包含右侧选项
+        int roiWidth = static_cast<int>(processImage.cols * 0.38);  // 最大38%宽度
+        int roiHeight = static_cast<int>(processImage.rows * 0.9);
         cv::Rect roiRect(0, 0, roiWidth, roiHeight);
         cv::Mat roi = processImage(roiRect);
         
-        qDebug() << QString("分析区域尺寸: %1 x %2").arg(roiWidth).arg(roiHeight);
+        qDebug() << QString("分析区域尺寸: %1 x %2 (限制在左侧38%%)").arg(roiWidth).arg(roiHeight);
+        
+        // 首先尝试检测封面的右边界（找到封面和选项区的分界线）
+        int coverRightBound = detectCoverRightBoundary(roi);
+        if (coverRightBound > 0 && coverRightBound < roiWidth * 0.95) {
+            qDebug() << QString("检测到封面右边界: %1").arg(coverRightBound);
+            // 缩小ROI到检测到的边界
+            roiWidth = coverRightBound + 5;  // 留一点边距
+            roiRect = cv::Rect(0, 0, roiWidth, roiHeight);
+            roi = processImage(roiRect);
+        }
         
         // 查找封面候选区域
         std::vector<CoverCandidate> candidates = findCoverCandidates(roi);
         
+        // 过滤掉明显不是封面的候选（宽度过大的）
+        candidates.erase(
+            std::remove_if(candidates.begin(), candidates.end(),
+                [roiWidth](const CoverCandidate& c) {
+                    // 封面宽度不应该超过ROI宽度的90%
+                    return c.w > roiWidth * 0.92;
+                }),
+            candidates.end()
+        );
+        
+        // 如果主要方法失败，尝试颜色分割
+        if (candidates.empty()) {
+            qDebug() << "轮廓检测失败，尝试颜色分割方法";
+            candidates = findCoverByColorSegmentation(roi);
+            
+            // 同样过滤
+            candidates.erase(
+                std::remove_if(candidates.begin(), candidates.end(),
+                    [roiWidth](const CoverCandidate& c) {
+                        return c.w > roiWidth * 0.92;
+                    }),
+                candidates.end()
+            );
+        }
+        
         if (!candidates.empty()) {
-            // 优化2：只取最好的候选，不需要排序所有
+            // 选择最佳候选，优先选择竖版且不太宽的
             auto best_it = std::max_element(candidates.begin(), candidates.end(),
                 [](const CoverCandidate& a, const CoverCandidate& b) {
-                    return (a.area * a.quality) < (b.area * b.quality);
+                    double aspectA = static_cast<double>(a.w) / a.h;
+                    double aspectB = static_cast<double>(b.w) / b.h;
+                    
+                    // 竖版封面加分（长宽比 0.6-0.85 最佳）
+                    double aspectBonusA = (aspectA >= 0.55 && aspectA <= 0.9) ? 1.5 : 1.0;
+                    double aspectBonusB = (aspectB >= 0.55 && aspectB <= 0.9) ? 1.5 : 1.0;
+                    
+                    double scoreA = a.area * a.quality * aspectBonusA;
+                    double scoreB = b.area * b.quality * aspectBonusB;
+                    return scoreA < scoreB;
                 });
             
             const CoverCandidate& best = *best_it;
-            qDebug() << QString("选择最佳候选区域: 位置(%1,%2) 尺寸(%3x%4)")
-                        .arg(best.x).arg(best.y).arg(best.w).arg(best.h);
+            qDebug() << QString("选择最佳候选: 位置(%1,%2) 尺寸(%3x%4) 长宽比:%5")
+                        .arg(best.x).arg(best.y).arg(best.w).arg(best.h)
+                        .arg(static_cast<double>(best.w) / best.h, 0, 'f', 2);
             
-            // 提取封面区域（如果缩放了，需要映射回原图）
-            cv::Rect coverRect;
+            // 提取封面
             cv::Mat cover;
             if (scale < 1.0f) {
-                // 映射回原图坐标
-                coverRect = cv::Rect(
+                // 映射回原图
+                int origRoiWidth = static_cast<int>(width * 0.38);
+                if (coverRightBound > 0) {
+                    origRoiWidth = static_cast<int>((coverRightBound + 5) / scale);
+                }
+                int origRoiHeight = static_cast<int>(height * 0.9);
+                
+                cv::Rect coverRect(
                     static_cast<int>(best.x / scale),
                     static_cast<int>(best.y / scale),
                     static_cast<int>(best.w / scale),
                     static_cast<int>(best.h / scale)
                 );
-                // 确保不超出原图边界
-                coverRect.x = std::max(0, std::min(coverRect.x, width - 1));
-                coverRect.y = std::max(0, std::min(coverRect.y, height - 1));
-                coverRect.width = std::min(coverRect.width, width - coverRect.x);
-                coverRect.height = std::min(coverRect.height, height - coverRect.y);
                 
-                // 从原图中提取（保持原始分辨率）
-                int origRoiWidth = static_cast<int>(width * 0.4);
-                int origRoiHeight = static_cast<int>(height * 0.8);
-                cv::Rect origRoiRect(0, 0, origRoiWidth, origRoiHeight);
+                coverRect.x = std::max(0, std::min(coverRect.x, origRoiWidth - 1));
+                coverRect.y = std::max(0, std::min(coverRect.y, origRoiHeight - 1));
+                coverRect.width = std::min(coverRect.width, origRoiWidth - coverRect.x);
+                coverRect.height = std::min(coverRect.height, origRoiHeight - coverRect.y);
+                
+                cv::Rect origRoiRect(0, 0, 
+                    std::min(origRoiWidth, width), 
+                    std::min(origRoiHeight, height));
                 cv::Mat origRoi = image(origRoiRect);
-                cover = origRoi(coverRect);
+                cover = origRoi(coverRect).clone();
             } else {
-                coverRect = cv::Rect(best.x, best.y, best.w, best.h);
-                cover = roi(coverRect);
+                cv::Rect coverRect(best.x, best.y, best.w, best.h);
+                cover = roi(coverRect).clone();
             }
             
-            // 优化3：边框优化是可选的，只对大图进行
-            if (cover.cols > 150 || cover.rows > 200) {
+            // 边框优化
+            if (cover.cols > 80 && cover.rows > 100) {
                 cv::Mat optimizedCover = removeCoverBorders(cover);
                 return optimizedCover.empty() ? cover : optimizedCover;
             }
             
             return cover;
         } else {
-            qDebug() << "未找到符合条件的封面区域，尝试备用方案";
-            // 备用方案也使用缩放后的图
-            cv::Mat fallback = extractFallbackByPosition(roi);
-            if (!fallback.empty() && scale < 1.0f) {
-                // 从原图中提取对应区域
-                int origRoiWidth = static_cast<int>(width * 0.4);
-                int origRoiHeight = static_cast<int>(height * 0.8);
-                cv::Rect origRoiRect(0, 0, origRoiWidth, origRoiHeight);
-                cv::Mat origRoi = image(origRoiRect);
-                
-                cv::Rect pos(static_cast<int>(origRoi.cols * 0.02), static_cast<int>(origRoi.rows * 0.1), 
-                            static_cast<int>(origRoi.cols * 0.35), static_cast<int>(origRoi.rows * 0.6));
-                pos.x = std::max(0, std::min(pos.x, origRoi.cols - 1));
-                pos.y = std::max(0, std::min(pos.y, origRoi.rows - 1));
-                pos.width = std::min(pos.width, origRoi.cols - pos.x);
-                pos.height = std::min(pos.height, origRoi.rows - pos.y);
-                
-                return origRoi(pos).clone();
-            }
-            return fallback;
+            qDebug() << "未找到候选区域，使用备用方案";
+            return extractFallbackByPosition(roi);
         }
         
     } catch (const std::exception& e) {
         qDebug() << "形状分析异常：" << e.what();
         return cv::Mat();
+    }
+}
+
+// 检测封面的右边界（找到封面和选项列表的分界线）
+int CoverExtractor::detectCoverRightBoundary(const cv::Mat& roi)
+{
+    try {
+        int height = roi.rows;
+        int width = roi.cols;
+        
+        // 转换为灰度
+        cv::Mat gray;
+        cv::cvtColor(roi, gray, cv::COLOR_BGR2GRAY);
+        
+        // 方法1：检测垂直边缘（封面右边通常有明显的垂直边界）
+        cv::Mat sobelX;
+        cv::Sobel(gray, sobelX, CV_16S, 1, 0, 3);
+        cv::Mat absSobelX;
+        cv::convertScaleAbs(sobelX, absSobelX);
+        
+        // 统计每列的垂直边缘强度
+        std::vector<double> colEdgeStrength(width, 0);
+        for (int x = 0; x < width; ++x) {
+            cv::Scalar sum = cv::sum(absSobelX.col(x));
+            colEdgeStrength[x] = sum[0] / height;
+        }
+        
+        // 在20%-80%的范围内寻找强垂直边缘
+        int searchStart = static_cast<int>(width * 0.2);
+        int searchEnd = static_cast<int>(width * 0.85);
+        
+        double maxStrength = 0;
+        int maxPos = -1;
+        
+        for (int x = searchStart; x < searchEnd; ++x) {
+            // 寻找局部最大值（边缘）
+            if (colEdgeStrength[x] > maxStrength && colEdgeStrength[x] > 30) {
+                // 检查这个位置是否是一条连续的垂直线
+                // 通过检查上下几行的边缘强度一致性
+                bool isVerticalLine = true;
+                double avgStrength = colEdgeStrength[x];
+                
+                // 简单检查：如果这一列的边缘强度明显高于平均值
+                double avgAllCols = 0;
+                for (int i = searchStart; i < searchEnd; ++i) {
+                    avgAllCols += colEdgeStrength[i];
+                }
+                avgAllCols /= (searchEnd - searchStart);
+                
+                if (colEdgeStrength[x] > avgAllCols * 1.5) {
+                    maxStrength = colEdgeStrength[x];
+                    maxPos = x;
+                }
+            }
+        }
+        
+        // 方法2：检测颜色变化（封面区域颜色丰富，选项区域颜色单一）
+        if (maxPos < 0) {
+            std::vector<double> colColorVariance(width, 0);
+            
+            for (int x = 0; x < width; ++x) {
+                cv::Mat col = roi.col(x);
+                cv::Scalar mean, stddev;
+                cv::meanStdDev(col, mean, stddev);
+                // 颜色方差 = 各通道标准差之和
+                colColorVariance[x] = stddev[0] + stddev[1] + stddev[2];
+            }
+            
+            // 找到颜色方差突然下降的位置（从封面进入选项区）
+            for (int x = searchStart; x < searchEnd - 10; ++x) {
+                double leftVariance = 0, rightVariance = 0;
+                for (int i = 0; i < 10; ++i) {
+                    leftVariance += colColorVariance[x - 5 + i];
+                    rightVariance += colColorVariance[x + 5 + i];
+                }
+                leftVariance /= 10;
+                rightVariance /= 10;
+                
+                // 如果左边颜色丰富，右边颜色单一
+                if (leftVariance > rightVariance * 1.8 && leftVariance > 20) {
+                    maxPos = x;
+                    qDebug() << QString("通过颜色变化检测到边界: %1 (左方差:%2, 右方差:%3)")
+                                .arg(x).arg(leftVariance, 0, 'f', 1).arg(rightVariance, 0, 'f', 1);
+                    break;
+                }
+            }
+        }
+        
+        return maxPos;
+        
+    } catch (const std::exception& e) {
+        qDebug() << "边界检测出错：" << e.what();
+        return -1;
     }
 }
 
@@ -224,10 +347,9 @@ std::vector<CoverCandidate> CoverExtractor::findCoverCandidates(const cv::Mat& r
         
         qDebug() << QString("找到 %1 个轮廓").arg(contours.size());
         
-        // 设置最小面积阈值
-        double minArea = std::max(5000.0, (width * height) * 0.015);
+        // 动态设置最小面积阈值（根据图片大小调整）
+        double minArea = std::max(3000.0, (width * height) * 0.01);  // 降低阈值
         
-        // 优化4：提前筛选，只处理符合条件的轮廓
         for (size_t i = 0; i < contours.size(); ++i) {
             double area = cv::contourArea(contours[i]);
             
@@ -235,55 +357,137 @@ std::vector<CoverCandidate> CoverExtractor::findCoverCandidates(const cv::Mat& r
                 cv::Rect boundRect = cv::boundingRect(contours[i]);
                 double aspectRatio = static_cast<double>(boundRect.width) / boundRect.height;
                 
-                // 快速筛选：长宽比和尺寸
-                if (aspectRatio > 0.5 && aspectRatio < 1.2 &&
-                    boundRect.width > 80 && boundRect.height > 120 &&
-                    boundRect.x > 3 && boundRect.y > 3) {
-                    
-                    // 优化5：延迟质量评分，只对通过初筛的进行
+                // 放宽长宽比限制，适应更多封面类型
+                // 典型游戏封面长宽比在 0.6-0.85 之间（竖版）
+                bool validAspectRatio = (aspectRatio > 0.45 && aspectRatio < 1.3);
+                bool validSize = (boundRect.width > 60 && boundRect.height > 80);
+                bool validPosition = (boundRect.x >= 0 && boundRect.y >= 0);
+                
+                if (validAspectRatio && validSize && validPosition) {
                     cv::Mat coverRegion = roi(boundRect);
                     double quality = calculateRegionQuality(coverRegion);
+                    
+                    // 位置权重：偏左上的区域加分
+                    double positionBonus = 1.0 + (1.0 - static_cast<double>(boundRect.x) / width) * 0.3;
+                    quality *= positionBonus;
                     
                     candidates.emplace_back(boundRect.x, boundRect.y, 
                                           boundRect.width, boundRect.height,
                                           area, quality, static_cast<int>(i));
                     
-                    // 优化6：如果找到了非常好的候选（面积大且质量高），提前退出
-                    if (area > minArea * 3 && quality > 0.8) {
-                        qDebug() << QString("✓ 找到优质候选区域，提前结束搜索");
+                    qDebug() << QString("候选区域 %1: 位置(%2,%3) 尺寸(%4x%5) 面积:%6 质量:%7")
+                                .arg(i).arg(boundRect.x).arg(boundRect.y)
+                                .arg(boundRect.width).arg(boundRect.height)
+                                .arg(area).arg(quality, 0, 'f', 2);
+                    
+                    // 如果找到足够好的候选，提前退出
+                    if (area > minArea * 5 && quality > 1.5) {
+                        qDebug() << "找到优质候选区域，提前结束搜索";
                         break;
                     }
                 }
             }
         }
         
-        // 降级策略
+        // 降级策略：如果没有找到合适的候选，放宽条件重试
         if (candidates.empty() && !contours.empty()) {
-            qDebug() << "使用降级策略：选择最大轮廓";
+            qDebug() << "使用降级策略：放宽条件搜索";
             
-            auto largestIt = std::max_element(contours.begin(), contours.end(),
-                [](const std::vector<cv::Point>& a, const std::vector<cv::Point>& b) {
-                    return cv::contourArea(a) < cv::contourArea(b);
-                });
-            
-            double largestArea = cv::contourArea(*largestIt);
-            
-            if (largestArea > 2000) {
-                cv::Rect boundRect = cv::boundingRect(*largestIt);
-                if (boundRect.width > 40 && boundRect.height > 60) {
-                    cv::Mat coverRegion = roi(boundRect);
-                    double quality = calculateRegionQuality(coverRegion);
+            for (size_t i = 0; i < contours.size(); ++i) {
+                double area = cv::contourArea(contours[i]);
+                
+                if (area > 1500) {  // 更低的面积阈值
+                    cv::Rect boundRect = cv::boundingRect(contours[i]);
                     
-                    candidates.emplace_back(boundRect.x, boundRect.y,
-                                          boundRect.width, boundRect.height,
-                                          largestArea, quality, 
-                                          static_cast<int>(largestIt - contours.begin()));
+                    if (boundRect.width > 40 && boundRect.height > 50) {
+                        cv::Mat coverRegion = roi(boundRect);
+                        double quality = calculateRegionQuality(coverRegion);
+                        
+                        candidates.emplace_back(boundRect.x, boundRect.y,
+                                              boundRect.width, boundRect.height,
+                                              area, quality, static_cast<int>(i));
+                    }
                 }
             }
         }
         
     } catch (const std::exception& e) {
         qDebug() << "寻找候选区域时出错：" << e.what();
+    }
+    
+    return candidates;
+}
+
+// 使用颜色分割方法查找封面候选区域
+std::vector<CoverCandidate> CoverExtractor::findCoverByColorSegmentation(const cv::Mat& roi)
+{
+    std::vector<CoverCandidate> candidates;
+    
+    try {
+        int height = roi.rows;
+        int width = roi.cols;
+        
+        // 转换到 HSV 色彩空间
+        cv::Mat hsv;
+        cv::cvtColor(roi, hsv, cv::COLOR_BGR2HSV);
+        
+        // 分析背景颜色（通常是深色或纯色）
+        // 修改器界面背景通常是深灰色或黑色
+        cv::Mat mask;
+        
+        // 方法1：检测非背景区域（非深色区域）
+        cv::Mat grayRoi;
+        cv::cvtColor(roi, grayRoi, cv::COLOR_BGR2GRAY);
+        
+        // 使用自适应阈值分割
+        cv::Mat binary;
+        cv::adaptiveThreshold(grayRoi, binary, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, 
+                             cv::THRESH_BINARY, 15, -5);
+        
+        // 形态学操作：闭运算填充空洞
+        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
+        cv::morphologyEx(binary, binary, cv::MORPH_CLOSE, kernel);
+        cv::morphologyEx(binary, binary, cv::MORPH_OPEN, kernel);
+        
+        // 查找轮廓
+        std::vector<std::vector<cv::Point>> contours;
+        cv::findContours(binary, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+        
+        qDebug() << QString("颜色分割找到 %1 个区域").arg(contours.size());
+        
+        double minArea = std::max(2000.0, (width * height) * 0.008);
+        
+        for (size_t i = 0; i < contours.size(); ++i) {
+            double area = cv::contourArea(contours[i]);
+            
+            if (area > minArea) {
+                cv::Rect boundRect = cv::boundingRect(contours[i]);
+                double aspectRatio = static_cast<double>(boundRect.width) / boundRect.height;
+                
+                // 检查是否符合封面特征
+                if (aspectRatio > 0.4 && aspectRatio < 1.4 &&
+                    boundRect.width > 50 && boundRect.height > 70) {
+                    
+                    cv::Mat coverRegion = roi(boundRect);
+                    double quality = calculateRegionQuality(coverRegion);
+                    
+                    // 颜色丰富度检查
+                    cv::Scalar meanColor = cv::mean(coverRegion);
+                    double colorVariance = std::abs(meanColor[0] - meanColor[1]) + 
+                                          std::abs(meanColor[1] - meanColor[2]);
+                    
+                    // 封面通常有较丰富的颜色
+                    if (colorVariance > 5 || quality > 0.5) {
+                        candidates.emplace_back(boundRect.x, boundRect.y,
+                                              boundRect.width, boundRect.height,
+                                              area, quality, static_cast<int>(i));
+                    }
+                }
+            }
+        }
+        
+    } catch (const std::exception& e) {
+        qDebug() << "颜色分割出错：" << e.what();
     }
     
     return candidates;
@@ -323,36 +527,56 @@ double CoverExtractor::calculateRegionQuality(const cv::Mat& region)
         int height = region.rows;
         int width = region.cols;
         
-        // 尺寸加分
-        double sizeScore = std::min(2.0, (width * height) / 50000.0);
+        // 1. 尺寸评分 - 封面通常有一定大小
+        double sizeScore = std::min(2.0, (width * height) / 40000.0);
         
-        // 转换为灰度
+        // 2. 长宽比评分 - 游戏封面通常是竖版 (0.6-0.85)
+        double aspectRatio = static_cast<double>(width) / height;
+        double aspectScore = 0.5;
+        if (aspectRatio >= 0.55 && aspectRatio <= 0.9) {
+            aspectScore = 1.5;  // 理想的竖版封面
+        } else if (aspectRatio >= 0.45 && aspectRatio <= 1.1) {
+            aspectScore = 1.0;  // 可接受的比例
+        }
+        
+        // 3. 纹理复杂度评分 - 封面通常有丰富的细节
         cv::Mat gray;
         cv::cvtColor(region, gray, cv::COLOR_BGR2GRAY);
         
-        // 计算纹理复杂度（标准差）
         cv::Scalar meanScalar, stdScalar;
         cv::meanStdDev(gray, meanScalar, stdScalar);
-        double textureScore = std::min(2.0, stdScalar[0] / 30.0);
+        double textureScore = std::min(2.0, stdScalar[0] / 25.0);
         
-        // 优化：去掉耗时的边缘密度计算
-        // 计算亮度分布
+        // 4. 亮度评分 - 封面通常不会太暗或太亮
         double meanBrightness = meanScalar[0];
-        double brightnessScore = (meanBrightness > 30 && meanBrightness < 220) ? 1.0 : 0.3;
+        double brightnessScore = 0.3;
+        if (meanBrightness > 40 && meanBrightness < 200) {
+            brightnessScore = 1.0;
+        } else if (meanBrightness > 25 && meanBrightness < 230) {
+            brightnessScore = 0.7;
+        }
         
-        // 优化：去掉耗时的颜色分布多样性计算和对比度计算
-        // 简化的综合得分
+        // 5. 颜色丰富度评分（快速计算）
+        cv::Scalar meanColor = cv::mean(region);
+        double colorVariance = std::abs(meanColor[0] - meanColor[1]) + 
+                              std::abs(meanColor[1] - meanColor[2]) +
+                              std::abs(meanColor[0] - meanColor[2]);
+        double colorScore = std::min(1.5, colorVariance / 30.0);
+        
+        // 综合得分
         double qualityScore = (
-            sizeScore * 0.5 +        // 增加尺寸权重
-            textureScore * 0.4 +     // 纹理权重
-            brightnessScore * 0.1    // 亮度权重
+            sizeScore * 0.3 +      // 尺寸权重
+            aspectScore * 0.25 +   // 长宽比权重
+            textureScore * 0.25 +  // 纹理权重
+            brightnessScore * 0.1 + // 亮度权重
+            colorScore * 0.1       // 颜色权重
         );
         
-        return std::max(0.1, std::min(qualityScore, 8.0));
+        return std::max(0.1, std::min(qualityScore, 10.0));
         
     } catch (const std::exception& e) {
         qDebug() << "质量评分计算错误：" << e.what();
-        return 1.0;
+        return 0.5;
     }
 }
 
@@ -362,14 +586,23 @@ cv::Mat CoverExtractor::extractFallbackByPosition(const cv::Mat& roi)
         int height = roi.rows;
         int width = roi.cols;
         
-        // 尝试几个典型的封面位置
+        // 更多的备选位置，覆盖不同的修改器界面布局
         std::vector<cv::Rect> positions = {
-            cv::Rect(static_cast<int>(width * 0.02), static_cast<int>(height * 0.1), 
-                    static_cast<int>(width * 0.35), static_cast<int>(height * 0.6)),
-            cv::Rect(static_cast<int>(width * 0.05), static_cast<int>(height * 0.15), 
-                    static_cast<int>(width * 0.3), static_cast<int>(height * 0.5)),
+            // 标准左上角位置
+            cv::Rect(static_cast<int>(width * 0.02), static_cast<int>(height * 0.08), 
+                    static_cast<int>(width * 0.4), static_cast<int>(height * 0.65)),
+            // 稍微偏右的位置
+            cv::Rect(static_cast<int>(width * 0.05), static_cast<int>(height * 0.1), 
+                    static_cast<int>(width * 0.35), static_cast<int>(height * 0.55)),
+            // 更靠近边缘
             cv::Rect(static_cast<int>(width * 0.01), static_cast<int>(height * 0.05), 
-                    static_cast<int>(width * 0.4), static_cast<int>(height * 0.7))
+                    static_cast<int>(width * 0.45), static_cast<int>(height * 0.7)),
+            // 居中偏左
+            cv::Rect(static_cast<int>(width * 0.08), static_cast<int>(height * 0.12), 
+                    static_cast<int>(width * 0.32), static_cast<int>(height * 0.5)),
+            // 更大范围
+            cv::Rect(static_cast<int>(width * 0.0), static_cast<int>(height * 0.02), 
+                    static_cast<int>(width * 0.5), static_cast<int>(height * 0.75))
         };
         
         cv::Mat bestCover;
@@ -384,7 +617,7 @@ cv::Mat CoverExtractor::extractFallbackByPosition(const cv::Mat& roi)
             pos.width = std::min(pos.width, width - pos.x);
             pos.height = std::min(pos.height, height - pos.y);
             
-            if (pos.width > 50 && pos.height > 80) {
+            if (pos.width > 40 && pos.height > 60) {
                 cv::Mat cover = roi(pos);
                 double score = calculateRegionQuality(cover);
                 
