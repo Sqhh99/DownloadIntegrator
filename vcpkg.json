@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "downloadintegrator",
+  "version": "1.0.0",
+  "description": "游戏修改器下载集成工具 - Game Modifier Download Integration Tool",
+  "homepage": "https://github.com/yourusername/DownloadIntegrator",
+  "license": "MIT",
+  "supports": "windows & x64",
+  "dependencies": [
+    {
+      "name": "curl",
+      "features": ["ssl"]
+    },
+    "nlohmann-json",
+    {
+      "name": "opencv4",
+      "default-features": false,
+      "features": ["jpeg", "png", "webp"]
+    },
+    "pugixml"
+  ],
+  "builtin-baseline": "c82f74667287d3dc386bce81e44964370c91a289",
+  "overrides": []
+}
