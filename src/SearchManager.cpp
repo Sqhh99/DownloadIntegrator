@@ -1,7 +1,6 @@
 #include "SearchManager.h"
 #include <QSettings>
 #include <QDateTime>
-#include <QStringListModel>
 #include <QRegularExpression>
 #include <QDebug>
 #include <algorithm>
@@ -12,7 +11,6 @@
 // 构造函数
 SearchManager::SearchManager(QObject* parent)
     : QObject(parent),
-      m_completer(nullptr),
       m_maxHistoryItems(20)
 {
     // 加载搜索历史
@@ -22,12 +20,6 @@ SearchManager::SearchManager(QObject* parent)
     if (m_searchHistory.isEmpty()) {
         initializeDefaultSuggestions();
     }
-    
-    // 初始化自动完成器
-    m_completer = new QCompleter(m_searchHistory, this);
-    m_completer->setCaseSensitivity(Qt::CaseInsensitive);
-    m_completer->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
-    m_completer->setCompletionMode(QCompleter::PopupCompletion);
 }
 
 // 初始化默认的搜索建议
@@ -298,9 +290,6 @@ void SearchManager::addSearchToHistory(const QString& searchTerm)
         m_searchHistory.removeLast();
     }
     
-    // 更新自动完成器
-    updateCompleter();
-    
     // 保存历史记录
     saveSearchHistory();
 }
@@ -315,14 +304,7 @@ QStringList SearchManager::getSearchHistory() const
 void SearchManager::clearSearchHistory()
 {
     m_searchHistory.clear();
-    updateCompleter();
     saveSearchHistory();
-}
-
-// 获取自动完成器
-QCompleter* SearchManager::getCompleter()
-{
-    return m_completer;
 }
 
 // 按相关性排序搜索结果
@@ -367,20 +349,6 @@ QList<ModifierInfo> SearchManager::sortByDate(const QList<ModifierInfo>& modifie
     });
     
     return result;
-}
-
-// 更新自动完成器
-void SearchManager::updateCompleter()
-{
-    if (m_completer) {
-        // 更新模型
-        QStringListModel* model = qobject_cast<QStringListModel*>(m_completer->model());
-        if (!model) {
-            model = new QStringListModel(m_completer);
-            m_completer->setModel(model);
-        }
-        model->setStringList(m_searchHistory);
-    }
 }
 
 // 计算搜索词与修改器的相关性分数

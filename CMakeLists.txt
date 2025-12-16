@@ -37,7 +37,7 @@ set(OPENCV_LIBS
 )
 
 # Qt组件 (包含 QML/Quick 支持)
-find_package(Qt6 COMPONENTS Widgets Network Core Concurrent Quick Qml QuickControls2 REQUIRED)
+find_package(Qt6 COMPONENTS Network Core Concurrent Quick Qml QuickControls2 REQUIRED)
 
 # 查找pugixml库
 find_package(pugixml CONFIG REQUIRED)
@@ -105,7 +105,6 @@ add_executable(${PROJECT_NAME}
 ) 
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
-    Qt6::Widgets 
     Qt6::Network
     Qt6::Core
     Qt6::Concurrent

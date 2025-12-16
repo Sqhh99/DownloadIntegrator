@@ -1,5 +1,5 @@
 #include "Backend.h"
-#include <QApplication>
+#include <QGuiApplication>
 #include <QDesktopServices>
 #include <QUrl>
 #include <QProcess>
@@ -15,7 +15,6 @@
 #include "LanguageManager.h"
 #include "DownloadManager.h"
 #include <QRegularExpression>
-#include <QFileDialog>
 #include <QSet>
 
 Backend::Backend(QObject* parent)
@@ -364,10 +363,8 @@ void Backend::checkForUpdates()
 
 void Backend::setTheme(int themeIndex)
 {
-    if (!m_app) return;
-    
     ConfigManager::Theme theme = static_cast<ConfigManager::Theme>(themeIndex);
-    ThemeManager::getInstance().switchTheme(*m_app, theme);
+    ThemeManager::getInstance().switchTheme(theme);
     qDebug() << "切换主题:" << themeIndex;
 }
 
@@ -402,12 +399,10 @@ void Backend::setDownloadPath(const QString& path)
     }
 }
 
-void Backend::selectDownloadFolder()
+void Backend::requestDownloadFolderSelection()
 {
-    QString dir = QFileDialog::getExistingDirectory(nullptr, tr("选择下载目录"), downloadPath());
-    if (!dir.isEmpty()) {
-        setDownloadPath(dir);
-    }
+    // 发射信号请求QML端显示文件选择对话框
+    emit downloadFolderSelectionRequested();
 }
 
 void Backend::onSearchCompleted(const QList<ModifierInfo>& modifiers)

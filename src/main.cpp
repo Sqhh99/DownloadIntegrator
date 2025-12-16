@@ -1,4 +1,4 @@
-#include <QApplication>
+#include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
@@ -34,8 +34,8 @@ void addDllSearchPaths() {
 
 int main(int argc, char *argv[])
 {
-    // 使用 QApplication 以支持 QWidget (如 SettingsDialog)
-    QApplication app(argc, argv);
+    // 使用 QGuiApplication (纯 QML 应用)
+    QGuiApplication app(argc, argv);
     
     try {
         qDebug() << "应用程序开始初始化...";

@@ -5,7 +5,6 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QPixmap>
-#include <QLabel>
 #include <functional>
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>

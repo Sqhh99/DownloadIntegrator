@@ -2,7 +2,6 @@
 #include "NetworkManager.h"
 #include "ConfigManager.h"
 #include <QDebug>
-#include <QApplication>
 #include <QStandardPaths>
 #include <QDir>
 #include <QFileInfo>

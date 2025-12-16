@@ -6,7 +6,6 @@
 #include <QDebug>
 #include <QBuffer>
 #include <QImageReader>
-#include <QApplication>
 #include <algorithm>
 #include <vector>
 

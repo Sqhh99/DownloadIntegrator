@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Window
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
+import QtQuick.Dialogs
 
 import "themes"
 import "components"
@@ -374,7 +375,29 @@ ApplicationWindow {
         
         onBrowseDownloadPath: {
             console.log("Main: 打开下载目录选择对话框")
-            if (backend) backend.selectDownloadFolder()
+            downloadFolderDialog.open()
+        }
+    }
+    
+    // 下载目录选择对话框
+    FolderDialog {
+        id: downloadFolderDialog
+        title: qsTr("选择下载目录")
+        currentFolder: backend ? "file:///" + backend.downloadPath : ""
+        onAccepted: {
+            if (backend) {
+                var path = selectedFolder.toString().replace("file:///", "")
+                backend.setDownloadPath(path)
+                console.log("已选择下载目录:", path)
+            }
+        }
+    }
+    
+    // 响应 Backend 信号请求打开文件夹选择对话框
+    Connections {
+        target: backend
+        function onDownloadFolderSelectionRequested() {
+            downloadFolderDialog.open()
         }
     }
     

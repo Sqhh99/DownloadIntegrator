@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QApplication>
 #include <QDebug>
 #include "ConfigManager.h"
 
@@ -19,7 +18,7 @@ public:
     }
     
     // 切换到指定主题（仅保存设置，QML端会自动响应）
-    void switchTheme(QApplication& /*app*/, ConfigManager::Theme theme) {
+    void switchTheme(ConfigManager::Theme theme) {
         // 保存主题设置
         ConfigManager::getInstance().setCurrentTheme(theme);
         qDebug() << "主题已切换为:" << getThemeName(theme);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QApplication>
+#include <QGuiApplication>
 #include <QTranslator>
 #include <QLocale>
 #include <QDebug>
@@ -27,14 +27,14 @@ public:
     }
     
     // 应用当前语言（从配置中读取）
-    void applyCurrentLanguage(QApplication& app) {
+    void applyCurrentLanguage(QGuiApplication& app) {
         ConfigManager::Language configLang = ConfigManager::getInstance().getCurrentLanguage();
         Language language = convertConfigLanguage(configLang);
         applyLanguage(app, language);
     }
     
     // 切换到指定语言
-    void switchLanguage(QApplication& app, Language language) {
+    void switchLanguage(QGuiApplication& app, Language language) {
         // 保存语言设置
         ConfigManager::Language configLang = convertToConfigLanguage(language);
         ConfigManager::getInstance().setCurrentLanguage(configLang);
@@ -121,7 +121,7 @@ private:
     }
     
     // 应用指定语言
-    void applyLanguage(QApplication& app, Language language) {
+    void applyLanguage(QGuiApplication& app, Language language) {
         // 卸载当前翻译器
         if (m_currentTranslator) {
             app.removeTranslator(m_currentTranslator);

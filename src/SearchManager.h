@@ -4,7 +4,6 @@
 #include <QString>
 #include <QList>
 #include <QSettings>
-#include <QCompleter>
 #include <QStringList>
 #include "ModifierParser.h"
 #include "ModifierInfoManager.h"
@@ -117,12 +116,6 @@ public:
     void clearSearchHistory();
 
     /**
-     * @brief 获取自动完成器
-     * @return 自动完成器对象指针
-     */
-    QCompleter* getCompleter();
-
-    /**
      * @brief 按相关性排序搜索结果
      * @param modifiers 修改器列表
      * @param searchTerm 搜索关键词
@@ -155,9 +148,6 @@ private:
     void performSearch(const QString& searchTerm, 
                       std::function<void(const QList<ModifierInfo>&)> callback);
 
-    // 更新自动完成器
-    void updateCompleter();
-
     // 初始化默认搜索建议
     void initializeDefaultSuggestions();
 
@@ -170,6 +160,5 @@ private:
 
 private:
     QStringList m_searchHistory;    // 搜索历史记录
-    QCompleter* m_completer;        // 自动完成器
     int m_maxHistoryItems;          // 最大历史记录数量
 }; 

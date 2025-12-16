@@ -13,7 +13,7 @@
 #include "LanguageManager.h"
 #include "CoverExtractor.h"
 
-class QApplication;
+class QGuiApplication;
 
 /**
  * Backend - QML后端桥接类
@@ -52,8 +52,8 @@ public:
     explicit Backend(QObject* parent = nullptr);
     ~Backend();
 
-    // 设置 QApplication 引用（用于主题和语言切换）
-    void setApplication(QApplication* app) { m_app = app; }
+    // 设置 QGuiApplication 引用（用于语言切换）
+    void setApplication(QGuiApplication* app) { m_app = app; }
     
     // 设置 QQmlEngine 引用（用于语言切换时刷新 QML）
     void setQmlEngine(QQmlEngine* engine) { m_qmlEngine = engine; }
@@ -81,8 +81,8 @@ public:
     
     // 下载目录
     QString downloadPath() const;
-    void setDownloadPath(const QString& path);
-    Q_INVOKABLE void selectDownloadFolder();  // 打开目录选择对话框
+    Q_INVOKABLE void setDownloadPath(const QString& path);
+    Q_INVOKABLE void requestDownloadFolderSelection();  // 请求打开目录选择对话框
 
 public slots:
     // 搜索功能
@@ -122,6 +122,7 @@ signals:
     void statusMessage(const QString& message);
     void coverExtracted();
     void downloadPathChanged();
+    void downloadFolderSelectionRequested();  // 请求显示文件夹选择对话框
 
 private slots:
     void onSearchCompleted(const QList<ModifierInfo>& modifiers);
@@ -133,7 +134,7 @@ private:
     void saveDownloadedModifiers();
 
 private:
-    QApplication* m_app = nullptr;
+    QGuiApplication* m_app = nullptr;
     QQmlEngine* m_qmlEngine = nullptr;
     ModifierListModel* m_modifierListModel;
     DownloadedModifierModel* m_downloadedModifierModel;
