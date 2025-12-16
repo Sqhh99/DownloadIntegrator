@@ -35,6 +35,7 @@ public:
     Q_INVOKABLE void clear();
     Q_INVOKABLE void setModifiers(const QList<ModifierInfo>& modifiers);
     Q_INVOKABLE ModifierInfo getModifier(int index) const;
+    Q_INVOKABLE QString getModifierName(int index) const;  // QML 可直接访问
     Q_INVOKABLE QList<ModifierInfo> getAllModifiers() const { return m_modifiers; }
     Q_INVOKABLE int count() const { return m_modifiers.size(); }
 

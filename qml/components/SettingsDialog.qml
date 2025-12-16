@@ -10,7 +10,7 @@ import "../themes"
 Dialog {
     id: settingsDialog
     
-    property int currentTheme: 0
+    property int currentTheme: ThemeProvider.currentTheme
     property int currentLanguage: 0
     property string downloadPath: ""
     
@@ -56,7 +56,7 @@ Dialog {
                 width: 30
                 height: 30
                 radius: ThemeProvider.radiusSmall
-                color: closeArea.containsMouse ? ThemeProvider.dangerColor : "transparent"
+                color: closeArea.containsMouse ? ThemeProvider.errorColor : "transparent"
                 
                 Text {
                     anchors.centerIn: parent
@@ -280,10 +280,10 @@ Dialog {
                             
                             Repeater {
                                 model: [
-                                    {name: qsTr("Dark"), color: "#1e1e1e"},
-                                    {name: qsTr("Light"), color: "#ffffff"},
-                                    {name: qsTr("经典"), color: "#2b2b2b"},
-                                    {name: qsTr("多彩"), color: "#1a1a2e"}
+                                    {name: qsTr("浅色"), color: "#FAFAFA"},
+                                    {name: qsTr("深色"), color: "#1A1D23"},
+                                    {name: qsTr("海洋"), color: "#E0F7FA"},
+                                    {name: qsTr("日落"), color: "#FFF8E1"}
                                 ]
                                 
                                 delegate: Rectangle {
@@ -298,7 +298,7 @@ Dialog {
                                         anchors.centerIn: parent
                                         text: modelData.name
                                         font.pixelSize: ThemeProvider.fontSizeSmall
-                                        color: index === 1 ? "#333" : "#fff"
+                                        color: index === 1 ? "#fff" : "#333"
                                     }
                                     
                                     MouseArea {

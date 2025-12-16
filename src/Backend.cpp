@@ -16,6 +16,7 @@
 #include "DownloadManager.h"
 #include <QRegularExpression>
 #include <QFileDialog>
+#include <QSet>
 
 Backend::Backend(QObject* parent)
     : QObject(parent)
@@ -24,6 +25,7 @@ Backend::Backend(QObject* parent)
     , m_coverExtractor(new CoverExtractor(this))
 {
     qDebug() << "Backend 初始化...";
+    loadGameMappings();  // 加载游戏名称映射数据库
     loadDownloadedModifiers();
     
     // 初始加载最近更新的修改器
@@ -489,4 +491,105 @@ void Backend::saveDownloadedModifiers()
     file.close();
     
     qDebug() << "已保存" << m_downloadedModifierModel->count() << "个已下载修改器";
+}
+
+// 加载游戏名称映射数据库
+void Backend::loadGameMappings()
+{
+    m_gameMappings.clear();
+    
+    QFile file(":/game_mappings.json");
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "无法打开游戏映射文件";
+        return;
+    }
+    
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    file.close();
+    
+    if (!doc.isObject()) {
+        qDebug() << "游戏映射文件格式错误";
+        return;
+    }
+    
+    QJsonObject rootObj = doc.object();
+    QJsonObject mappings = rootObj["mappings"].toObject();
+    
+    for (const QString& chineseName : mappings.keys()) {
+        QJsonObject gameObj = mappings[chineseName].toObject();
+        
+        GameMapping mapping;
+        mapping.chineseName = chineseName;
+        mapping.englishName = gameObj["english"].toString();
+        
+        // 加载别名
+        QJsonArray aliasArray = gameObj["aliases"].toArray();
+        for (const QJsonValue& val : aliasArray) {
+            mapping.aliases.append(val.toString());
+        }
+        
+        m_gameMappings.append(mapping);
+    }
+    
+    qDebug() << "已加载" << m_gameMappings.size() << "个游戏名称映射";
+}
+
+// 获取搜索建议 - 支持中英文模糊匹配
+QStringList Backend::getSuggestions(const QString& keyword, int maxResults)
+{
+    QStringList results;
+    
+    if (keyword.isEmpty()) {
+        return results;
+    }
+    
+    QString lowerKeyword = keyword.toLower();
+    
+    // 记录已添加的游戏名（避免重复）
+    QSet<QString> addedNames;
+    
+    for (const GameMapping& mapping : m_gameMappings) {
+        if (results.size() >= maxResults) break;
+        
+        bool matched = false;
+        QString displayName;
+        
+        // 1. 检查中文名称匹配
+        if (mapping.chineseName.toLower().contains(lowerKeyword)) {
+            matched = true;
+            displayName = mapping.chineseName;
+            // 如果中文名匹配，显示中文名（英文名）
+            if (!mapping.englishName.isEmpty()) {
+                displayName += " (" + mapping.englishName + ")";
+            }
+        }
+        // 2. 检查英文名称匹配
+        else if (mapping.englishName.toLower().contains(lowerKeyword)) {
+            matched = true;
+            displayName = mapping.englishName;
+            // 如果英文名匹配，显示英文名（中文名）
+            if (!mapping.chineseName.isEmpty()) {
+                displayName += " (" + mapping.chineseName + ")";
+            }
+        }
+        // 3. 检查别名匹配
+        else {
+            for (const QString& alias : mapping.aliases) {
+                if (alias.toLower().contains(lowerKeyword)) {
+                    matched = true;
+                    // 别名匹配时，显示中文名（匹配的别名）
+                    displayName = mapping.chineseName + " (" + alias + ")";
+                    break;
+                }
+            }
+        }
+        
+        // 添加到结果（避免重复）
+        if (matched && !addedNames.contains(displayName)) {
+            results.append(displayName);
+            addedNames.insert(displayName);
+        }
+    }
+    
+    return results;
 }

@@ -106,6 +106,9 @@ public slots:
     // 设置
     Q_INVOKABLE void setTheme(int themeIndex);
     Q_INVOKABLE void setLanguage(int languageIndex);
+    
+    // 搜索建议 - 从 game_mappings.json 获取
+    Q_INVOKABLE QStringList getSuggestions(const QString& keyword, int maxResults = 8);
 
 
 signals:
@@ -151,4 +154,13 @@ private:
     // 封面提取器
     CoverExtractor* m_coverExtractor;
     QString m_currentCoverPath;
+    
+    // 游戏名称映射数据 (中英文搜索建议)
+    struct GameMapping {
+        QString chineseName;   // 中文名
+        QString englishName;   // 英文名
+        QStringList aliases;   // 别名列表
+    };
+    QList<GameMapping> m_gameMappings;
+    void loadGameMappings();
 };

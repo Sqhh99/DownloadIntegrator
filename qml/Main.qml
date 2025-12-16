@@ -158,6 +158,7 @@ ApplicationWindow {
             // 搜索页 - 不再使用 SplitView
             SearchPage {
                 id: searchPage
+                backend: mainWindow.backend  // 传入后端对象
                 modifierModel: backend ? backend.modifierListModel : null
                 
                 onSearchRequested: function(keyword) {

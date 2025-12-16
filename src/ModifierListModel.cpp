@@ -70,3 +70,11 @@ ModifierInfo ModifierListModel::getModifier(int index) const
     }
     return ModifierInfo();
 }
+
+QString ModifierListModel::getModifierName(int index) const
+{
+    if (index >= 0 && index < m_modifiers.size()) {
+        return m_modifiers.at(index).name;
+    }
+    return QString();
+}

@@ -36,12 +36,12 @@ public:
         switch (theme) {
             case ConfigManager::Theme::Light:
                 return "浅色主题";
-            case ConfigManager::Theme::Win11:
-                return "Windows 11主题";
-            case ConfigManager::Theme::Classic:
-                return "经典主题";
-            case ConfigManager::Theme::Colorful:
-                return "多彩主题";
+            case ConfigManager::Theme::Dark:
+                return "深色主题";
+            case ConfigManager::Theme::Ocean:
+                return "海洋主题";
+            case ConfigManager::Theme::Sunset:
+                return "日落主题";
             default:
                 return "未知主题";
         }
@@ -66,14 +66,14 @@ private:
             case ConfigManager::Theme::Light:
                 styleFilePath = ":/style/main.qss";
                 break;
-            case ConfigManager::Theme::Win11:
-                styleFilePath = ":/style/win11.qss";
+            case ConfigManager::Theme::Dark:
+                styleFilePath = ":/style/dark.qss";
                 break;
-            case ConfigManager::Theme::Classic:
-                styleFilePath = ":/style/classic.qss";
+            case ConfigManager::Theme::Ocean:
+                styleFilePath = ":/style/ocean.qss";
                 break;
-            case ConfigManager::Theme::Colorful:
-                styleFilePath = ":/style/colorful.qss";
+            case ConfigManager::Theme::Sunset:
+                styleFilePath = ":/style/sunset.qss";
                 break;
             default:
                 styleFilePath = ":/style/main.qss";

@@ -20,9 +20,9 @@ public:
     // 主题类型枚举
     enum class Theme {
         Light,      // 浅色主题
-        Win11,      // Windows 11主题
-        Classic,    // 经典主题
-        Colorful,   // 多彩主题
+        Dark,       // 深色主题
+        Ocean,      // 海洋主题
+        Sunset,     // 日落主题
         Default = Light  // 默认使用浅色主题
     };
     
