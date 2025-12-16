@@ -20,6 +20,10 @@ Drawer {
     property int selectedVersionIndex: 0
     property string coverUrl: ""
     
+    // 加载状态：当 gameName 不为空且 versions 有数据时认为加载完成
+    property bool isLoading: gameName.length > 0 && versions.length === 0
+    property bool isReady: gameName.length > 0 && versions.length > 0
+    
     // 信号
     signal versionChanged(int index)
     signal startDownload(int versionIndex)  // 开始下载信号
@@ -29,7 +33,7 @@ Drawer {
     width: Math.min(400, parent.width * 0.4)
     height: parent.height
     modal: false
-    interactive: true
+    interactive: true  // 禁用边缘拖拽，只能通过代码打开
     
     background: Rectangle {
         color: ThemeProvider.surfaceColor
@@ -45,11 +49,63 @@ Drawer {
     
     onClosed: detailDrawer.closed()
     
-    // 内容
+    // 加载中遮罩层
+    Rectangle {
+        anchors.fill: parent
+        color: ThemeProvider.surfaceColor
+        visible: detailDrawer.isLoading
+        z: 100
+        
+        Column {
+            anchors.centerIn: parent
+            spacing: 16
+            
+            // 加载动画（旋转的圆圈）
+            Rectangle {
+                id: loadingSpinner
+                width: 40
+                height: 40
+                radius: 20
+                color: "transparent"
+                border.width: 3
+                border.color: ThemeProvider.primaryColor
+                anchors.horizontalCenter: parent.horizontalCenter
+                
+                // 只显示四分之三的圆弧效果
+                Rectangle {
+                    width: 12
+                    height: 12
+                    radius: 6
+                    color: ThemeProvider.surfaceColor
+                    anchors.top: parent.top
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.topMargin: -2
+                }
+                
+                RotationAnimation on rotation {
+                    from: 0
+                    to: 360
+                    duration: 1000
+                    loops: Animation.Infinite
+                    running: detailDrawer.isLoading
+                }
+            }
+            
+            Text {
+                text: qsTr("加载中...")
+                font.pixelSize: ThemeProvider.fontSizeMedium
+                color: ThemeProvider.textSecondary
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+        }
+    }
+    
+    // 内容（只有在准备好时才显示）
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: ThemeProvider.spacingMedium
         spacing: ThemeProvider.spacingMedium
+        visible: detailDrawer.isReady  // 只有数据准备好才显示内容
         
         // 标题栏
         RowLayout {
