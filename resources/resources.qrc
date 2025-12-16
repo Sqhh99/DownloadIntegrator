@@ -19,5 +19,8 @@
         <file>icons/maximize.png</file>
         <file>icons/maximize_restoration.png</file>
         <file>icons/minimize.png</file>
+        <file>icons/details.png</file>
+        <file>icons/about.png</file>
+        <file>icons/language.png</file>
     </qresource>
 </RCC>

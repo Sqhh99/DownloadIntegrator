@@ -13,11 +13,13 @@ Rectangle {
     property string title: ""
     property var targetWindow: null
     property bool maximized: targetWindow ? (targetWindow.visibility === Window.Maximized) : false
+    property int activeDownloads: 0  // 活动下载数
     
     signal minimizeClicked()
     signal maximizeClicked()
     signal closeClicked()
     signal settingsClicked()
+    signal downloadClicked()  // 下载列表按钮
     
     height: 40
     color: ThemeProvider.surfaceColor
@@ -87,6 +89,41 @@ Rectangle {
             Layout.fillWidth: true
             Layout.leftMargin: 10
             elide: Text.ElideRight
+        }
+        
+        // 下载按钮（带徽章）
+        Item {
+            Layout.preferredWidth: 36
+            Layout.preferredHeight: 36
+            
+            IconButton {
+                anchors.centerIn: parent
+                iconSource: "qrc:/icons/download.png"
+                tooltip: qsTr("下载列表")
+                iconSize: 16
+                onClicked: downloadClicked()
+            }
+            
+            // 活动下载数徽章
+            Rectangle {
+                visible: activeDownloads > 0
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.topMargin: 2
+                anchors.rightMargin: 2
+                width: 16
+                height: 16
+                radius: 8
+                color: ThemeProvider.dangerColor
+                
+                Text {
+                    anchors.centerIn: parent
+                    text: activeDownloads > 9 ? "9+" : activeDownloads.toString()
+                    font.pixelSize: 10
+                    font.bold: true
+                    color: "white"
+                }
+            }
         }
         
         // 设置按钮

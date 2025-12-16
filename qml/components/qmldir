@@ -6,3 +6,6 @@ ProgressIndicator 1.0 ProgressIndicator.qml
 IconButton 1.0 IconButton.qml
 CustomTitleBar 1.0 CustomTitleBar.qml
 DetailDrawer 1.0 DetailDrawer.qml
+DownloadListPopup 1.0 DownloadListPopup.qml
+SettingsDialog 1.0 SettingsDialog.qml
+

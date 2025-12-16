@@ -22,6 +22,7 @@ Drawer {
     
     // 信号
     signal versionChanged(int index)
+    signal startDownload(int versionIndex)  // 开始下载信号
     signal closed()
     
     edge: Qt.RightEdge
@@ -166,10 +167,10 @@ Drawer {
             }
         }
         
-        // 版本选择
+        // 版本选择和下载
         GroupBox {
             Layout.fillWidth: true
-            title: qsTr("可用版本")
+            title: qsTr("选择版本下载")
             
             background: Rectangle {
                 y: parent.topPadding - parent.padding
@@ -187,25 +188,78 @@ Drawer {
                 color: ThemeProvider.textSecondary
             }
             
-            ComboBox {
+            RowLayout {
                 width: parent.width
-                model: versions.map(function(v) { return v.name || v; })
-                currentIndex: selectedVersionIndex
-                onCurrentIndexChanged: versionChanged(currentIndex)
+                spacing: ThemeProvider.spacingSmall
                 
-                background: Rectangle {
-                    color: ThemeProvider.inputBackground
-                    border.color: parent.hovered ? ThemeProvider.primaryColor : ThemeProvider.borderColor
-                    radius: ThemeProvider.radiusSmall
+                ComboBox {
+                    id: versionComboBox
+                    Layout.fillWidth: true
+                    enabled: versions.length > 0
+                    model: versions.length > 0 ? versions.map(function(v) { return v.name || v; }) : [qsTr("加载中...")]
+                    currentIndex: selectedVersionIndex
+                    onCurrentIndexChanged: versionChanged(currentIndex)
+                    
+                    background: Rectangle {
+                        color: ThemeProvider.inputBackground
+                        border.color: parent.hovered ? ThemeProvider.primaryColor : ThemeProvider.borderColor
+                        radius: ThemeProvider.radiusSmall
+                    }
+                    
+                    contentItem: Text {
+                        leftPadding: 10
+                        text: parent.displayText
+                        font.pixelSize: ThemeProvider.fontSizeMedium
+                        color: versions.length > 0 ? ThemeProvider.textPrimary : ThemeProvider.textDisabled
+                        verticalAlignment: Text.AlignVCenter
+                        elide: Text.ElideMiddle
+                    }
                 }
                 
-                contentItem: Text {
-                    leftPadding: 10
-                    text: parent.displayText
-                    font.pixelSize: ThemeProvider.fontSizeMedium
-                    color: ThemeProvider.textPrimary
-                    verticalAlignment: Text.AlignVCenter
-                    elide: Text.ElideRight
+                // 下载按钮
+                Rectangle {
+                    Layout.preferredWidth: 80
+                    Layout.preferredHeight: 32
+                    radius: ThemeProvider.radiusSmall
+                    color: downloadBtnMouseArea.containsMouse && versions.length > 0 
+                           ? ThemeProvider.successColor 
+                           : (versions.length > 0 ? ThemeProvider.primaryColor : ThemeProvider.disabledColor)
+                    
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 4
+                        
+                        Image {
+                            anchors.verticalCenter: parent.verticalCenter
+                            source: "qrc:/icons/download.png"
+                            width: 16
+                            height: 16
+                            sourceSize: Qt.size(16, 16)
+                            opacity: versions.length > 0 ? 1.0 : 0.5
+                        }
+                        
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: qsTr("下载")
+                            font.pixelSize: ThemeProvider.fontSizeMedium
+                            color: "#ffffff"
+                            opacity: versions.length > 0 ? 1.0 : 0.7
+                        }
+                    }
+                    
+                    MouseArea {
+                        id: downloadBtnMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: versions.length > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        
+                        onClicked: {
+                            if (versions.length > 0) {
+                                console.log("详情面板下载按钮点击, 版本索引:", versionComboBox.currentIndex)
+                                detailDrawer.startDownload(versionComboBox.currentIndex)
+                            }
+                        }
+                    }
                 }
             }
         }

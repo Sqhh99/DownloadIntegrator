@@ -54,12 +54,12 @@ Item {
                         
                         Text {
                             anchors.fill: parent
-                            anchors.leftMargin: 10
                             text: modelData
                             font.pixelSize: ThemeProvider.fontSizeMedium
                             font.bold: true
                             color: ThemeProvider.textSecondary
                             verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
                             elide: Text.ElideRight
                         }
                         

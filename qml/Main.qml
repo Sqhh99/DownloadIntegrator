@@ -30,6 +30,10 @@ ApplicationWindow {
     // backend 由 main.cpp 通过 rootContext 注入
     required property var backend
     
+    // 待下载标志 - 用于等待详情加载完成后自动开始下载
+    property bool pendingDownload: false
+    property int pendingDownloadIndex: -1
+    
     Component.onCompleted: {
         console.log("Main.qml 加载完成")
         console.log("Backend 对象:", backend)
@@ -50,9 +54,29 @@ ApplicationWindow {
             Layout.fillWidth: true
             title: mainWindow.title
             targetWindow: mainWindow
+            activeDownloads: downloadListPopup.activeDownloads
+            
+            onDownloadClicked: {
+                // 切换下载列表显示
+                console.log("下载按钮点击, popup.visible:", downloadListPopup.visible)
+                if (downloadListPopup.visible) {
+                    console.log("关闭下载列表")
+                    downloadListPopup.close()
+                } else {
+                    console.log("打开下载列表")
+                    downloadListPopup.open()
+                }
+            }
             
             onSettingsClicked: {
-                if (backend) backend.openSettings()
+                settingsDialog.currentTheme = ThemeProvider.currentTheme
+                settingsDialog.currentLanguage = backend ? backend.currentLanguage : 0
+                // 切换设置对话框显示
+                if (settingsDialog.visible) {
+                    settingsDialog.close()
+                } else {
+                    settingsDialog.open()
+                }
             }
         }
         
@@ -142,8 +166,8 @@ ApplicationWindow {
                 }
                 
                 onModifierSelected: function(index) {
-                    if (backend) backend.selectModifier(index)
-                    detailDrawer.open()
+                    // 行选择由 SearchPage 内部处理
+                    console.log("行点击, index:", index)
                 }
                 
                 onSortChanged: function(sortIndex) {
@@ -155,13 +179,22 @@ ApplicationWindow {
                     statusBar.showMessage(qsTr("正在刷新..."), 0)
                 }
                 
-                onDownloadRequested: function(index) {
-                    if (backend) {
-                        backend.selectModifier(index)
-                        backend.downloadModifier(0)  // 下载默认版本
+                // 详情按钮 - 打开详情面板，并选择对应行
+                onDetailsRequested: function(index) {
+                    // 选择对应的行
+                    searchPage.selectRow(index)
+                    
+                    if (backend) backend.selectModifier(index)
+                    
+                    // 切换详情面板显示
+                    if (detailDrawer.visible) {
+                        detailDrawer.close()
+                    } else {
+                        detailDrawer.open()
                     }
-                    statusBar.showMessage(qsTr("开始下载..."), 0)
                 }
+                
+                // 下载功能已移至详情面板
             }
             
             // 已下载页
@@ -170,7 +203,7 @@ ApplicationWindow {
                 downloadedModel: backend ? backend.downloadedModifierModel : null
                 
                 onOpenFolderRequested: function(index) {
-                    if (backend) backend.runModifier(index)  // 运行修改器
+                    if (backend) backend.openDownloadFolder()  // 打开下载文件夹
                 }
                 
                 onDeleteModifier: function(index) {
@@ -211,6 +244,32 @@ ApplicationWindow {
         onVersionChanged: function(index) {
             if (backend) backend.selectVersion(index)
         }
+        
+        // 从详情面板触发下载
+        onStartDownload: function(versionIndex) {
+            console.log("从详情面板下载, 修改器:", gameName, "版本索引:", versionIndex)
+            
+            if (backend) {
+                // 添加到下载列表
+                var newItem = {
+                    fileName: gameName,
+                    progress: 0,
+                    status: "downloading",
+                    downloadIndex: versionIndex
+                }
+                var items = downloadListPopup.downloadItems.slice()
+                items.push(newItem)
+                downloadListPopup.downloadItems = items
+                downloadListPopup.activeDownloads = downloadListPopup.downloadItems.filter(function(item) { 
+                    return item.status === "downloading" 
+                }).length
+                
+                // 开始下载
+                backend.downloadModifier(versionIndex)
+                statusBar.showMessage(qsTr("开始下载: ") + gameName, 0)
+                downloadListPopup.open()
+            }
+        }
     }
     
     // 后端连接
@@ -221,12 +280,101 @@ ApplicationWindow {
             statusBar.showMessage(qsTr("搜索完成"), 3000)
         }
         
+        // 当修改器详情加载完成时，检查是否有待下载任务
+        function onSelectedModifierChanged() {
+            console.log("详情加载完成, pendingDownload:", mainWindow.pendingDownload, "版本数:", backend ? backend.selectedModifierVersions.length : 0)
+            
+            // 只有当有待下载任务 AND 版本列表不为空时才开始下载
+            if (mainWindow.pendingDownload && backend && backend.selectedModifierVersions.length > 0) {
+                mainWindow.pendingDownload = false
+                console.log("开始真正下载, 版本:", backend.selectedModifierVersions[0])
+                
+                // 开始真正的下载
+                backend.downloadModifier(0)  // 下载第一个版本
+                statusBar.showMessage(qsTr("开始下载: ") + backend.selectedModifierName, 0)
+            }
+            // 如果版本列表为空，保持 pendingDownload 为 true，等待下一次信号
+        }
+        
         function onDownloadCompleted(success) {
             statusBar.showMessage(success ? qsTr("下载完成") : qsTr("下载失败"), 5000)
         }
         
         function onStatusMessage(message) {
             statusBar.showMessage(message, 0)
+        }
+    }
+    
+    // 下载列表弹窗
+    DownloadListPopup {
+        id: downloadListPopup
+        parent: Overlay.overlay
+        
+        // 下载列表数据
+        downloadItems: []
+        activeDownloads: 0
+        
+        onOpenFolder: function(index) {
+            if (backend) backend.openDownloadFolder()
+        }
+        
+        onRemoveFromList: function(index) {
+            var items = downloadItems.slice()
+            items.splice(index, 1)
+            downloadItems = items
+        }
+    }
+    
+    // 后端下载进度连接
+    Connections {
+        target: backend
+        
+        function onDownloadProgressChanged() {
+            // 更新最后一个下载任务的进度（从backend属性获取进度值）
+            if (downloadListPopup.downloadItems.length > 0 && backend) {
+                var progress = backend.downloadProgress * 100  // 转换为百分比
+                var items = downloadListPopup.downloadItems.slice()
+                for (var i = items.length - 1; i >= 0; i--) {
+                    if (items[i].status === "downloading") {
+                        items[i].progress = progress
+                        break
+                    }
+                }
+                downloadListPopup.downloadItems = items
+            }
+        }
+        
+        function onDownloadCompleted(success) {
+            // 更新最后一个下载任务的状态
+            if (downloadListPopup.downloadItems.length > 0) {
+                var items = downloadListPopup.downloadItems.slice()
+                for (var i = items.length - 1; i >= 0; i--) {
+                    if (items[i].status === "downloading") {
+                        items[i].status = success ? "completed" : "failed"
+                        items[i].progress = success ? 100 : items[i].progress
+                        break
+                    }
+                }
+                downloadListPopup.downloadItems = items
+                downloadListPopup.activeDownloads = items.filter(function(item) { 
+                    return item.status === "downloading" 
+                }).length
+            }
+            statusBar.showMessage(success ? qsTr("下载完成") : qsTr("下载失败"), 3000)
+        }
+    }
+    
+    // 设置对话框
+    SettingsDialog {
+        id: settingsDialog
+        
+        onThemeChanged: function(index) {
+            ThemeProvider.currentTheme = index
+            if (backend) backend.setTheme(index)
+        }
+        
+        onLanguageChanged: function(index) {
+            if (backend) backend.setLanguage(index)
         }
     }
     

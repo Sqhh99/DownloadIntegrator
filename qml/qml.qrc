@@ -17,6 +17,8 @@
         <file>components/IconButton.qml</file>
         <file>components/CustomTitleBar.qml</file>
         <file>components/DetailDrawer.qml</file>
+        <file>components/DownloadListPopup.qml</file>
+        <file>components/SettingsDialog.qml</file>
         <file>components/qmldir</file>
         
         <!-- 页面 -->
