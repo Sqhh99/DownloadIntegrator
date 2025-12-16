@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.25) # CMake install : https://cmake.org/downloa
 project(DownloadIntegrator LANGUAGES CXX)
 set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/icon.rc")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_PREFIX_PATH "d:/Qt/6.6.3/msvc2019_64") # Qt Kit Dir
+set(CMAKE_PREFIX_PATH "D:/Qt/6.10.0/msvc2022_64") #
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -36,8 +36,8 @@ set(OPENCV_LIBS
     ${OPENCV_LIB_DIR}/opencv_imgcodecs4.lib
 )
 
-# Qt组件
-find_package(Qt6 COMPONENTS Widgets Network Core Concurrent REQUIRED)
+# Qt组件 (包含 QML/Quick 支持)
+find_package(Qt6 COMPONENTS Widgets Network Core Concurrent Quick Qml QuickControls2 REQUIRED)
 
 # 查找pugixml库
 find_package(pugixml CONFIG REQUIRED)
@@ -61,6 +61,9 @@ set(SOURCES
     src/GameMappingManager.cpp
     src/translator.cpp
     src/CoverExtractor.cpp
+    src/Backend.cpp
+    src/ModifierListModel.cpp
+    src/DownloadedModifierModel.cpp
 )
 
 # Define header files
@@ -81,11 +84,15 @@ set(HEADERS
     src/GameMappingManager.h
     src/translator.h
     src/CoverExtractor.h
+    src/Backend.h
+    src/ModifierListModel.h
+    src/DownloadedModifierModel.h
 )
 
 # Define resource files
 set(RESOURCE_FILES
     resources/resources.qrc
+    qml/qml.qrc
 )
 
 # Add build directory to include path
@@ -96,7 +103,7 @@ add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 add_executable(${PROJECT_NAME}
-    WIN32 # If you need a terminal for debug, please comment this statement
+    # WIN32 # If you need a terminal for debug, please comment this statement
     ${app_icon_resource_windows}
     ${SOURCES}
     ${HEADERS}
@@ -108,6 +115,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Network
     Qt6::Core
     Qt6::Concurrent
+    Qt6::Quick
+    Qt6::Qml
+    Qt6::QuickControls2
     pugixml::pugixml
     CURL::libcurl
     nlohmann_json::nlohmann_json
