@@ -10,8 +10,7 @@
         <file>game_mappings.json</file>
         <file>icons/delete.png</file>
         <file>icons/exit.png</file>
-        <file>icons/icon_jm.ico</file>
-        <file>icons/icon_ml.ico</file>
+        <file>icons/app_icon.ico</file>
         <file>icons/maximize.png</file>
         <file>icons/maximize_restoration.png</file>
         <file>icons/minimize.png</file>
