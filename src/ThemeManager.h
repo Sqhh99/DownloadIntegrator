@@ -1,12 +1,14 @@
 #pragma once
 
 #include <QApplication>
-#include <QFile>
 #include <QDebug>
 #include "ConfigManager.h"
 
 /**
- * @brief 主题管理类，负责切换和应用不同的主题样式表
+ * @brief 主题管理类
+ * 
+ * 注意：主题样式已完全迁移到 QML 的 ThemeProvider.qml
+ * 此类现在仅负责保存主题设置到配置文件
  */
 class ThemeManager {
 public:
@@ -16,19 +18,11 @@ public:
         return instance;
     }
     
-    // 应用当前主题（从配置中读取）
-    void applyCurrentTheme(QApplication& app) {
-        ConfigManager::Theme theme = ConfigManager::getInstance().getCurrentTheme();
-        applyTheme(app, theme);
-    }
-    
-    // 切换到指定主题
-    void switchTheme(QApplication& app, ConfigManager::Theme theme) {
+    // 切换到指定主题（仅保存设置，QML端会自动响应）
+    void switchTheme(QApplication& /*app*/, ConfigManager::Theme theme) {
         // 保存主题设置
         ConfigManager::getInstance().setCurrentTheme(theme);
-        
-        // 应用主题
-        applyTheme(app, theme);
+        qDebug() << "主题已切换为:" << getThemeName(theme);
     }
     
     // 获取主题名称
@@ -42,6 +36,16 @@ public:
                 return "海洋主题";
             case ConfigManager::Theme::Sunset:
                 return "日落主题";
+            case ConfigManager::Theme::Forest:
+                return "森林主题";
+            case ConfigManager::Theme::Lavender:
+                return "薰衣草主题";
+            case ConfigManager::Theme::Rose:
+                return "玫瑰主题";
+            case ConfigManager::Theme::Midnight:
+                return "午夜主题";
+            case ConfigManager::Theme::Mocha:
+                return "摩卡主题";
             default:
                 return "未知主题";
         }
@@ -57,55 +61,4 @@ private:
     // 禁用拷贝构造函数和赋值操作符
     ThemeManager(const ThemeManager&) = delete;
     ThemeManager& operator=(const ThemeManager&) = delete;
-    
-    // 应用指定主题
-    void applyTheme(QApplication& app, ConfigManager::Theme theme) {
-        QString styleFilePath;
-        
-        switch (theme) {
-            case ConfigManager::Theme::Light:
-                styleFilePath = ":/style/main.qss";
-                break;
-            case ConfigManager::Theme::Dark:
-                styleFilePath = ":/style/dark.qss";
-                break;
-            case ConfigManager::Theme::Ocean:
-                styleFilePath = ":/style/ocean.qss";
-                break;
-            case ConfigManager::Theme::Sunset:
-                styleFilePath = ":/style/sunset.qss";
-                break;
-            default:
-                styleFilePath = ":/style/main.qss";
-                break;
-        }
-          QFile styleFile(styleFilePath);
-        if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
-            QString styleSheet = QLatin1String(styleFile.readAll());
-            app.setStyleSheet(styleSheet);
-            qDebug() << "已应用" << getThemeName(theme) << "样式表，文件路径:" << styleFilePath;
-            qDebug() << "样式表大小:" << styleSheet.length() << "字符";
-            styleFile.close();
-        } else {
-            qDebug() << "无法打开样式表文件:" << styleFilePath;
-            qDebug() << "错误信息:" << styleFile.errorString();
-            
-            // 列出可用的资源文件
-            QDir resourceDir(":/");
-            qDebug() << "资源根目录是否存在:" << resourceDir.exists();
-            
-            QDir styleDir(":/style");
-            qDebug() << "样式目录是否存在:" << styleDir.exists();
-            if (styleDir.exists()) {
-                QStringList styleFiles = styleDir.entryList(QStringList() << "*.qss", QDir::Files);
-                qDebug() << "可用的样式文件:" << styleFiles;
-            }
-            
-            // 如果无法加载样式表，回退到浅色主题
-            if (theme != ConfigManager::Theme::Light) {
-                qDebug() << "回退到浅色主题";
-                applyTheme(app, ConfigManager::Theme::Light);
-            }
-        }
-    }
 }; 

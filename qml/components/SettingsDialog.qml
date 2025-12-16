@@ -275,22 +275,30 @@ Dialog {
                             color: ThemeProvider.textSecondary
                         }
                         
-                        RowLayout {
-                            spacing: ThemeProvider.spacingMedium
+                        // 使用 GridLayout 显示所有主题
+                        GridLayout {
+                            columns: 5
+                            rowSpacing: ThemeProvider.spacingSmall
+                            columnSpacing: ThemeProvider.spacingSmall
                             
                             Repeater {
                                 model: [
-                                    {name: qsTr("浅色"), color: "#FAFAFA"},
-                                    {name: qsTr("深色"), color: "#1A1D23"},
-                                    {name: qsTr("海洋"), color: "#E0F7FA"},
-                                    {name: qsTr("日落"), color: "#FFF8E1"}
+                                    {name: qsTr("浅色"), bgColor: "#FAFAFA", textColor: "#333"},
+                                    {name: qsTr("深色"), bgColor: "#1A1D23", textColor: "#fff"},
+                                    {name: qsTr("海洋"), bgColor: "#E0F7FA", textColor: "#006064"},
+                                    {name: qsTr("日落"), bgColor: "#FFF8E1", textColor: "#4E342E"},
+                                    {name: qsTr("森林"), bgColor: "#E8F5E9", textColor: "#1B5E20"},
+                                    {name: qsTr("薰衣草"), bgColor: "#F3E5F5", textColor: "#4A148C"},
+                                    {name: qsTr("玫瑰"), bgColor: "#FCE4EC", textColor: "#880E4F"},
+                                    {name: qsTr("午夜"), bgColor: "#1A1A2E", textColor: "#E8EAF6"},
+                                    {name: qsTr("摩卡"), bgColor: "#EFEBE9", textColor: "#3E2723"}
                                 ]
                                 
                                 delegate: Rectangle {
-                                    width: 80
-                                    height: 60
+                                    width: 72
+                                    height: 50
                                     radius: ThemeProvider.radiusSmall
-                                    color: modelData.color
+                                    color: modelData.bgColor
                                     border.width: currentTheme === index ? 2 : 1
                                     border.color: currentTheme === index ? ThemeProvider.primaryColor : ThemeProvider.borderColor
                                     
@@ -298,7 +306,27 @@ Dialog {
                                         anchors.centerIn: parent
                                         text: modelData.name
                                         font.pixelSize: ThemeProvider.fontSizeSmall
-                                        color: index === 1 ? "#fff" : "#333"
+                                        color: modelData.textColor
+                                    }
+                                    
+                                    // 选中标记
+                                    Rectangle {
+                                        visible: currentTheme === index
+                                        anchors.top: parent.top
+                                        anchors.right: parent.right
+                                        anchors.margins: 4
+                                        width: 12
+                                        height: 12
+                                        radius: 6
+                                        color: ThemeProvider.primaryColor
+                                        
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "✓"
+                                            font.pixelSize: 8
+                                            font.bold: true
+                                            color: "#fff"
+                                        }
                                     }
                                     
                                     MouseArea {

@@ -23,6 +23,11 @@ public:
         Dark,       // 深色主题
         Ocean,      // 海洋主题
         Sunset,     // 日落主题
+        Forest,     // 森林主题
+        Lavender,   // 薰衣草主题
+        Rose,       // 玫瑰主题
+        Midnight,   // 午夜主题
+        Mocha,      // 摩卡主题
         Default = Light  // 默认使用浅色主题
     };
     
