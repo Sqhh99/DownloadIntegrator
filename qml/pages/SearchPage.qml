@@ -65,14 +65,23 @@ Item {
             StyledButton {
                 text: qsTr("搜索")
                 buttonType: "secondary"
-                onClicked: searchRequested(searchInput.text)
+                onClicked: {
+                    if (searchInput.text.trim() === "") {
+                        refreshRequested()
+                    } else {
+                        searchRequested(searchInput.text)
+                    }
+                }
             }
             
             StyledComboBox {
                 id: sortComboBox
                 implicitWidth: 120
-                model: [qsTr("最近更新"), qsTr("按名称"), qsTr("下载次数")]
-                onCurrentIndexChanged: sortChanged(currentIndex)
+                model: [qsTr("最近更新"), qsTr("按名称"), qsTr("选项数量")]
+                onActivated: function(index) {
+                    console.log("排序方式改变:", index)
+                    sortChanged(index)
+                }
             }
             
             StyledButton {
@@ -203,37 +212,25 @@ Item {
                         }
                     }
                     
-                    // 操作按钮区 - 只有详情按钮
+                    // 操作按钮区 - 只有详情图标按钮
                     Item {
                         width: modifierTable.columnWidths[4]
                         height: parent.height
                         
-                        // 详情按钮
+                        // 详情按钮 - 仅图标
                         Rectangle {
                             anchors.centerIn: parent
-                            width: 60
-                            height: 26
+                            width: 28
+                            height: 28
                             radius: ThemeProvider.radiusSmall
-                            color: detailsMouseArea.containsMouse ? ThemeProvider.primaryColor : ThemeProvider.hoverColor
+                            color: detailsMouseArea.containsMouse ? ThemeProvider.hoverColor : "transparent"
                             
-                            Row {
+                            Image {
                                 anchors.centerIn: parent
-                                spacing: 4
-                                
-                                Image {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    source: "qrc:/icons/details.png"
-                                    width: 14
-                                    height: 14
-                                    sourceSize: Qt.size(14, 14)
-                                }
-                                
-                                Text {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: qsTr("详情")
-                                    font.pixelSize: ThemeProvider.fontSizeSmall
-                                    color: ThemeProvider.textPrimary
-                                }
+                                source: "qrc:/icons/details.png"
+                                width: 18
+                                height: 18
+                                sourceSize: Qt.size(18, 18)
                             }
                             
                             MouseArea {

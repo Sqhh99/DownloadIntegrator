@@ -15,6 +15,7 @@
 #include "LanguageManager.h"
 #include "DownloadManager.h"
 #include <QRegularExpression>
+#include <QFileDialog>
 
 Backend::Backend(QObject* parent)
     : QObject(parent)
@@ -103,7 +104,29 @@ void Backend::setSortOrder(int sortIndex)
 {
     qDebug() << "设置排序方式:" << sortIndex;
     // 根据排序索引更新列表
-    // 0: 最近更新, 1: 按名称, 2: 下载次数
+    // 0: 最近更新, 1: 按名称, 2: 选项数量
+    
+    QList<ModifierInfo> modifiers = m_modifierListModel->getAllModifiers();
+    
+    switch (sortIndex) {
+        case 0: // 最近更新 - 按更新日期降序
+            std::sort(modifiers.begin(), modifiers.end(), [](const ModifierInfo& a, const ModifierInfo& b) {
+                return a.lastUpdate > b.lastUpdate;
+            });
+            break;
+        case 1: // 按名称 - 按名称升序
+            std::sort(modifiers.begin(), modifiers.end(), [](const ModifierInfo& a, const ModifierInfo& b) {
+                return a.name.toLower() < b.name.toLower();
+            });
+            break;
+        case 2: // 选项数量 - 按选项数量降序
+            std::sort(modifiers.begin(), modifiers.end(), [](const ModifierInfo& a, const ModifierInfo& b) {
+                return a.optionsCount > b.optionsCount;
+            });
+            break;
+    }
+    
+    m_modifierListModel->setModifiers(modifiers);
 }
 
 void Backend::selectModifier(int index)
@@ -340,17 +363,37 @@ void Backend::setLanguage(int languageIndex)
     
     LanguageManager::Language language = static_cast<LanguageManager::Language>(languageIndex);
     LanguageManager::getInstance().switchLanguage(*m_app, language);
+    
+    // 刷新 QML 翻译
+    if (m_qmlEngine) {
+        m_qmlEngine->retranslate();
+        qDebug() << "已刷新 QML 翻译";
+    }
+    
     emit languageChanged();
     qDebug() << "切换语言:" << languageIndex;
 }
 
-void Backend::openSettings()
+QString Backend::downloadPath() const
 {
-    qDebug() << "打开设置对话框";
-    // 创建设置对话框
-    SettingsDialog* dialog = new SettingsDialog(nullptr);
-    dialog->setAttribute(Qt::WA_DeleteOnClose);
-    dialog->exec();
+    return ConfigManager::getInstance().getDownloadDirectory();
+}
+
+void Backend::setDownloadPath(const QString& path)
+{
+    if (!path.isEmpty() && path != downloadPath()) {
+        ConfigManager::getInstance().setDownloadDirectory(path);
+        emit downloadPathChanged();
+        qDebug() << "下载路径已设置为:" << path;
+    }
+}
+
+void Backend::selectDownloadFolder()
+{
+    QString dir = QFileDialog::getExistingDirectory(nullptr, tr("选择下载目录"), downloadPath());
+    if (!dir.isEmpty()) {
+        setDownloadPath(dir);
+    }
 }
 
 void Backend::onSearchCompleted(const QList<ModifierInfo>& modifiers)

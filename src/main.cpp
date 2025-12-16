@@ -82,6 +82,9 @@ int main(int argc, char *argv[])
         // 创建 QML 引擎
         QQmlApplicationEngine engine;
         
+        // 设置 QQmlEngine 引用（用于语言切换时刷新 QML）
+        backend->setQmlEngine(&engine);
+        
         // 添加 QML 导入路径
         engine.addImportPath("qrc:/qml");
         

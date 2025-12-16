@@ -45,14 +45,11 @@ find_package(pugixml CONFIG REQUIRED)
 # Define source files explicitly instead of using aux_source_directory
 set(SOURCES
     src/main.cpp
-    src/DownloadIntegrator.cpp
     src/ConfigManager.cpp
-    src/SettingsDialog.cpp
     src/ModifierParser.cpp
     src/NetworkManager.cpp
     src/ModifierManager.cpp
     src/FileSystem.cpp
-    src/UIHelper.cpp
     src/UpdateManager.cpp
     src/DownloadManager.cpp
     src/ModifierInfoManager.cpp
@@ -68,14 +65,11 @@ set(SOURCES
 
 # Define header files
 set(HEADERS
-    src/DownloadIntegrator.h
     src/ConfigManager.h
-    src/SettingsDialog.h
     src/ModifierParser.h
     src/NetworkManager.h
     src/ModifierManager.h
     src/FileSystem.h
-    src/UIHelper.h
     src/UpdateManager.h
     src/DownloadManager.h
     src/ModifierInfoManager.h

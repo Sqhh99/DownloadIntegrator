@@ -5,7 +5,7 @@ import "../themes"
 
 /**
  * SettingsDialog - 设置对话框
- * 侧边栏导航布局，设置主题和语言
+ * 侧边栏导航布局，设置主题、语言、下载路径
  */
 Dialog {
     id: settingsDialog
@@ -15,33 +15,33 @@ Dialog {
     property string downloadPath: ""
     
     signal themeChanged(int index)
-    signal languageChanged(int index)
-    signal browseDownloadPath()  // 打开目录选择对话框
+    signal languageChangedSignal(int index)  // 重命名避免冲突
+    signal browseDownloadPath()
     signal settingsApplied()
     
     title: qsTr("设置")
     modal: true
     anchors.centerIn: parent
     width: 600
-    height: 450
+    height: 500
     
     // 自定义背景
     background: Rectangle {
         color: ThemeProvider.surfaceColor
         radius: ThemeProvider.radiusMedium
         border.color: ThemeProvider.borderColor
-        border.width: 1
     }
     
-    // 自定义标题
+    // 自定义头部
     header: Rectangle {
         height: 50
-        color: "transparent"
+        color: ThemeProvider.surfaceColor
+        radius: ThemeProvider.radiusMedium
         
         RowLayout {
             anchors.fill: parent
             anchors.leftMargin: ThemeProvider.spacingMedium
-            anchors.rightMargin: ThemeProvider.spacingSmall
+            anchors.rightMargin: ThemeProvider.spacingMedium
             
             Text {
                 text: qsTr("设置")
@@ -51,11 +51,27 @@ Dialog {
                 Layout.fillWidth: true
             }
             
-            IconButton {
-                iconSource: "qrc:/icons/exit.png"
-                iconSize: 16
-                tooltip: qsTr("关闭")
-                onClicked: settingsDialog.close()
+            // 关闭按钮
+            Rectangle {
+                width: 30
+                height: 30
+                radius: ThemeProvider.radiusSmall
+                color: closeArea.containsMouse ? ThemeProvider.dangerColor : "transparent"
+                
+                Text {
+                    anchors.centerIn: parent
+                    text: "✕"
+                    font.pixelSize: 16
+                    color: closeArea.containsMouse ? "#fff" : ThemeProvider.textSecondary
+                }
+                
+                MouseArea {
+                    id: closeArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: settingsDialog.close()
+                }
             }
         }
         
@@ -67,22 +83,14 @@ Dialog {
         }
     }
     
-    // 主内容
     contentItem: RowLayout {
         spacing: 0
         
-        // 侧边栏导航
+        // 侧边栏
         Rectangle {
-            Layout.preferredWidth: 150
+            Layout.preferredWidth: 140
             Layout.fillHeight: true
             color: ThemeProvider.backgroundColor
-            
-            Rectangle {
-                anchors.right: parent.right
-                width: 1
-                height: parent.height
-                color: ThemeProvider.borderColor
-            }
             
             ColumnLayout {
                 anchors.fill: parent
@@ -123,12 +131,46 @@ Dialog {
                     }
                 }
                 
-                // 语言设置
+                // 下载设置
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
                     radius: ThemeProvider.radiusSmall
                     color: settingsStack.currentIndex === 1 ? ThemeProvider.selectedColor : "transparent"
+                    
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        spacing: 8
+                        
+                        Image {
+                            source: "qrc:/icons/download.png"
+                            width: 18
+                            height: 18
+                            sourceSize: Qt.size(18, 18)
+                        }
+                        
+                        Text {
+                            text: qsTr("下载")
+                            font.pixelSize: ThemeProvider.fontSizeMedium
+                            color: ThemeProvider.textPrimary
+                            Layout.fillWidth: true
+                        }
+                    }
+                    
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: settingsStack.currentIndex = 1
+                    }
+                }
+                
+                // 语言设置
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 40
+                    radius: ThemeProvider.radiusSmall
+                    color: settingsStack.currentIndex === 2 ? ThemeProvider.selectedColor : "transparent"
                     
                     RowLayout {
                         anchors.fill: parent
@@ -153,7 +195,7 @@ Dialog {
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: settingsStack.currentIndex = 1
+                        onClicked: settingsStack.currentIndex = 2
                     }
                 }
                 
@@ -162,7 +204,7 @@ Dialog {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
                     radius: ThemeProvider.radiusSmall
-                    color: settingsStack.currentIndex === 2 ? ThemeProvider.selectedColor : "transparent"
+                    color: settingsStack.currentIndex === 3 ? ThemeProvider.selectedColor : "transparent"
                     
                     RowLayout {
                         anchors.fill: parent
@@ -187,7 +229,7 @@ Dialog {
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: settingsStack.currentIndex = 2
+                        onClicked: settingsStack.currentIndex = 3
                     }
                 }
                 
@@ -272,10 +314,33 @@ Dialog {
                         }
                     }
                     
+                    Item { Layout.fillHeight: true }
+                }
+            }
+            
+            // 下载设置页
+            Item {
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: ThemeProvider.spacingMedium
+                    spacing: ThemeProvider.spacingMedium
+                    
+                    Text {
+                        text: qsTr("下载设置")
+                        font.pixelSize: ThemeProvider.fontSizeTitle
+                        font.bold: true
+                        color: ThemeProvider.textPrimary
+                    }
+                    
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 1
+                        color: ThemeProvider.borderColor
+                    }
+                    
                     // 下载目录设置
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Layout.topMargin: ThemeProvider.spacingMedium
                         spacing: ThemeProvider.spacingSmall
                         
                         Text {
@@ -296,11 +361,10 @@ Dialog {
                                 border.color: ThemeProvider.borderColor
                                 
                                 Text {
-                                    id: downloadPathText
                                     anchors.fill: parent
                                     anchors.leftMargin: 10
                                     anchors.rightMargin: 10
-                                    text: settingsDialog.downloadPath || qsTr("默认位置")
+                                    text: settingsDialog.downloadPath || qsTr("未设置")
                                     font.pixelSize: ThemeProvider.fontSizeMedium
                                     color: ThemeProvider.textPrimary
                                     verticalAlignment: Text.AlignVCenter
@@ -360,13 +424,15 @@ Dialog {
                         }
                         
                         ComboBox {
+                            id: languageComboBox
                             Layout.preferredWidth: 200
                             model: [qsTr("简体中文"), qsTr("English"), qsTr("日本語")]
-                            currentIndex: currentLanguage
+                            currentIndex: settingsDialog.currentLanguage
                             
-                            onCurrentIndexChanged: {
-                                currentLanguage = currentIndex
-                                languageChanged(currentIndex)
+                            onActivated: function(index) {
+                                console.log("语言切换:", index)
+                                settingsDialog.currentLanguage = index
+                                settingsDialog.languageChangedSignal(index)
                             }
                             
                             background: Rectangle {
@@ -377,11 +443,17 @@ Dialog {
                             
                             contentItem: Text {
                                 leftPadding: 10
-                                text: parent.displayText
+                                text: languageComboBox.displayText
                                 font.pixelSize: ThemeProvider.fontSizeMedium
                                 color: ThemeProvider.textPrimary
                                 verticalAlignment: Text.AlignVCenter
                             }
+                        }
+                        
+                        Text {
+                            text: qsTr("切换语言后需要重启应用才能完全生效")
+                            font.pixelSize: ThemeProvider.fontSizeSmall
+                            color: ThemeProvider.textDisabled
                         }
                     }
                     
@@ -409,34 +481,27 @@ Dialog {
                         color: ThemeProvider.borderColor
                     }
                     
-                    Image {
-                        source: "qrc:/icons/app_icon.png"
-                        Layout.preferredWidth: 64
-                        Layout.preferredHeight: 64
-                        sourceSize: Qt.size(64, 64)
-                        Layout.alignment: Qt.AlignHCenter
-                    }
-                    
-                    Text {
-                        text: qsTr("游戏修改器下载集成工具")
-                        font.pixelSize: ThemeProvider.fontSizeTitle
-                        font.bold: true
-                        color: ThemeProvider.textPrimary
-                        Layout.alignment: Qt.AlignHCenter
-                    }
-                    
-                    Text {
-                        text: qsTr("版本 1.0.0")
-                        font.pixelSize: ThemeProvider.fontSizeMedium
-                        color: ThemeProvider.textSecondary
-                        Layout.alignment: Qt.AlignHCenter
-                    }
-                    
-                    Text {
-                        text: qsTr("一个用于下载和管理游戏修改器的工具")
-                        font.pixelSize: ThemeProvider.fontSizeSmall
-                        color: ThemeProvider.textSecondary
-                        Layout.alignment: Qt.AlignHCenter
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: ThemeProvider.spacingSmall
+                        
+                        Text {
+                            text: qsTr("游戏修改器下载集成工具")
+                            font.pixelSize: ThemeProvider.fontSizeMedium
+                            color: ThemeProvider.textSecondary
+                        }
+                        
+                        Text {
+                            text: qsTr("版本: 1.0.0")
+                            font.pixelSize: ThemeProvider.fontSizeMedium
+                            color: ThemeProvider.textSecondary
+                        }
+                        
+                        Text {
+                            text: qsTr("作者: Sqhh99")
+                            font.pixelSize: ThemeProvider.fontSizeMedium
+                            color: ThemeProvider.textSecondary
+                        }
                     }
                     
                     Item { Layout.fillHeight: true }
@@ -445,6 +510,16 @@ Dialog {
         }
     }
     
-    // 没有底部按钮
-    footer: Item { height: 0 }
+    footer: Rectangle {
+        height: 50
+        color: ThemeProvider.surfaceColor
+        radius: ThemeProvider.radiusMedium
+        
+        Rectangle {
+            anchors.top: parent.top
+            width: parent.width
+            height: 1
+            color: ThemeProvider.borderColor
+        }
+    }
 }

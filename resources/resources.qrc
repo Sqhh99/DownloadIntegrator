@@ -22,5 +22,6 @@
         <file>icons/details.png</file>
         <file>icons/about.png</file>
         <file>icons/language.png</file>
+        <file>icons/pause.png</file>
     </qresource>
 </RCC>

@@ -23,25 +23,6 @@ Item {
         anchors.margins: ThemeProvider.spacingMedium
         spacing: ThemeProvider.spacingMedium
         
-        // 标题栏
-        RowLayout {
-            Layout.fillWidth: true
-            
-            Text {
-                text: qsTr("已下载的游戏修改器")
-                font.pixelSize: ThemeProvider.fontSizeTitle
-                font.bold: true
-                color: ThemeProvider.textPrimary
-                Layout.fillWidth: true
-            }
-            
-            StyledButton {
-                text: qsTr("检查更新")
-                buttonType: "info"
-                onClicked: checkUpdates()
-            }
-        }
-        
         // 已下载表格
         StyledTable {
             id: downloadedTable

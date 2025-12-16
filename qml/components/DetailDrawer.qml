@@ -216,35 +216,22 @@ Drawer {
                     }
                 }
                 
-                // 下载按钮
+                // 下载按钮 - 仅图标
                 Rectangle {
-                    Layout.preferredWidth: 80
-                    Layout.preferredHeight: 32
+                    Layout.preferredWidth: 36
+                    Layout.preferredHeight: 36
                     radius: ThemeProvider.radiusSmall
                     color: downloadBtnMouseArea.containsMouse && versions.length > 0 
-                           ? ThemeProvider.successColor 
-                           : (versions.length > 0 ? ThemeProvider.primaryColor : ThemeProvider.disabledColor)
+                           ? ThemeProvider.hoverColor 
+                           : "transparent"
+                    opacity: versions.length > 0 ? 1.0 : 0.5
                     
-                    Row {
+                    Image {
                         anchors.centerIn: parent
-                        spacing: 4
-                        
-                        Image {
-                            anchors.verticalCenter: parent.verticalCenter
-                            source: "qrc:/icons/download.png"
-                            width: 16
-                            height: 16
-                            sourceSize: Qt.size(16, 16)
-                            opacity: versions.length > 0 ? 1.0 : 0.5
-                        }
-                        
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: qsTr("下载")
-                            font.pixelSize: ThemeProvider.fontSizeMedium
-                            color: "#ffffff"
-                            opacity: versions.length > 0 ? 1.0 : 0.7
-                        }
+                        source: "qrc:/icons/download.png"
+                        width: 20
+                        height: 20
+                        sourceSize: Qt.size(20, 20)
                     }
                     
                     MouseArea {

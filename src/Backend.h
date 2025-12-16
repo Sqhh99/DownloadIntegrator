@@ -11,7 +11,6 @@
 #include "ConfigManager.h"
 #include "ThemeManager.h"
 #include "LanguageManager.h"
-#include "SettingsDialog.h"
 #include "CoverExtractor.h"
 
 class QApplication;
@@ -45,6 +44,9 @@ class Backend : public QObject
     // 下载状态
     Q_PROPERTY(bool isDownloading READ isDownloading NOTIFY downloadingChanged)
     Q_PROPERTY(qreal downloadProgress READ downloadProgress NOTIFY downloadProgressChanged)
+    
+    // 下载目录
+    Q_PROPERTY(QString downloadPath READ downloadPath WRITE setDownloadPath NOTIFY downloadPathChanged)
 
 public:
     explicit Backend(QObject* parent = nullptr);
@@ -52,6 +54,9 @@ public:
 
     // 设置 QApplication 引用（用于主题和语言切换）
     void setApplication(QApplication* app) { m_app = app; }
+    
+    // 设置 QQmlEngine 引用（用于语言切换时刷新 QML）
+    void setQmlEngine(QQmlEngine* engine) { m_qmlEngine = engine; }
 
     // 属性访问
     ModifierListModel* modifierListModel() const { return m_modifierListModel; }
@@ -73,6 +78,11 @@ public:
 
     bool isDownloading() const { return m_isDownloading; }
     qreal downloadProgress() const { return m_downloadProgress; }
+    
+    // 下载目录
+    QString downloadPath() const;
+    void setDownloadPath(const QString& path);
+    Q_INVOKABLE void selectDownloadFolder();  // 打开目录选择对话框
 
 public slots:
     // 搜索功能
@@ -96,7 +106,7 @@ public slots:
     // 设置
     Q_INVOKABLE void setTheme(int themeIndex);
     Q_INVOKABLE void setLanguage(int languageIndex);
-    Q_INVOKABLE void openSettings();
+
 
 signals:
     void languageChanged();
@@ -108,6 +118,7 @@ signals:
     void downloadCompleted(bool success);
     void statusMessage(const QString& message);
     void coverExtracted();
+    void downloadPathChanged();
 
 private slots:
     void onSearchCompleted(const QList<ModifierInfo>& modifiers);
@@ -120,6 +131,7 @@ private:
 
 private:
     QApplication* m_app = nullptr;
+    QQmlEngine* m_qmlEngine = nullptr;
     ModifierListModel* m_modifierListModel;
     DownloadedModifierModel* m_downloadedModifierModel;
     

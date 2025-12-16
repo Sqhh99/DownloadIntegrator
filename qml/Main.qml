@@ -162,7 +162,6 @@ ApplicationWindow {
                 
                 onSearchRequested: function(keyword) {
                     if (backend) backend.searchModifiers(keyword)
-                    statusBar.showMessage(qsTr("正在搜索: ") + keyword, 0)
                 }
                 
                 onModifierSelected: function(index) {
@@ -176,7 +175,6 @@ ApplicationWindow {
                 
                 onRefreshRequested: {
                     if (backend) backend.fetchRecentModifiers()
-                    statusBar.showMessage(qsTr("正在刷新..."), 0)
                 }
                 
                 // 详情按钮 - 打开详情面板，并选择对应行
@@ -220,12 +218,6 @@ ApplicationWindow {
                 }
             }
         }
-        
-        // 状态栏
-        AppStatusBar {
-            id: statusBar
-            Layout.fillWidth: true
-        }
     }
     
     // 右侧弹出详情面板
@@ -266,7 +258,6 @@ ApplicationWindow {
                 
                 // 开始下载
                 backend.downloadModifier(versionIndex)
-                statusBar.showMessage(qsTr("开始下载: ") + gameName, 0)
                 downloadListPopup.open()
             }
         }
@@ -277,7 +268,7 @@ ApplicationWindow {
         target: backend
         
         function onSearchCompleted() {
-            statusBar.showMessage(qsTr("搜索完成"), 3000)
+            // 搜索完成
         }
         
         // 当修改器详情加载完成时，检查是否有待下载任务
@@ -291,17 +282,16 @@ ApplicationWindow {
                 
                 // 开始真正的下载
                 backend.downloadModifier(0)  // 下载第一个版本
-                statusBar.showMessage(qsTr("开始下载: ") + backend.selectedModifierName, 0)
             }
             // 如果版本列表为空，保持 pendingDownload 为 true，等待下一次信号
         }
         
         function onDownloadCompleted(success) {
-            statusBar.showMessage(success ? qsTr("下载完成") : qsTr("下载失败"), 5000)
+            // 下载完成通知已由下载列表处理
         }
         
         function onStatusMessage(message) {
-            statusBar.showMessage(message, 0)
+            // 状态消息已移除
         }
     }
     
@@ -360,7 +350,7 @@ ApplicationWindow {
                     return item.status === "downloading" 
                 }).length
             }
-            statusBar.showMessage(success ? qsTr("下载完成") : qsTr("下载失败"), 3000)
+            // 下载完成通知已由列表处理
         }
     }
     
@@ -368,13 +358,22 @@ ApplicationWindow {
     SettingsDialog {
         id: settingsDialog
         
+        // 绑定下载路径
+        downloadPath: backend ? backend.downloadPath : ""
+        
         onThemeChanged: function(index) {
             ThemeProvider.currentTheme = index
             if (backend) backend.setTheme(index)
         }
         
-        onLanguageChanged: function(index) {
+        onLanguageChangedSignal: function(index) {
+            console.log("Main: 语言切换信号收到, index:", index)
             if (backend) backend.setLanguage(index)
+        }
+        
+        onBrowseDownloadPath: {
+            console.log("Main: 打开下载目录选择对话框")
+            if (backend) backend.selectDownloadFolder()
         }
     }
     

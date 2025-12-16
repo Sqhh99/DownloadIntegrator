@@ -169,28 +169,83 @@ Item {
             statusText: downloading ? qsTr("下载中...") + Math.round(downloadProgress * 100) + "%" : ""
         }
         
-        // 按钮区
+        // 按钮区 - 仅图标
         RowLayout {
             Layout.fillWidth: true
             spacing: ThemeProvider.spacingLarge
             
-            StyledButton {
-                text: downloading ? qsTr("下载中...") : qsTr("下载")
-                buttonType: "primary"
+            // 下载按钮
+            Rectangle {
+                width: 36
+                height: 36
+                radius: ThemeProvider.radiusSmall
+                color: downloadMouseArea.containsMouse ? ThemeProvider.hoverColor : "transparent"
                 enabled: !downloading && versions.length > 0
-                onClicked: downloadRequested(selectedVersionIndex)
+                opacity: enabled ? 1.0 : 0.5
+                
+                Image {
+                    anchors.centerIn: parent
+                    source: "qrc:/icons/download.png"
+                    width: 20
+                    height: 20
+                    sourceSize: Qt.size(20, 20)
+                }
+                
+                MouseArea {
+                    id: downloadMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: if (parent.enabled) downloadRequested(selectedVersionIndex)
+                }
             }
             
-            StyledButton {
-                text: qsTr("打开下载目录")
-                buttonType: "secondary"
-                onClicked: openFolderRequested()
+            // 打开文件夹按钮
+            Rectangle {
+                width: 36
+                height: 36
+                radius: ThemeProvider.radiusSmall
+                color: folderMouseArea.containsMouse ? ThemeProvider.hoverColor : "transparent"
+                
+                Image {
+                    anchors.centerIn: parent
+                    source: "qrc:/icons/folder.png"
+                    width: 20
+                    height: 20
+                    sourceSize: Qt.size(20, 20)
+                }
+                
+                MouseArea {
+                    id: folderMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: openFolderRequested()
+                }
             }
             
-            StyledButton {
-                text: qsTr("设置")
-                buttonType: "info"
-                onClicked: settingsRequested()
+            // 设置按钮
+            Rectangle {
+                width: 36
+                height: 36
+                radius: ThemeProvider.radiusSmall
+                color: settingsMouseArea.containsMouse ? ThemeProvider.hoverColor : "transparent"
+                
+                Image {
+                    anchors.centerIn: parent
+                    source: "qrc:/icons/settings.png"
+                    width: 20
+                    height: 20
+                    sourceSize: Qt.size(20, 20)
+                }
+                
+                MouseArea {
+                    id: settingsMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: settingsRequested()
+                }
             }
             
             Item { Layout.fillWidth: true }
