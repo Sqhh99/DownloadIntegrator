@@ -5,12 +5,12 @@ import "../themes"
 
 /**
  * SearchPage - 搜索标签页
- * 包含搜索栏、排序选项和修改器列表
+ * 包含搜索栏、排序选项和修改器列表（带下载按钮）
  */
 Item {
     id: searchPage
     
-    // 后端接口和模型 - 使用直接属性而不是alias避免绑定链断裂
+    // 后端接口和模型
     property var modifierModel: null
     
     // 信号
@@ -18,6 +18,7 @@ Item {
     signal searchRequested(string keyword)
     signal sortChanged(int sortIndex)
     signal refreshRequested()
+    signal downloadRequested(int index)
     
     // 监控模型变化
     Connections {
@@ -27,7 +28,6 @@ Item {
         }
     }
     
-    // 当模型变化时打印调试信息
     onModifierModelChanged: {
         console.log("SearchPage: modifierModel 属性变化:", modifierModel)
         if (modifierModel) {
@@ -84,11 +84,10 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             
-            // 绑定模型到外部传入的 modifierModel
             model: searchPage.modifierModel
             
-            headers: [qsTr("游戏名称"), qsTr("更新日期"), qsTr("支持版本"), qsTr("选项数量")]
-            columnWidths: [250, 100, 150, 80]
+            headers: [qsTr("游戏名称"), qsTr("更新日期"), qsTr("支持版本"), qsTr("选项数量"), qsTr("操作")]
+            columnWidths: [250, 100, 150, 80, 60]
             
             delegate: Rectangle {
                 width: modifierTable.width
@@ -103,13 +102,14 @@ Item {
                     return "transparent"
                 }
                 
-                Row {
+                RowLayout {
                     anchors.fill: parent
+                    spacing: 0
                     
                     // 游戏名称
                     Text {
-                        width: modifierTable.columnWidths[0]
-                        height: parent.height
+                        Layout.preferredWidth: modifierTable.columnWidths[0]
+                        Layout.fillHeight: true
                         leftPadding: 10
                         text: model.name || ""
                         font.pixelSize: ThemeProvider.fontSizeMedium
@@ -120,8 +120,8 @@ Item {
                     
                     // 更新日期
                     Text {
-                        width: modifierTable.columnWidths[1]
-                        height: parent.height
+                        Layout.preferredWidth: modifierTable.columnWidths[1]
+                        Layout.fillHeight: true
                         leftPadding: 10
                         text: model.lastUpdate || ""
                         font.pixelSize: ThemeProvider.fontSizeMedium
@@ -132,8 +132,8 @@ Item {
                     
                     // 支持版本
                     Text {
-                        width: modifierTable.columnWidths[2]
-                        height: parent.height
+                        Layout.preferredWidth: modifierTable.columnWidths[2]
+                        Layout.fillHeight: true
                         leftPadding: 10
                         text: model.gameVersion || ""
                         font.pixelSize: ThemeProvider.fontSizeMedium
@@ -144,8 +144,8 @@ Item {
                     
                     // 选项数量
                     Text {
-                        width: modifierTable.columnWidths[3]
-                        height: parent.height
+                        Layout.preferredWidth: modifierTable.columnWidths[3]
+                        Layout.fillHeight: true
                         leftPadding: 10
                         text: model.optionsCount || "0"
                         font.pixelSize: ThemeProvider.fontSizeMedium
@@ -153,11 +153,28 @@ Item {
                         verticalAlignment: Text.AlignVCenter
                         horizontalAlignment: Text.AlignHCenter
                     }
+                    
+                    // 下载按钮
+                    Item {
+                        Layout.preferredWidth: modifierTable.columnWidths[4]
+                        Layout.fillHeight: true
+                        
+                        IconButton {
+                            anchors.centerIn: parent
+                            iconSource: "qrc:/icons/download.png"
+                            iconSize: 18
+                            tooltip: qsTr("下载")
+                            onClicked: {
+                                downloadRequested(index)
+                            }
+                        }
+                    }
                 }
                 
                 MouseArea {
                     id: itemMouseArea
                     anchors.fill: parent
+                    anchors.rightMargin: modifierTable.columnWidths[4]  // 排除下载按钮区域
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     

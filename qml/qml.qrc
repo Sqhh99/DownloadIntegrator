@@ -14,6 +14,9 @@
         <file>components/StyledComboBox.qml</file>
         <file>components/StyledTable.qml</file>
         <file>components/ProgressIndicator.qml</file>
+        <file>components/IconButton.qml</file>
+        <file>components/CustomTitleBar.qml</file>
+        <file>components/DetailDrawer.qml</file>
         <file>components/qmldir</file>
         
         <!-- 页面 -->

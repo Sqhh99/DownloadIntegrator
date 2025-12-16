@@ -1,0 +1,191 @@
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls.Basic
+import "../themes"
+
+/**
+ * CustomTitleBar - 自定义无边框窗口标题栏
+ * 包含应用标题和窗口控制按钮
+ */
+Rectangle {
+    id: titleBar
+    
+    property string title: ""
+    property var targetWindow: null
+    property bool maximized: targetWindow ? (targetWindow.visibility === Window.Maximized) : false
+    
+    signal minimizeClicked()
+    signal maximizeClicked()
+    signal closeClicked()
+    signal settingsClicked()
+    
+    height: 40
+    color: ThemeProvider.surfaceColor
+    
+    // 底部边框
+    Rectangle {
+        anchors.bottom: parent.bottom
+        width: parent.width
+        height: 1
+        color: ThemeProvider.borderColor
+    }
+    
+    // 拖动区域
+    MouseArea {
+        id: dragArea
+        anchors.fill: parent
+        anchors.rightMargin: windowControls.width
+        
+        property point clickPos: Qt.point(0, 0)
+        
+        onPressed: function(mouse) {
+            clickPos = Qt.point(mouse.x, mouse.y)
+        }
+        
+        onPositionChanged: function(mouse) {
+            if (pressed && targetWindow) {
+                var delta = Qt.point(mouse.x - clickPos.x, mouse.y - clickPos.y)
+                if (maximized) {
+                    // 从最大化状态拖动时还原窗口
+                    targetWindow.showNormal()
+                }
+                targetWindow.x += delta.x
+                targetWindow.y += delta.y
+            }
+        }
+        
+        onDoubleClicked: {
+            if (maximized) {
+                targetWindow.showNormal()
+            } else {
+                targetWindow.showMaximized()
+            }
+        }
+    }
+    
+    RowLayout {
+        anchors.fill: parent
+        anchors.leftMargin: 10
+        anchors.rightMargin: 5
+        spacing: 0
+        
+        // 应用图标
+        Image {
+            source: "qrc:/icons/app_icon.png"
+            Layout.preferredWidth: 24
+            Layout.preferredHeight: 24
+            sourceSize: Qt.size(24, 24)
+            fillMode: Image.PreserveAspectFit
+        }
+        
+        // 标题
+        Text {
+            text: titleBar.title
+            font.pixelSize: ThemeProvider.fontSizeMedium
+            font.bold: true
+            color: ThemeProvider.textPrimary
+            Layout.fillWidth: true
+            Layout.leftMargin: 10
+            elide: Text.ElideRight
+        }
+        
+        // 设置按钮
+        IconButton {
+            iconSource: "qrc:/icons/settings.png"
+            tooltip: qsTr("设置")
+            iconSize: 16
+            onClicked: settingsClicked()
+        }
+        
+        // 窗口控制按钮
+        Row {
+            id: windowControls
+            Layout.alignment: Qt.AlignRight
+            spacing: 0
+            
+            // 最小化
+            Rectangle {
+                width: 46
+                height: 40
+                color: minimizeArea.containsMouse ? ThemeProvider.hoverColor : "transparent"
+                
+                Image {
+                    anchors.centerIn: parent
+                    source: "qrc:/icons/minimize.png"
+                    width: 16
+                    height: 16
+                    sourceSize: Qt.size(16, 16)
+                }
+                
+                MouseArea {
+                    id: minimizeArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (targetWindow) targetWindow.showMinimized()
+                        minimizeClicked()
+                    }
+                }
+            }
+            
+            // 最大化/还原
+            Rectangle {
+                width: 46
+                height: 40
+                color: maximizeArea.containsMouse ? ThemeProvider.hoverColor : "transparent"
+                
+                Image {
+                    anchors.centerIn: parent
+                    source: maximized ? "qrc:/icons/maximize_restoration.png" : "qrc:/icons/maximize.png"
+                    width: 16
+                    height: 16
+                    sourceSize: Qt.size(16, 16)
+                }
+                
+                MouseArea {
+                    id: maximizeArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (targetWindow) {
+                            if (maximized) {
+                                targetWindow.showNormal()
+                            } else {
+                                targetWindow.showMaximized()
+                            }
+                        }
+                        maximizeClicked()
+                    }
+                }
+            }
+            
+            // 关闭
+            Rectangle {
+                width: 46
+                height: 40
+                color: closeArea.containsMouse ? "#E81123" : "transparent"
+                
+                Image {
+                    anchors.centerIn: parent
+                    source: "qrc:/icons/exit.png"
+                    width: 16
+                    height: 16
+                    sourceSize: Qt.size(16, 16)
+                }
+                
+                MouseArea {
+                    id: closeArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (targetWindow) targetWindow.close()
+                        closeClicked()
+                    }
+                }
+            }
+        }
+    }
+}

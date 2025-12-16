@@ -10,7 +10,7 @@ import "layouts"
 
 /**
  * Main.qml - 主窗口
- * 组合所有模块，作为应用程序入口
+ * 无边框设计，自定义标题栏
  */
 ApplicationWindow {
     id: mainWindow
@@ -22,10 +22,12 @@ ApplicationWindow {
     visible: true
     title: qsTr("游戏修改器下载集成工具")
     
+    // 无边框窗口
+    flags: Qt.FramelessWindowHint | Qt.Window
+    
     color: ThemeProvider.backgroundColor
     
     // backend 由 main.cpp 通过 rootContext 注入
-    // 使用 required property 确保绑定正确
     required property var backend
     
     Component.onCompleted: {
@@ -37,32 +39,22 @@ ApplicationWindow {
         }
     }
     
-    // 菜单栏
-    menuBar: AppMenuBar {
-        id: appMenuBar
-        currentTheme: ThemeProvider.currentTheme
-        currentLanguage: backend ? backend.currentLanguage : 0
-        
-        onThemeSelected: function(index) {
-            ThemeProvider.currentTheme = index
-            if (backend) backend.setTheme(index)
-        }
-        
-        onLanguageSelected: function(index) {
-            if (backend) backend.setLanguage(index)
-        }
-        
-        onSettingsRequested: {
-            if (backend) backend.openSettings()
-        }
-        
-        onExitRequested: Qt.quit()
-    }
-    
     // 主内容区
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
+        
+        // 自定义标题栏
+        CustomTitleBar {
+            id: customTitleBar
+            Layout.fillWidth: true
+            title: mainWindow.title
+            targetWindow: mainWindow
+            
+            onSettingsClicked: {
+                if (backend) backend.openSettings()
+            }
+        }
         
         // 标签页
         TabBar {
@@ -139,69 +131,36 @@ ApplicationWindow {
             Layout.fillHeight: true
             currentIndex: tabBar.currentIndex
             
-            // 搜索页 - 带分割器
-            SplitView {
-                id: searchSplitView
-                orientation: Qt.Horizontal
+            // 搜索页 - 不再使用 SplitView
+            SearchPage {
+                id: searchPage
+                modifierModel: backend ? backend.modifierListModel : null
                 
-                SearchPage {
-                    id: searchPage
-                    SplitView.preferredWidth: parent.width * 0.6
-                    SplitView.minimumWidth: 400
-                    modifierModel: backend ? backend.modifierListModel : null
-                    
-                    onSearchRequested: function(keyword) {
-                        if (backend) backend.searchModifiers(keyword)
-                        statusBar.showMessage(qsTr("正在搜索: ") + keyword, 0)
-                    }
-                    
-                    onModifierSelected: function(index) {
-                        if (backend) backend.selectModifier(index)
-                        detailPanel.visible = true
-                    }
-                    
-                    onSortChanged: function(sortIndex) {
-                        if (backend) backend.setSortOrder(sortIndex)
-                    }
-                    
-                    onRefreshRequested: {
-                        if (backend) backend.fetchRecentModifiers()
-                        statusBar.showMessage(qsTr("正在刷新..."), 0)
-                    }
+                onSearchRequested: function(keyword) {
+                    if (backend) backend.searchModifiers(keyword)
+                    statusBar.showMessage(qsTr("正在搜索: ") + keyword, 0)
                 }
                 
-                ModifierDetailPanel {
-                    id: detailPanel
-                    SplitView.preferredWidth: parent.width * 0.4
-                    SplitView.minimumWidth: 300
-                    visible: false
-                    
-                    gameName: backend ? backend.selectedModifierName : ""
-                    gameVersion: backend ? backend.selectedModifierVersion : ""
-                    optionsCount: backend ? backend.selectedModifierOptionsCount : 0
-                    lastUpdate: backend ? backend.selectedModifierLastUpdate : ""
-                    optionsHtml: backend ? backend.selectedModifierOptions : ""
-                    versions: backend ? backend.selectedModifierVersions : []
-                    downloadProgress: backend ? backend.downloadProgress : 0
-                    downloading: backend ? backend.isDownloading : false
-                    coverUrl: backend ? backend.selectedModifierCoverPath : ""
-                    
-                    onDownloadRequested: function(versionIndex) {
-                        if (backend) backend.downloadModifier(versionIndex)
-                        statusBar.showMessage(qsTr("开始下载..."), 0)
+                onModifierSelected: function(index) {
+                    if (backend) backend.selectModifier(index)
+                    detailDrawer.open()
+                }
+                
+                onSortChanged: function(sortIndex) {
+                    if (backend) backend.setSortOrder(sortIndex)
+                }
+                
+                onRefreshRequested: {
+                    if (backend) backend.fetchRecentModifiers()
+                    statusBar.showMessage(qsTr("正在刷新..."), 0)
+                }
+                
+                onDownloadRequested: function(index) {
+                    if (backend) {
+                        backend.selectModifier(index)
+                        backend.downloadModifier(0)  // 下载默认版本
                     }
-                    
-                    onOpenFolderRequested: {
-                        if (backend) backend.openDownloadFolder()
-                    }
-                    
-                    onSettingsRequested: {
-                        if (backend) backend.openSettings()
-                    }
-                    
-                    onVersionChanged: function(index) {
-                        if (backend) backend.selectVersion(index)
-                    }
+                    statusBar.showMessage(qsTr("开始下载..."), 0)
                 }
             }
             
@@ -210,8 +169,8 @@ ApplicationWindow {
                 id: downloadedPage
                 downloadedModel: backend ? backend.downloadedModifierModel : null
                 
-                onRunModifier: function(index) {
-                    if (backend) backend.runModifier(index)
+                onOpenFolderRequested: function(index) {
+                    if (backend) backend.runModifier(index)  // 运行修改器
                 }
                 
                 onDeleteModifier: function(index) {
@@ -236,6 +195,24 @@ ApplicationWindow {
         }
     }
     
+    // 右侧弹出详情面板
+    DetailDrawer {
+        id: detailDrawer
+        parent: Overlay.overlay
+        
+        gameName: backend ? backend.selectedModifierName : ""
+        gameVersion: backend ? backend.selectedModifierVersion : ""
+        optionsCount: backend ? backend.selectedModifierOptionsCount : 0
+        lastUpdate: backend ? backend.selectedModifierLastUpdate : ""
+        optionsHtml: backend ? backend.selectedModifierOptions : ""
+        versions: backend ? backend.selectedModifierVersions : []
+        coverUrl: backend ? backend.selectedModifierCoverPath : ""
+        
+        onVersionChanged: function(index) {
+            if (backend) backend.selectVersion(index)
+        }
+    }
+    
     // 后端连接
     Connections {
         target: backend
@@ -250,6 +227,52 @@ ApplicationWindow {
         
         function onStatusMessage(message) {
             statusBar.showMessage(message, 0)
+        }
+    }
+    
+    // 窗口调整大小边框
+    MouseArea {
+        id: resizeArea
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        width: 16
+        height: 16
+        cursorShape: Qt.SizeFDiagCursor
+        
+        property point clickPos: Qt.point(0, 0)
+        
+        onPressed: function(mouse) {
+            clickPos = Qt.point(mouse.x, mouse.y)
+        }
+        
+        onPositionChanged: function(mouse) {
+            if (pressed) {
+                var newWidth = mainWindow.width + (mouse.x - clickPos.x)
+                var newHeight = mainWindow.height + (mouse.y - clickPos.y)
+                mainWindow.width = Math.max(mainWindow.minimumWidth, newWidth)
+                mainWindow.height = Math.max(mainWindow.minimumHeight, newHeight)
+            }
+        }
+        
+        // 调整大小指示器
+        Rectangle {
+            anchors.fill: parent
+            color: "transparent"
+            
+            Canvas {
+                anchors.fill: parent
+                onPaint: {
+                    var ctx = getContext("2d")
+                    ctx.strokeStyle = ThemeProvider.borderColor
+                    ctx.lineWidth = 1
+                    for (var i = 0; i < 3; i++) {
+                        ctx.beginPath()
+                        ctx.moveTo(width - 3 - i * 4, height)
+                        ctx.lineTo(width, height - 3 - i * 4)
+                        ctx.stroke()
+                    }
+                }
+            }
         }
     }
 }
