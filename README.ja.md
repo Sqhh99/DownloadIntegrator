@@ -20,7 +20,7 @@ Qt 製のゲームトレーナーダウンロード管理ツール。中国語�
 
 ## スクリーンショット
 
-![Interface](./interface.png)
+![Interface](./resources/interface.png)
 
 ## 動作環境
 

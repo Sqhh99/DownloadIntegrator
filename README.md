@@ -20,7 +20,7 @@
 
 ## 界面截图
 
-![Interface](./interface.png)
+![Interface](./resources/interface.png)
 
 ## 系统要求
 

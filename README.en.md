@@ -20,7 +20,7 @@ A Qt-based trainer download manager with intelligent Chinese title mapping.
 
 ## Screenshot
 
-![Interface](./interface.png)
+![Interface](./resources/interface.png)
 
 ## Requirements
 
