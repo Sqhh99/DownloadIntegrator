@@ -1,69 +1,78 @@
 <div align="center">
-
-  <img src="https://github.com/user-attachments/assets/e8aceb6b-2534-4aaf-a757-020b654aa285" alt="DownloadIntegrator Logo" width="200">
-  
-  <h1>DownloadIntegrator</h1>
-
-  <strong>A game trainer download manager built with Qt, featuring intelligent Chinese search.</strong>
-
+  <img src="https://github.com/user-attachments/assets/e8aceb6b-2534-4aaf-a757-020b654aa285" alt="Logo" width="120">
 </div>
 
-<p align="center">
-    <a href="https://github.com/Sqhh99/DownloadIntegrator/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="license"></a>
-    <a href="https://github.com/Sqhh99/DownloadIntegrator/stargazers"><img src="https://img.shields.io/github/stars/Sqhh99/DownloadIntegrator.svg?style=flat" alt="stars"></a>
-    <a href="https://github.com/Sqhh99/DownloadIntegrator/releases"><img src="https://img.shields.io/github/downloads/Sqhh99/DownloadIntegrator/total.svg?style=flat" alt="downloads"></a>
-    <a href="https://github.com/Sqhh99/DownloadIntegrator/releases/latest"><img src="https://img.shields.io/github/v/release/Sqhh99/DownloadIntegrator.svg" alt="release"></a>
-    <a href="https://github.com/Sqhh99/DownloadIntegrator/commits/main"><img src="https://img.shields.io/github/last-commit/Sqhh99/DownloadIntegrator.svg" alt="last commit"></a>
-</p>
+# DownloadIntegrator
 
-<p align="center">
-  <a href="./README.md">简体中文</a> |
-  <a href="./README.en.md">English</a> |
-  <a href="./README.ja.md">日本語</a>
-</p>
+A Qt-based trainer download manager with intelligent Chinese title mapping.
+
+[简体中文](./README.md) | [English](./README.en.md) | [日本語](./README.ja.md)
 
 ---
 
-## 🚀 Features
+## Features
 
-- 🎨 **Modern User Interface**: Supports multiple themes including Light, Windows 11, Classic, and Colorful.
-- 🔍 **Smart Chinese Search**: Search using Chinese game titles, which are automatically mapped to English for lookup.
-- 📥 **One-Click Download Management**: Automatically downloads, categorizes, and manages all trainer files.
-- 🌍 **Multi-language UI**: Built-in support for Simplified Chinese, English, and Japanese.
-- 🔄 **Automatic Update Detection**: Checks for and notifies about available trainer updates in real-time.
+- Modern UI with themes: Light, Windows 11, Classic, Colorful
+- Search by Chinese game titles, auto-mapped to English
+- One-click download and categorized management
+- Built-in languages: Chinese, English, Japanese
+- Real-time update detection
 
-## 🖥️ Screenshot
+## Screenshot
 
-![image](https://github.com/user-attachments/assets/df514f5d-cddc-476a-ac35-dac939eed2c0)
+![Interface](./interface.png)
 
+## Requirements
 
-## 📋 Requirements
+- Windows 10 or later
+- No extra runtime dependencies; required libraries are statically linked
 
-- Windows 10 or higher
-- The software is statically linked with all necessary libraries; no additional dependencies are required.
+## Quick Start
 
-## 📦 Quick Start
+- Download the latest release from [Releases](../../releases), unzip, run `DownloadIntegrator.exe`
 
-1.  Download the latest version from the **[Releases Page](../../releases)**.
-2.  Unzip and run `DownloadIntegrator.exe`.
-3.  Launch the software and enter a Chinese game title in the search box to begin.
+## Development & Build (Windows)
 
-## 🔧 Development
+### Prerequisites
 
-- **Qt**: 6.6.3+
-- **Compiler**: MSVC 2019+
-- **Build System**: CMake 3.16+
+- Visual Studio 2022 (Desktop development with C++)
+- CMake ≥ 3.25
+- Qt 6.6.3+ (MSVC x64), e.g. `C:\Qt\6.10.0\msvc2022_64`
+- vcpkg (set `VCPKG_ROOT`)
 
-## 📄 License
+### Environment (PowerShell)
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+```powershell
+$env:VCPKG_ROOT = "C:\vcpkg"
+$env:CMAKE_PREFIX_PATH = "C:\Qt\6.10.0\msvc2022_64"
+```
 
-## 📞 Feedback
+### Configure & Build
 
-If you encounter any issues, please create an **[Issue](../../issues)** on GitHub.
+```powershell
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 \
+  -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" \
+  -DVCPKG_TARGET_TRIPLET="x64-windows-static"
 
----
+cmake --build build --config Release
+```
 
-<p align="center">
-  <strong>Made with ❤️ using Qt and C++</strong>
-</p>
+Artifact: `build\Release\DownloadIntegrator.exe`
+
+Optional with CMakePresets:
+
+```powershell
+cmake --list-presets
+cmake --preset <configure-preset>
+cmake --build --preset <build-preset>
+```
+
+## Security & Privacy
+
+- Windows Defender may flag a false positive (e.g. `Win32/Wacapew.C!ml`); the app is safe.
+- No personal data collection; network requests only for search and downloads; config stored locally.
+
+## License & Feedback
+
+- License: MIT, see [LICENSE](LICENSE)
+- Feedback: open [Issues](../../issues) on GitHub

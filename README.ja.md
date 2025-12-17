@@ -1,68 +1,78 @@
 <div align="center">
-
-  <img src="https://github.com/user-attachments/assets/e8aceb6b-2534-4aaf-a757-020b654aa285" alt="DownloadIntegrator Logo" width="200">
-  
-  <h1>DownloadIntegrator</h1>
-
-  <strong>Qtで開発された、スマートな中国語検索をサポートするゲームトレーナーダウンロード管理ツールです。</strong>
-
+  <img src="https://github.com/user-attachments/assets/e8aceb6b-2534-4aaf-a757-020b654aa285" alt="Logo" width="120">
 </div>
 
-<p align="center">
-    <a href="https://github.com/Sqhh99/DownloadIntegrator/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="license"></a>
-    <a href="https://github.com/Sqhh99/DownloadIntegrator/stargazers"><img src="https://img.shields.io/github/stars/Sqhh99/DownloadIntegrator.svg?style=flat" alt="stars"></a>
-    <a href="https://github.com/Sqhh99/DownloadIntegrator/releases"><img src="https://img.shields.io/github/downloads/Sqhh99/DownloadIntegrator/total.svg?style=flat" alt="downloads"></a>
-    <a href="https://github.com/Sqhh99/DownloadIntegrator/releases/latest"><img src="https://img.shields.io/github/v/release/Sqhh99/DownloadIntegrator.svg" alt="release"></a>
-    <a href="https://github.com/Sqhh99/DownloadIntegrator/commits/main"><img src="https://img.shields.io/github/last-commit/Sqhh99/DownloadIntegrator.svg" alt="last commit"></a>
-</p>
+# DownloadIntegrator
 
-<p align="center">
-  <a href="./README.md">简体中文</a> |
-  <a href="./README.en.md">English</a> |
-  <a href="./README.ja.md">日本語</a>
-</p>
+Qt 製のゲームトレーナーダウンロード管理ツール。中国語タイトルの英語マッピング検索に対応。
+
+[简体中文](./README.md) | [English](./README.en.md) | [日本語](./README.ja.md)
 
 ---
 
-## 🚀 主な機能 (Features)
+## 機能
 
-- 🎨 **モダンなユーザーインターフェース**: ライト、Windows 11、クラシック、カラフルなど複数のテーマをサポート。
-- 🔍 **スマート中国語検索**: 中国語のゲーム名で検索でき、自動的に英語にマッピングして検索します。
-- 📥 **ワンクリックダウンロード管理**: トレーナーファイルを自動的にダウンロード、分類、管理します。
-- 🌍 **多言語UI**: 簡体字中国語、英語、日本語を内蔵サポート。
-- 🔄 **自動アップデートチェック**: 利用可能なトレーナーの更新をリアルタイムでチェックし、通知します。
+- モダン UI と複数テーマ（ライト／Windows 11／クラシック／カラー）
+- 中国語ゲーム名で検索し、英語に自動マッピングして検索
+- 1クリックでダウンロードと分類管理
+- 内蔵言語：中文・英語・日本語
+- 更新のリアルタイム検出
 
-## 🖥️ スクリーンショット (Screenshot)
+## スクリーンショット
 
-![image](https://github.com/user-attachments/assets/6ea137e3-bc5a-4b95-b55f-255389ed379a)
+![Interface](./interface.png)
 
-## 📋 システム要件 (Requirements)
+## 動作環境
 
 - Windows 10 以降
-- ソフトウェアは必要なライブラリと静的にリンクされているため、追加の依存関係をインストールする必要はありません。
+- 必要なライブラリは静的リンク済み（追加の依存は不要）
 
-## 📦 クイックスタート (Quick Start)
+## クイックスタート
 
-1.  **[Releasesページ](../../releases)** から最新バージョンをダウンロードします。
-2.  解凍して `DownloadIntegrator.exe` を実行します。
-3.  ソフトウェアを起動し、検索ボックスに中国語のゲーム名を入力して検索を開始します。
+- [Releases](../../releases) から最新版を取得し、`DownloadIntegrator.exe` を実行
 
-## 🔧 開発環境 (Development)
+## 開発・ビルド（Windows）
 
-- **Qt**: 6.6.3+
-- **Compiler**: MSVC 2019+
-- **Build System**: CMake 3.16+
+### 必要ツール
 
-## 📄 ライセンス (License)
+- Visual Studio 2022（C++ デスクトップ開発）
+- CMake ≥ 3.25
+- Qt 6.6.3+（MSVC x64）例：`C:\Qt\6.10.0\msvc2022_64`
+- vcpkg（`VCPKG_ROOT` を設定）
 
-このプロジェクトはMITライセンスに基づいています。詳細は [LICENSE](LICENSE) ファイルをご覧ください。
+### 環境変数例（PowerShell）
 
-## 📞 フィードバック (Feedback)
+```powershell
+$env:VCPKG_ROOT = "C:\vcpkg"
+$env:CMAKE_PREFIX_PATH = "C:\Qt\6.10.0\msvc2022_64"
+```
 
-何か問題が発生した場合は、GitHubで **[Issue](../../issues)** を作成してください。
+### 設定とビルド
 
----
+```powershell
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 \
+  -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" \
+  -DVCPKG_TARGET_TRIPLET="x64-windows-static"
 
-<p align="center">
-  <strong>Made with ❤️ using Qt and C++</strong>
-</p>
+cmake --build build --config Release
+```
+
+生成物：`build\Release\DownloadIntegrator.exe`
+
+（任意）CMakePresets を使う場合：
+
+```powershell
+cmake --list-presets
+cmake --preset <configure-preset>
+cmake --build --preset <build-preset>
+```
+
+## セキュリティとプライバシー
+
+- Windows Defender により誤検知される可能性あり（例：`Win32/Wacapew.C!ml`）。安全です。
+- 個人情報は収集しません。通信は検索とダウンロードのみ。設定はローカル保存。
+
+## ライセンスとフィードバック
+
+- ライセンス：MIT（[LICENSE](LICENSE)）
+- 問題報告：GitHub の [Issues](../../issues)
