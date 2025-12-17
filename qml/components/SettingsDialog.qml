@@ -520,7 +520,7 @@ Dialog {
                         }
                         
                         Text {
-                            text: qsTr("版本: 1.0.0")
+                            text: qsTr("版本: 2.3.0")
                             font.pixelSize: ThemeProvider.fontSizeMedium
                             color: ThemeProvider.textSecondary
                         }
@@ -529,6 +529,28 @@ Dialog {
                             text: qsTr("作者: Sqhh99")
                             font.pixelSize: ThemeProvider.fontSizeMedium
                             color: ThemeProvider.textSecondary
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                            height: 24
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: qsTr("开源地址: https://github.com/Sqhh99/DownloadIntegrator")
+                                font.pixelSize: ThemeProvider.fontSizeMedium
+                                color: ThemeProvider.primaryColor
+                                font.underline: true
+                                elide: Text.ElideMiddle
+                                horizontalAlignment: Text.AlignLeft
+                                verticalAlignment: Text.AlignVCenter
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: Qt.openUrlExternally("https://github.com/Sqhh99/DownloadIntegrator")
+                            }
                         }
                     }
                     

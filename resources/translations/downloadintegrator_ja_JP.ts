@@ -1047,7 +1047,7 @@
     <message>
         <location filename="../../qml/components/StyledTable.qml" line="106"/>
         <source>暂无数据</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">利用可能なデータはありません</translation>
     </message>
 </context>
 <context>

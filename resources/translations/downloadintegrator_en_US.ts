@@ -1060,7 +1060,7 @@ Game Name: %2</translation>
     <message>
         <location filename="../../qml/components/StyledTable.qml" line="106"/>
         <source>暂无数据</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">No data available</translation>
     </message>
 </context>
 <context>
