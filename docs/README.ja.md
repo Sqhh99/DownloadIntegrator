@@ -26,11 +26,19 @@
 ## 動作環境
 
 - Windows 10 以降
-- 追加のランタイム依存は不要。必要なライブラリはアプリに同梱済み
+- Qt などを別途インストールする必要はありません。ポータブル版とインストーラーには Qt、ONNX Runtime など実行に必要なファイルが含まれます。
+
+## FLiNG との関係
+
+本プロジェクトは独立したオープンソースのダウンローダーであり、公式の FLiNG Trainer **とは無関係**です。改造ツール本体はホストも再配布もせず、公開ソースからの検索とダウンロードだけを行います。ゲーム改造ツールは利用規約に反する場合があるため、利用は自己責任です。
 
 ## クイックスタート
 
-- [Releases](../../releases) から最新版をダウンロードし、展開して `FLiNG Downloader.exe` を実行
+- [Releases](../../releases) から最新版を入手
+- ポータブル版：展開して `FLiNG Downloader.exe` を実行
+- インストーラー：`setup.exe` を実行
+- ファイル検証：同バージョンの `SHA256SUMS.txt`（今後のリリースから添付）
+- Windows Defender の誤検出：[FAQ](./ANTIVIRUS_FAQ.md)
 
 ## 開発・ビルド（Windows）
 
@@ -104,7 +112,7 @@ build.cmd benchmark --filter CoverExtractor/.*
 ## CI / リリース
 
 - `build.yml` はビルドとテストを実行します
-- `make-release.yml` はインストーラーとポータブル版を生成し、`fling_translations.db` を同梱します
+- `make-release.yml` はインストーラーとポータブル版を生成し、`fling_translations.db` と `SHA256SUMS.txt` を同梱します
 - インストーラー版とポータブル版の両方に、ランチャー、本体、外部リソースディレクトリが含まれます
 
 ### バージョン公開
@@ -136,4 +144,8 @@ git push origin v1.2.0-beta.1
 ## ライセンスとフィードバック
 
 - ライセンス: GNU AGPL v3（[LICENSE](../LICENSE)）
-- フィードバック: GitHub の [Issues](../../issues)
+- 第三者ライセンス: [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)
+- 不具合と合意済みの機能: [Issues](../../issues)
+- 使い方の質問とアイデア: [Discussions](../../discussions)
+- 開発参加: [CONTRIBUTING.md](../CONTRIBUTING.md)
+- 脆弱性: [SECURITY.md](../SECURITY.md)
