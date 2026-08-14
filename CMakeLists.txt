@@ -257,6 +257,7 @@ if(MSVC)
         wldap32.lib
         crypt32.lib
         normaliz.lib
+        dwmapi.lib
         User32.lib
         Gdi32.lib
         Advapi32.lib
