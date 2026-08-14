@@ -37,48 +37,38 @@ Popup {
         return (bytesPerSec / (1024 * 1024 * 1024)).toFixed(2) + " GB/s"
     }
     
-    width: 400
-    height: Math.min(450, downloadItems.length * 80 + 100)
+    readonly property int rowHeight: 60
+
+    width: 300
+    height: downloadItems.length === 0
+            ? 118
+            : Math.min(268, 40 + downloadItems.length * rowHeight + 8)
+    padding: 8
     modal: false
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
     
-    x: parent.width - width - 10
-    y: 50
+    x: parent.width - width - 8
+    y: 42
     
     background: Rectangle {
         color: ThemeProvider.surfaceColor
         border.color: ThemeProvider.borderColor
         border.width: 1
         radius: ThemeProvider.radiusMedium
-        opacity: 1.0
-
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: -4
-            z: -1
-            radius: ThemeProvider.radiusMedium + 4
-            color: "#40000000"
-        }
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: -2
-            z: -1
-            radius: ThemeProvider.radiusMedium + 2
-            color: "#30000000"
-        }
     }
     
     contentItem: ColumnLayout {
-        spacing: ThemeProvider.spacingMedium
+        spacing: 6
         
         // 标题栏
         RowLayout {
             Layout.fillWidth: true
-            Layout.margins: ThemeProvider.spacingMedium
+            Layout.leftMargin: 4
+            Layout.rightMargin: 4
             
             Text {
                 text: qsTr("下载列表")
-                font.pixelSize: ThemeProvider.fontSizeTitle
+                font.pixelSize: ThemeProvider.fontSizeMedium
                 font.bold: true
                 color: ThemeProvider.textPrimary
                 Layout.fillWidth: true
@@ -103,119 +93,88 @@ Popup {
             id: downloadListView
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.margins: ThemeProvider.spacingSmall
             clip: true
             
-            model: downloadItems
+            // 用条数做 model，进度刷新时复用行，避免进度条动画被重置
+            model: downloadItems ? downloadItems.length : 0
             
             delegate: Rectangle {
                 id: delegateRoot
                 width: downloadListView.width
-                height: 70
+                height: downloadPopup.rowHeight
                 color: index % 2 === 0 ? "transparent" : ThemeProvider.alternateRowColor
                 radius: ThemeProvider.radiusSmall
 
-                // 是否为不确定进度（服务器未返回文件大小）
-                readonly property bool indeterminate: (modelData.status === "downloading") && (modelData.progress < 0)
+                readonly property var item: {
+                    var items = downloadPopup.downloadItems
+                    if (!items || index < 0 || index >= items.length)
+                        return ({})
+                    return items[index]
+                }
+
+                // 下载中且没有总大小时走不确定进度动画
+                readonly property bool indeterminate: {
+                    if (item.status !== "downloading")
+                        return false
+                    if (typeof item.progress === "number" && item.progress < 0)
+                        return true
+                    return !(item.bytesTotal > 0)
+                }
                 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: ThemeProvider.spacingSmall
-                    spacing: 4
+                    anchors.leftMargin: 8
+                    anchors.rightMargin: 6
+                    anchors.topMargin: 4
+                    anchors.bottomMargin: 4
+                    spacing: 2
                     
                     // 文件名和状态
                     RowLayout {
                         Layout.fillWidth: true
                         
                         Text {
-                            text: modelData.fileName || modelData.name || qsTr("未知文件")
+                            text: item.fileName || item.name || qsTr("未知文件")
                             font.pixelSize: ThemeProvider.fontSizeMedium
                             color: ThemeProvider.textPrimary
                             Layout.fillWidth: true
-                            Layout.preferredWidth: 250
+                            Layout.preferredWidth: 170
                             elide: Text.ElideMiddle
                         }
                         
                         Text {
                             text: {
-                                if (modelData.status === "queued") return qsTr("队列中")
-                                if (modelData.status === "downloading") return qsTr("下载中")
-                                if (modelData.status === "paused") return qsTr("已暂停")
-                                if (modelData.status === "completed") return qsTr("已完成")
-                                if (modelData.status === "failed") return qsTr("失败")
-                                if (modelData.status === "canceled") return qsTr("已取消")
+                                if (item.status === "queued") return qsTr("队列中")
+                                if (item.status === "downloading") return qsTr("下载中")
+                                if (item.status === "paused") return qsTr("已暂停")
+                                if (item.status === "completed") return qsTr("已完成")
+                                if (item.status === "failed") return qsTr("失败")
+                                if (item.status === "canceled") return qsTr("已取消")
                                 return ""
                             }
                             font.pixelSize: ThemeProvider.fontSizeSmall
                             color: {
-                                if (modelData.status === "completed") return ThemeProvider.successColor
-                                if (modelData.status === "failed") return ThemeProvider.dangerColor
-                                if (modelData.status === "canceled") return ThemeProvider.textSecondary
-                                if (modelData.status === "paused") return ThemeProvider.warningColor
+                                if (item.status === "completed") return ThemeProvider.successColor
+                                if (item.status === "failed") return ThemeProvider.dangerColor
+                                if (item.status === "canceled") return ThemeProvider.textSecondary
+                                if (item.status === "paused") return ThemeProvider.warningColor
                                 return ThemeProvider.textSecondary
                             }
                         }
                     }
                     
-                    // 进度条
-                    Item {
+                    ProgressIndicator {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 6
-
-                        // 正常进度条（已知大小）
-                        ProgressBar {
-                            id: progressBar
-                            anchors.fill: parent
-                            visible: !delegateRoot.indeterminate
-                            value: (modelData.progress >= 0) ? modelData.progress : 0
-
-                            background: Rectangle {
-                                radius: 3
-                                color: ThemeProvider.backgroundColor
-                            }
-
-                            contentItem: Item {
-                                Rectangle {
-                                    width: progressBar.visualPosition * parent.width
-                                    height: parent.height
-                                    radius: 3
-                                    color: {
-                                        if (modelData.status === "completed") return ThemeProvider.successColor
-                                        if (modelData.status === "failed") return ThemeProvider.dangerColor
-                                        if (modelData.status === "paused") return ThemeProvider.warningColor
-                                        return ThemeProvider.primaryColor
-                                    }
-                                }
-                            }
-                        }
-
-                        // 不确定进度条动画（未知大小）
-                        Rectangle {
-                            id: indeterminateBg
-                            anchors.fill: parent
-                            radius: 3
-                            color: ThemeProvider.backgroundColor
-                            visible: delegateRoot.indeterminate
-                            clip: true
-
-                            Rectangle {
-                                id: indeterminateBar
-                                width: parent.width * 0.3
-                                height: parent.height
-                                radius: 3
-                                color: ThemeProvider.primaryColor
-
-                                SequentialAnimation on x {
-                                    running: delegateRoot.indeterminate
-                                    loops: Animation.Infinite
-                                    NumberAnimation {
-                                        from: -indeterminateBar.width
-                                        to: indeterminateBg.width
-                                        duration: 1500
-                                        easing.type: Easing.InOutQuad
-                                    }
-                                }
-                            }
+                        Layout.preferredHeight: 4
+                        showText: false
+                        flat: true
+                        indeterminate: delegateRoot.indeterminate
+                        value: (item.progress >= 0) ? item.progress : 0
+                        barColor: {
+                            if (item.status === "completed") return ThemeProvider.successColor
+                            if (item.status === "failed") return ThemeProvider.dangerColor
+                            if (item.status === "paused") return ThemeProvider.warningColor
+                            return ThemeProvider.primaryColor
                         }
                     }
                     
@@ -227,17 +186,17 @@ Popup {
                         // 进度文本：大小 + 百分比 + 速度
                         Text {
                             text: {
-                                var status = modelData.status
+                                var status = item.status
                                 if (status === "downloading" || status === "paused") {
-                                    var received = modelData.bytesReceived || 0
-                                    var total = modelData.bytesTotal || 0
+                                    var received = item.bytesReceived || 0
+                                    var total = item.bytesTotal || 0
                                     var result = formatFileSize(received)
                                     if (total > 0) {
-                                        var pct = Math.round((modelData.progress || 0) * 100)
+                                        var pct = Math.round((item.progress || 0) * 100)
                                         result += " / " + formatFileSize(total) + "  " + pct + "%"
                                     }
                                     if (status === "downloading") {
-                                        var spd = modelData.speed || 0
+                                        var spd = item.speed || 0
                                         if (spd > 0) {
                                             result += "  " + formatSpeed(spd)
                                         }
@@ -245,13 +204,13 @@ Popup {
                                     return result
                                 }
                                 if (status === "completed") {
-                                    var fileSize = modelData.bytesTotal || modelData.bytesReceived || 0
+                                    var fileSize = item.bytesTotal || item.bytesReceived || 0
                                     if (fileSize > 0) {
                                         return formatFileSize(fileSize)
                                     }
                                 }
-                                if (status === "failed" && modelData.errorMessage) {
-                                    return modelData.errorMessage
+                                if (status === "failed" && item.errorMessage) {
+                                    return item.errorMessage
                                 }
                                 return ""
                             }
@@ -263,18 +222,18 @@ Popup {
                         
                         // 暂停/继续按钮
                         IconButton {
-                            visible: modelData.status === "downloading" || modelData.status === "paused" || modelData.status === "queued"
-                            iconSource: (modelData.status === "paused" || modelData.status === "queued")
+                            visible: item.status === "downloading" || item.status === "paused" || item.status === "queued"
+                            iconSource: (item.status === "paused" || item.status === "queued")
                                         ? ThemeProvider.assetUrl("icons/step-forward.png")
                                         : ThemeProvider.assetUrl("icons/pause.png")
-                            iconSize: 14
+                            iconSize: 12
                             tooltip: {
-                                if (modelData.status === "paused") return qsTr("继续")
-                                if (modelData.status === "queued") return qsTr("继续")
+                                if (item.status === "paused") return qsTr("继续")
+                                if (item.status === "queued") return qsTr("继续")
                                 return qsTr("暂停")
                             }
                             onClicked: {
-                                if (modelData.status === "paused" || modelData.status === "queued") {
+                                if (item.status === "paused" || item.status === "queued") {
                                     resumeDownload(index)
                                 } else {
                                     pauseDownload(index)
@@ -284,36 +243,36 @@ Popup {
                         
                         // 重试按钮（失败任务）
                         IconButton {
-                            visible: modelData.status === "failed"
+                            visible: item.status === "failed"
                             iconSource: ThemeProvider.assetUrl("icons/step-forward.png")
-                            iconSize: 14
+                            iconSize: 12
                             tooltip: qsTr("重试")
                             onClicked: resumeDownload(index)
                         }
                         
                         // 取消按钮
                         IconButton {
-                            visible: modelData.status === "downloading" || modelData.status === "paused" || modelData.status === "queued"
+                            visible: item.status === "downloading" || item.status === "paused" || item.status === "queued"
                             iconSource: ThemeProvider.assetUrl("icons/exit.png")
-                            iconSize: 14
+                            iconSize: 12
                             tooltip: qsTr("取消")
                             onClicked: cancelDownload(index)
                         }
                         
                         // 打开文件夹按钮
                         IconButton {
-                            visible: modelData.status === "completed"
+                            visible: item.status === "completed"
                             iconSource: ThemeProvider.assetUrl("icons/folder.png")
-                            iconSize: 14
+                            iconSize: 12
                             tooltip: qsTr("打开文件夹")
                             onClicked: openFolder(index)
                         }
                         
                         // 删除条目按钮
                         IconButton {
-                            visible: modelData.status === "completed" || modelData.status === "failed" || modelData.status === "canceled"
+                            visible: item.status === "completed" || item.status === "failed" || item.status === "canceled"
                             iconSource: ThemeProvider.assetUrl("icons/delete.png")
-                            iconSize: 14
+                            iconSize: 12
                             tooltip: qsTr("移除")
                             onClicked: removeFromList(index)
                         }
