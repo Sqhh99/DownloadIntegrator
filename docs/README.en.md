@@ -26,11 +26,19 @@
 ## Requirements
 
 - Windows 10 or later
-- No extra runtime dependencies are required; required libraries are bundled with the app
+- You do not need to install Qt or other runtimes yourself. The portable zip and the installer already ship Qt, ONNX Runtime, and the other files the app needs.
+
+## Relationship to FLiNG
+
+This is an independent open-source downloader. It is **not affiliated with** the official FLiNG Trainer project. The app does not host or redistribute trainer binaries; it only searches public sources and downloads what you ask for. Game trainers may violate a game's terms of use — that risk is yours.
 
 ## Quick Start
 
-- Download the latest version from [Releases](../../releases), extract it, and run `FLiNG Downloader.exe`
+- Download the latest build from [Releases](../../releases)
+- Portable zip: extract and run `FLiNG Downloader.exe`
+- Installer: run `setup.exe`
+- Verify the files against `SHA256SUMS.txt` (shipped starting with new releases)
+- Windows Defender false positives: [antivirus FAQ](./ANTIVIRUS_FAQ.md)
 
 ## Development & Build (Windows)
 
@@ -104,7 +112,7 @@ build.cmd benchmark --filter CoverExtractor/.*
 ## CI / Release
 
 - `build.yml` runs build and test jobs
-- `make-release.yml` produces installer and portable packages and includes `fling_translations.db`
+- `make-release.yml` produces installer and portable packages and includes `fling_translations.db` plus `SHA256SUMS.txt`
 - Both installer and portable packages contain the launcher, main app, and external resource directory
 
 ### Version Release
@@ -136,4 +144,8 @@ git push origin v1.2.0-beta.1
 ## License & Feedback
 
 - License: GNU AGPL v3, see [LICENSE](../LICENSE)
-- Feedback: open [Issues](../../issues) on GitHub
+- Third-party notices: [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)
+- Bugs and agreed features: [Issues](../../issues)
+- Questions and ideas: [Discussions](../../discussions)
+- Contributing: [CONTRIBUTING.md](../CONTRIBUTING.md)
+- Security: [SECURITY.md](../SECURITY.md)

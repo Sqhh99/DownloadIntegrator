@@ -1,17 +1,29 @@
-# 安全策略 (Security Policy)
+# 安全策略
 
-## 漏洞报告
+## 支持范围
 
-如果发现任何安全问题，请优先通过 GitHub Security Advisory 提交私密报告：
+目前只为 **最新正式版 Release** 提供安全修复。预发布 tag（名称中带 `-`）与自行构建的二进制不在支持范围内。
+
+## 如何报告漏洞
+
+请通过 GitHub Security Advisory 提交私密报告：
+
 https://github.com/Sqhh99/FLiNG-Downloader/security/advisories/new
 
-如果无法使用私密通道，请提交 Issue 并打上 `security` 标签。在漏洞修复前，请勿公开相关细节。
+**不要**开公开 Issue，也不要在 Discussions、PR 或评论里贴利用细节、样本或完整复现脚本。
 
-## 隐私说明
+报告请尽量包含：
 
-- 不收集个人身份信息。网络请求仅用于搜索与下载修改器。
-- 配置、缓存、日志等数据均仅在本地存储。
+- 受影响版本（Release 标签或 `关于` 页版本）
+- 复现步骤与影响范围
+- 已尝试的缓解办法
 
-## 联系方式
+收到报告后，会在 7 日内确认是否受理；修复发布后再协商公开时机。
 
-- 一般反馈：https://github.com/Sqhh99/FLiNG-Downloader/issues
+## 隐私
+
+- 不收集个人身份信息。
+- 网络请求仅用于搜索修改器、下载文件、检查软件或翻译库更新。
+- 配置、缓存、日志和翻译库覆盖文件只存在本机。
+
+一般使用问题请走 [Issues](https://github.com/Sqhh99/FLiNG-Downloader/issues) 或 [Discussions](https://github.com/Sqhh99/FLiNG-Downloader/discussions)。

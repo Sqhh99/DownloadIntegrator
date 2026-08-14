@@ -26,11 +26,19 @@
 ## 系统要求
 
 - Windows 10 及以上
-- 不需要额外依赖，已静态链接必需库
+- 无需自行安装 Qt 或其他运行库：便携包与安装包已附带 Qt、ONNX Runtime 等运行时文件
+
+## 与 FLiNG 的关系
+
+本项目是独立的开源下载工具，**不隶属于**风灵月影 / FLiNG Trainer 官方。软件不托管、不二次分发修改器本体，只按你的操作从公开来源检索并下载。游戏修改器可能违反部分游戏的用户协议，请自行判断使用风险。
 
 ## 快速开始
 
-- 从 [Releases](../../releases) 下载最新版本，解压运行 `FLiNG Downloader.exe`
+- 从 [Releases](../../releases) 下载最新版本
+- 便携包：解压后运行 `FLiNG Downloader.exe`
+- 安装包：运行 `setup.exe`
+- 校验文件：对照同版本的 `SHA256SUMS.txt`（新版本起提供）
+- Windows Defender 误报见 [杀毒 FAQ](./docs/ANTIVIRUS_FAQ.md)
 
 ## 开发与构建（Windows）
 
@@ -104,7 +112,7 @@ build.cmd benchmark --filter CoverExtractor/.*
 ## CI / 发布
 
 - `build.yml` 会执行构建与测试
-- `make-release.yml` 会生成安装包与便携包，并携带 `fling_translations.db`
+- `make-release.yml` 会生成安装包与便携包，并携带 `fling_translations.db` 与 `SHA256SUMS.txt`
 - 便携包与安装包都包含启动器、主程序以及外置资源目录
 
 ### 版本发布
@@ -136,4 +144,8 @@ git push origin v1.2.0-beta.1
 ## 许可与反馈
 
 - 许可：GNU AGPL v3，详见 [LICENSE](LICENSE)
-- 反馈：请在 GitHub 提交 [Issues](../../issues)
+- 第三方组件许可：[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+- 缺陷与已讨论过的功能：[Issues](../../issues)
+- 使用疑问与想法：[Discussions](../../discussions)
+- 参与开发：[CONTRIBUTING.md](CONTRIBUTING.md)
+- 安全漏洞：[SECURITY.md](SECURITY.md)

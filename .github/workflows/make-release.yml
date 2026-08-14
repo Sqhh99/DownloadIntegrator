@@ -11,6 +11,9 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: read
+
 env:
   QT_VERSION: "6.9.0"
   DIST_DIR: "dist/FLiNG Downloader"
@@ -46,12 +49,6 @@ jobs:
       - name: Update translations for release
         shell: pwsh
         run: .\build.cmd i18n
-
-      - name: Update vcpkg
-        shell: pwsh
-        run: |
-          cd $env:VCPKG_INSTALLATION_ROOT
-          git pull
 
       - name: Install build and packaging tools
         shell: pwsh
@@ -443,6 +440,46 @@ jobs:
 
           "installer_exe=$($installerFile.FullName)" >> $env:GITHUB_OUTPUT
 
+      - name: Write checksums and release notes
+        id: checksums
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $workspace = $env:GITHUB_WORKSPACE
+          $portableZip = "${{ steps.portable.outputs.portable_zip }}"
+          $installerExe = "${{ steps.installer.outputs.installer_exe }}"
+          $sumsPath = Join-Path $workspace "dist\SHA256SUMS.txt"
+          $notesPath = Join-Path $workspace "dist\RELEASE_INTRO.md"
+
+          $lines = @()
+          foreach ($path in @($portableZip, $installerExe)) {
+            if (!(Test-Path $path)) {
+              throw "Missing artifact for checksum: $path"
+            }
+            $hash = (Get-FileHash -Algorithm SHA256 -Path $path).Hash.ToLowerInvariant()
+            $name = Split-Path -Leaf $path
+            $lines += "$hash  $name"
+          }
+          $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+          [System.IO.File]::WriteAllLines($sumsPath, $lines, $utf8NoBom)
+
+          $intro = @(
+            '## 下载说明',
+            '',
+            '- 请只从此 GitHub Release 页面下载。',
+            '- **便携包**：解压后运行 `FLiNG Downloader.exe`。',
+            '- **安装包**：运行 setup 可执行文件。',
+            '- **校验**：对照附件 `SHA256SUMS.txt` 检查 zip / exe 的 SHA-256。',
+            '- Windows Defender 可能误报，见 [杀毒 FAQ](https://github.com/Sqhh99/FLiNG-Downloader/blob/main/docs/ANTIVIRUS_FAQ.md)。',
+            '',
+            '下面是本版本合入的 Pull Request 列表。',
+            ''
+          )
+          [System.IO.File]::WriteAllLines($notesPath, $intro, $utf8NoBom)
+
+          "sums=$sumsPath" >> $env:GITHUB_OUTPUT
+          "notes=$notesPath" >> $env:GITHUB_OUTPUT
+
       - name: Upload portable artifact
         uses: actions/upload-artifact@v4
         with:
@@ -464,5 +501,7 @@ jobs:
           files: |
             ${{ steps.portable.outputs.portable_zip }}
             ${{ steps.installer.outputs.installer_exe }}
+            ${{ steps.checksums.outputs.sums }}
+          body_path: ${{ steps.checksums.outputs.notes }}
           generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, '-') }}

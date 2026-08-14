@@ -1,0 +1,88 @@
+name: 缺陷报告
+description: 程序崩溃、搜索失败、下载异常等可复现问题
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提交前请确认：
+
+        - 已安装 [最新 Release](https://github.com/Sqhh99/FLiNG-Downloader/releases/latest)
+        - 若是杀毒软件拦截，请先阅读 [杀毒误报 FAQ](https://github.com/Sqhh99/FLiNG-Downloader/blob/main/docs/ANTIVIRUS_FAQ.md)，不要在这里重复开单
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我使用的是最新正式版 Release（不是自己随手编译的中间产物）
+          required: true
+        - label: 我已搜索过现有 Issues，没有相同报告
+          required: true
+        - label: 这不是杀毒软件误报（误报请走 FAQ）
+          required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: 软件版本
+      description: 关于页面或安装包文件名中的版本，例如 v1.1.8
+      placeholder: v1.1.8
+    validations:
+      required: true
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: 安装方式
+      options:
+        - 便携包（zip）
+        - 安装包（setup.exe）
+        - 自行从源码构建
+    validations:
+      required: true
+
+  - type: dropdown
+    id: windows
+    attributes:
+      label: Windows 版本
+      options:
+        - Windows 10
+        - Windows 11
+        - 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际发生了什么
+      description: 用自己的话写，不要粘贴大段 AI 生成的套话。
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开软件
+        2. 搜索「……」
+        3. 点击下载
+        4. 出现……
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: 日志、截图或其他信息
+      description: 可直接拖入截图。日志请打码路径中的用户名等个人信息。

@@ -10,11 +10,12 @@
 
 ### 📋 使用指南
 - **[主 README](../README.md)** - 项目介绍和快速开始
-- **[英文 README](../README.en.md)** - English documentation
-- **[日文 README](../README.ja.md)** - 日本語ドキュメント
+- **[英文 README](./README.en.md)** - English documentation
+- **[日文 README](./README.ja.md)** - 日本語ドキュメント
 
 ### 🔧 开发相关
-- **[构建说明](../CMakeLists.txt)** - CMake 构建配置
+- **[贡献指南](../CONTRIBUTING.md)** - 如何提 Issue / PR
+- **[第三方许可](../THIRD_PARTY_NOTICES.md)** - Qt、ONNX Runtime 等依赖许可
 - **[许可证](../LICENSE)** - GNU AGPL v3 开源许可证
 
 ## 🚨 常见问题快速索引
@@ -24,7 +25,7 @@
 | Windows Defender 误报 | 添加排除项 | [FAQ](./ANTIVIRUS_FAQ.md#方法一添加-windows-defender-排除项推荐) |
 | 其他杀毒软件误报 | 各软件设置方法 | [FAQ](./ANTIVIRUS_FAQ.md#其他杀毒软件) |
 | 软件安全性疑问 | 安全保障说明 | [安全政策](../SECURITY.md) |
-| 下载和安装 | 快速开始指南 | [主 README](../README.md#快速开始-quick-start) |
+| 下载和安装 | 快速开始指南 | [主 README](../README.md#快速开始) |
 
 ## 🆘 获取帮助
 

@@ -16,7 +16,7 @@
 
 1. 仅从官方发布页下载：
    https://github.com/Sqhh99/FLiNG-Downloader/releases
-2. 校验文件完整性（如 Release 提供哈希值则对比）。
+2. 校验文件完整性：下载同版本的 `SHA256SUMS.txt`，对照 zip / setup 的 SHA-256。新版本起会随 Release 发布该文件。
 3. 将程序目录加入 Defender 排除项后再运行。
 4. 如仍被拦截，向 Microsoft 提交误报样本。
 
