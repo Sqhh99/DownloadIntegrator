@@ -14,7 +14,6 @@ Item {
     
     signal openFolderRequested(int index)
     signal deleteModifier(int index)
-    signal checkUpdates()
     signal modifierDoubleClicked(int index)
     
     ColumnLayout {
@@ -164,7 +163,7 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             
                             onClicked: {
-                                console.log("DownloadedPage: 打开文件夹点击, index:", delegateRoot.rowIndex)
+                                Log.debug("DownloadedPage: 打开文件夹点击, index: " + delegateRoot.rowIndex)
                                 downloadedPage.openFolderRequested(delegateRoot.rowIndex)
                             }
                         }
@@ -194,7 +193,7 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             
                             onClicked: {
-                                console.log("DownloadedPage: 删除点击, index:", delegateRoot.rowIndex)
+                                Log.debug("DownloadedPage: 删除点击, index: " + delegateRoot.rowIndex)
                                 downloadedPage.deleteModifier(delegateRoot.rowIndex)
                             }
                         }

@@ -1,4 +1,5 @@
 #include "DownloadManager.h"
+#include "Logger.h"
 #include <QDebug>
 #include <QFile>
 #include <QFileInfo>
@@ -85,36 +86,36 @@ void DownloadManager::downloadModifier(const ModifierInfo& modifier,
                                       qint64 resumeFrom,
                                       bool keepPartialOnAbort)
 {
-    qDebug() << "DownloadManager: downloadModifier called for:" << modifier.name;
-    qDebug() << "DownloadManager: Requested version:" << version;
-    qDebug() << "DownloadManager: Available versions count:" << modifier.versions.size();
+    LOG_DEBUG() << "DownloadManager: downloadModifier called for:" << modifier.name;
+    LOG_DEBUG() << "DownloadManager: Requested version:" << version;
+    LOG_DEBUG() << "DownloadManager: Available versions count:" << modifier.versions.size();
     
     // Find the selected version link
     QString url;
     for (const auto& ver : modifier.versions) {
-        qDebug() << "DownloadManager: Checking version:" << ver.first << "URL:" << ver.second;
+        LOG_DEBUG() << "DownloadManager: Checking version:" << ver.first << "URL:" << ver.second;
         if (ver.first == version) {
             url = ver.second;
-            qDebug() << "DownloadManager: Found matching version, URL:" << url;
+            LOG_DEBUG() << "DownloadManager: Found matching version, URL:" << url;
             break;
         }
     }
     
     if (url.isEmpty() && !modifier.versions.isEmpty()) {
         url = modifier.versions.first().second;
-        qDebug() << "DownloadManager: Using first available version, URL:" << url;
+        LOG_DEBUG() << "DownloadManager: Using first available version, URL:" << url;
     }
     
     if (url.isEmpty()) {
-        qDebug() << "DownloadManager: ERROR - No download URL found!";
+        LOG_DEBUG() << "DownloadManager: ERROR - No download URL found!";
         if (completedCallback) {
             completedCallback(false, "Download URL not found", savePath, modifier, false);
         }
         return;
     }
     
-    qDebug() << "DownloadManager: Final download URL:" << url;
-    qDebug() << "DownloadManager: Save path:" << savePath;
+    LOG_DEBUG() << "DownloadManager: Final download URL:" << url;
+    LOG_DEBUG() << "DownloadManager: Save path:" << savePath;
     
     bool isArchive = isArchiveFormat(url) || isArchiveFormat(savePath);
     

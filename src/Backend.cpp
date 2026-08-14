@@ -18,6 +18,7 @@
 #include "DownloadManager.h"
 #include "TranslationDatabase.h"
 #include "TranslationTextUtils.h"
+#include "Logger.h"
 #include <QSet>
 
 namespace {
@@ -259,13 +260,6 @@ QVariantList Backend::selectedModifierVersions() const
     return versions;
 }
 
-QString Backend::selectedModifierCoverUrl() const
-{
-    // Use modifier's screenshot URL as cover
-    // screenshotUrl is usually a game screenshot that can be displayed
-    return m_selectedModifier.screenshotUrl;
-}
-
 QVariantList Backend::downloadTasks() const
 {
     QVariantList list;
@@ -302,7 +296,6 @@ void Backend::setUpdateSource(int index)
 
 void Backend::searchModifiers(const QString& keyword)
 {
-    emit statusMessage(tr("Searching: %1").arg(keyword));
     const quint64 requestId = beginSearchRequest();
     SearchManager::getInstance().searchModifiers(
         keyword,
@@ -313,7 +306,6 @@ void Backend::searchModifiers(const QString& keyword)
 
 void Backend::fetchRecentModifiers()
 {
-    emit statusMessage(tr("Loading modifiers..."));
     const quint64 requestId = beginSearchRequest();
     SearchManager::getInstance().fetchRecentlyUpdatedModifiers(
         [this, requestId](const QList<ModifierInfo>& modifiers) {
@@ -376,7 +368,6 @@ void Backend::selectModifier(int index)
     emit coverLoadingChanged();
     
     if (!m_selectedModifier.url.isEmpty()) {
-        emit statusMessage(tr("Loading modifier details..."));
         
         ModifierManager::getInstance().getModifierDetail(
             m_selectedModifier.url,
@@ -392,13 +383,11 @@ void Backend::selectModifier(int index)
                     
                     emit selectedModifierChanged();
                     emit selectedModifierOptionsChanged();
-                    emit statusMessage(tr("Details loaded"));
                     
                     extractCover();
 
                     delete modifier;
                 } else {
-                    emit statusMessage(tr("Failed to load details"));
                     // Detail fetch failed: stop the cover spinner so it doesn't
                     // hang forever on the placeholder.
                     if (m_coverLoading) {
@@ -423,7 +412,6 @@ void Backend::selectVersion(int versionIndex)
 void Backend::downloadModifier(int versionIndex)
 {
     if (m_selectedModifier.versions.isEmpty()) {
-        emit statusMessage(tr("No download version available"));
         return;
     }
     
@@ -445,8 +433,7 @@ void Backend::downloadModifier(int versionIndex)
     
     const QString savePath = downloadDir + "/" + sanitizedName + "_" + versionName + ".zip";
     const QString taskId = createDownloadTask(m_selectedModifier, versionName, savePath);
-    emit statusMessage(tr("Added to download queue: %1").arg(m_selectedModifier.name));
-    qDebug() << "Backend: queued download task:" << taskId << "for" << m_selectedModifier.name;
+    LOG_DEBUG() << "Backend: queued download task:" << taskId << "for" << m_selectedModifier.name;
     processNextDownloadTask();
 }
 
@@ -588,7 +575,6 @@ void Backend::extractCover()
         return;
     }
 
-    emit statusMessage(tr("Extracting cover..."));
 
     m_coverExtractor->extractCoverFromTrainerImage(
         m_selectedModifier.screenshotUrl,
@@ -603,11 +589,9 @@ void Backend::extractCover()
                 m_currentCoverPath = "file:///" + CoverExtractor::getCacheDirectory()
                                      + "/" + gameId + ".png";
                 emit coverExtracted();
-                emit statusMessage(tr("Cover extracted"));
             } else {
                 m_currentCoverPath.clear();
                 emit coverExtracted();
-                emit statusMessage(tr("Failed to extract cover"));
             }
 
             m_coverLoading = false;
@@ -638,7 +622,6 @@ void Backend::runModifier(int index)
             m_downloadedList.removeAt(index);
         }
         saveDownloadedModifiers();
-        emit statusMessage(tr("File not found. Removed from downloaded list: %1").arg(modifier.name));
     }
 }
 
@@ -660,22 +643,6 @@ void Backend::deleteModifier(int index)
         m_downloadedList.removeAt(index);
     }
     saveDownloadedModifiers();
-    
-    emit statusMessage(tr("Deleted: %1").arg(modifier.name));
-}
-
-void Backend::checkForUpdates()
-{
-    emit statusMessage(tr("Checking for updates..."));
-
-    ModifierManager::getInstance().batchCheckForUpdates(
-        [this](int current, int total, bool) {
-            emit statusMessage(tr("Checking for updates... (%1/%2)").arg(current).arg(total));
-        },
-        [this](int updatesCount) {
-            Q_UNUSED(updatesCount)
-            emit statusMessage(tr("Update check complete"));
-        });
 }
 
 void Backend::checkAppUpdate()
@@ -687,7 +654,6 @@ void Backend::checkAppUpdate()
     m_appUpdateChecking = true;
     m_appUpdateStatusText = tr("Checking for updates...");
     emit appUpdateStateChanged();
-    emit statusMessage(m_appUpdateStatusText);
 
     m_appUpdateManager->checkForUpdates(
         appVersion(),
@@ -705,7 +671,6 @@ void Backend::checkAppUpdate()
                     ? tr("Failed to check for updates")
                     : errorMessage;
                 emit appUpdateStateChanged();
-                emit statusMessage(m_appUpdateStatusText);
                 return;
             }
 
@@ -719,7 +684,6 @@ void Backend::checkAppUpdate()
                 : tr("You are using the latest version");
 
             emit appUpdateStateChanged();
-            emit statusMessage(m_appUpdateStatusText);
         });
 }
 
@@ -733,7 +697,6 @@ void Backend::downloadAppUpdate()
     m_appUpdateProgress = 0.0;
     m_appUpdateStatusText = tr("Downloading installer...");
     emit appUpdateStateChanged();
-    emit statusMessage(m_appUpdateStatusText);
 
     m_appUpdateManager->downloadInstaller(
         m_latestAppRelease,
@@ -755,20 +718,17 @@ void Backend::downloadAppUpdate()
                     ? tr("Failed to download installer")
                     : errorMessage;
                 emit appUpdateStateChanged();
-                emit statusMessage(m_appUpdateStatusText);
                 return;
             }
 
             m_appUpdateProgress = 1.0;
             m_appUpdateStatusText = tr("Installer downloaded. Launching setup...");
             emit appUpdateStateChanged();
-            emit statusMessage(m_appUpdateStatusText);
 
             const bool launched = QProcess::startDetached(installerPath, QStringList());
             if (!launched) {
                 m_appUpdateStatusText = tr("Failed to launch installer");
                 emit appUpdateStateChanged();
-                emit statusMessage(m_appUpdateStatusText);
                 return;
             }
 
@@ -788,7 +748,6 @@ void Backend::checkDatabaseUpdate()
     m_databaseUpdateChecking = true;
     m_databaseUpdateStatusText = tr("Checking database updates...");
     emit databaseUpdateStateChanged();
-    emit statusMessage(m_databaseUpdateStatusText);
 
     m_databaseUpdateManager->checkForUpdates(
         m_databaseCurrentVersion,
@@ -809,7 +768,6 @@ void Backend::checkDatabaseUpdate()
                     ? tr("Failed to check database updates")
                     : errorMessage;
                 emit databaseUpdateStateChanged();
-                emit statusMessage(m_databaseUpdateStatusText);
                 return;
             }
 
@@ -823,7 +781,6 @@ void Backend::checkDatabaseUpdate()
                 : tr("You are using the latest database version");
 
             emit databaseUpdateStateChanged();
-            emit statusMessage(m_databaseUpdateStatusText);
         });
 }
 
@@ -838,7 +795,6 @@ void Backend::downloadDatabaseUpdate()
     m_databaseUpdateProgress = 0.0;
     m_databaseUpdateStatusText = tr("Downloading database update...");
     emit databaseUpdateStateChanged();
-    emit statusMessage(m_databaseUpdateStatusText);
 
     m_databaseUpdateManager->downloadDatabase(
         m_latestDatabaseRelease,
@@ -860,7 +816,6 @@ void Backend::downloadDatabaseUpdate()
                     ? tr("Failed to download database update")
                     : errorMessage;
                 emit databaseUpdateStateChanged();
-                emit statusMessage(m_databaseUpdateStatusText);
                 return;
             }
 
@@ -871,7 +826,6 @@ void Backend::downloadDatabaseUpdate()
                     ? tr("Failed to activate database update")
                     : installError;
                 emit databaseUpdateStateChanged();
-                emit statusMessage(m_databaseUpdateStatusText);
                 return;
             }
 
@@ -879,7 +833,6 @@ void Backend::downloadDatabaseUpdate()
                 m_databaseUpdateProgress = 0.0;
                 m_databaseUpdateStatusText = tr("Database updated, but failed to reload data");
                 emit databaseUpdateStateChanged();
-                emit statusMessage(m_databaseUpdateStatusText);
                 return;
             }
 
@@ -890,7 +843,6 @@ void Backend::downloadDatabaseUpdate()
             m_databaseUpdateStatusText =
                 tr("Database updated successfully: %1").arg(m_databaseCurrentVersion);
             emit databaseUpdateStateChanged();
-            emit statusMessage(m_databaseUpdateStatusText);
         });
 }
 
@@ -1004,7 +956,6 @@ void Backend::processNextDownloadTask()
     if (nextIndex < 0) {
         if (m_isDownloading) {
             m_isDownloading = false;
-            emit downloadingChanged();
         }
         return;
     }
@@ -1039,10 +990,7 @@ void Backend::startDownloadTask(const QString& taskId)
     m_activeDownloadTaskId = taskId;
     if (!m_isDownloading) {
         m_isDownloading = true;
-        emit downloadingChanged();
     }
-    m_downloadProgress = 0.0;
-    emit downloadProgressChanged();
     
     // Start speed tracking
     m_lastSpeedBytes = resumeFrom;
@@ -1086,9 +1034,6 @@ void Backend::startDownloadTask(const QString& taskId)
                 });
                 m_activeDownloadTaskId.clear();
                 m_isDownloading = false;
-                emit downloadingChanged();
-                m_downloadProgress = 0.0;
-                emit downloadProgressChanged();
                 processNextDownloadTask();
                 return;
             }
@@ -1107,9 +1052,6 @@ void Backend::startDownloadTask(const QString& taskId)
                 }
                 m_activeDownloadTaskId.clear();
                 m_isDownloading = false;
-                emit downloadingChanged();
-                m_downloadProgress = 0.0;
-                emit downloadProgressChanged();
                 processNextDownloadTask();
                 return;
             }
@@ -1160,19 +1102,11 @@ void Backend::startDownloadTask(const QString& taskId)
                 m_downloadedModifierModel->setModifiers(m_downloadedList);
                 saveDownloadedModifiers();
                 
-                m_downloadProgress = 1.0;
-                emit downloadProgressChanged();
-                emit downloadCompleted(true);
-                emit statusMessage(tr("Download complete: %1").arg(finalPath));
             } else {
                 updateDownloadTask(taskId, [errorMsg](QVariantMap& task) {
                     task["status"] = "failed";
                     task["errorMessage"] = errorMsg;
                 });
-                m_downloadProgress = 0.0;
-                emit downloadProgressChanged();
-                emit downloadCompleted(false);
-                emit statusMessage(tr("Download failed: %1").arg(errorMsg));
             }
             
             m_speedUpdateTimer->stop();
@@ -1183,7 +1117,6 @@ void Backend::startDownloadTask(const QString& taskId)
             }
             m_activeDownloadTaskId.clear();
             m_isDownloading = false;
-            emit downloadingChanged();
             processNextDownloadTask();
         },
         [this, taskId](qint64 bytesReceived, qint64 bytesTotal) {
@@ -1204,8 +1137,6 @@ void Backend::startDownloadTask(const QString& taskId)
             });
             
             if (taskId == m_activeDownloadTaskId) {
-                m_downloadProgress = (progress >= 0) ? progress : 0.0;
-                emit downloadProgressChanged();
             }
         },
         resumeFrom,
@@ -1268,33 +1199,10 @@ void Backend::finishSearchRequest(quint64 requestId, const QList<ModifierInfo>& 
     }
 
     m_modifierListModel->setModifiers(modifiers);
-    emit searchCompleted();
-    emit statusMessage(tr("Found %1 modifiers").arg(modifiers.size()));
 
     if (m_searchLoading) {
         m_searchLoading = false;
         emit searchLoadingChanged();
-    }
-}
-
-void Backend::onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal)
-{
-    if (bytesTotal > 0) {
-        m_downloadProgress = static_cast<qreal>(bytesReceived) / bytesTotal;
-        emit downloadProgressChanged();
-    }
-}
-
-void Backend::onDownloadFinished(bool success)
-{
-    m_isDownloading = false;
-    emit downloadingChanged();
-    emit downloadCompleted(success);
-    
-    if (success) {
-        emit statusMessage(tr("Download complete"));
-    } else {
-        emit statusMessage(tr("Download failed"));
     }
 }
 
@@ -1350,7 +1258,7 @@ void Backend::saveDownloadedModifiers()
     QFile file(filePath);
     
     if (!file.open(QIODevice::WriteOnly)) {
-        qWarning() << "Backend: Failed to save downloaded modifiers";
+        LOG_WARN() << "Backend: Failed to save downloaded modifiers";
         return;
     }
     
@@ -1379,7 +1287,7 @@ void Backend::loadGameMappings()
 
     const QList<TranslationGameRecord> records = TranslationDatabase::getInstance().loadAllGames();
     if (records.isEmpty()) {
-        qWarning() << "Backend: No game mappings loaded from translation database";
+        LOG_WARN() << "Backend: No game mappings loaded from translation database";
         return;
     }
 
@@ -1404,7 +1312,7 @@ void Backend::loadGameMappings()
         m_gameMappings.append(mapping);
     }
 
-    qDebug() << "Backend: Loaded" << m_gameMappings.size() << "game mappings from SQLite";
+    LOG_DEBUG() << "Backend: Loaded" << m_gameMappings.size() << "game mappings from SQLite";
 }
 
 void Backend::refreshCurrentDatabaseVersion()
@@ -1507,20 +1415,5 @@ QVariantList Backend::getSuggestionItems(const QString& keyword, int maxResults)
         }
     }
     
-    return results;
-}
-
-// Legacy string-only suggestion API used by older QML code.
-QStringList Backend::getSuggestions(const QString& keyword, int maxResults)
-{
-    QStringList results;
-    const QVariantList items = getSuggestionItems(keyword, maxResults);
-    for (const QVariant& itemVariant : items) {
-        const QVariantMap item = itemVariant.toMap();
-        const QString displayText = item.value("displayText").toString();
-        if (!displayText.isEmpty()) {
-            results.append(displayText);
-        }
-    }
     return results;
 }

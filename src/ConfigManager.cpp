@@ -1,4 +1,5 @@
 #include "ConfigManager.h"
+#include "Logger.h"
 #include <QDir>
 #include <QDebug>
 #include <QFile>
@@ -19,7 +20,7 @@ ConfigManager::ConfigManager()
     m_settings = new QSettings(path, QSettings::IniFormat);
     migrateLegacySettingsIfNeeded();
     migrateLegacyDataFilesIfNeeded();
-    qDebug() << "Config file path:" << m_settings->fileName();
+    LOG_DEBUG() << "Config file path:" << m_settings->fileName();
 }
 
 ConfigManager::~ConfigManager()
@@ -45,9 +46,9 @@ void ConfigManager::setDownloadDirectory(const QString& directory)
     if (FileSystem::getInstance().ensureDirectoryExists(directory)) {
         m_settings->setValue("downloadDirectory", directory);
         m_settings->sync();
-        qDebug() << "Download directory set to:" << directory;
+        LOG_DEBUG() << "Download directory set to:" << directory;
     } else {
-        qDebug() << "Cannot set download directory, path invalid:" << directory;
+        LOG_DEBUG() << "Cannot set download directory, path invalid:" << directory;
     }
 }
 
@@ -159,7 +160,7 @@ void ConfigManager::setCurrentTheme(Theme theme)
 {
     m_settings->setValue("currentTheme", static_cast<int>(theme));
     m_settings->sync();
-    qDebug() << "Theme set to:" << static_cast<int>(theme);
+    LOG_DEBUG() << "Theme set to:" << static_cast<int>(theme);
 }
 
 ConfigManager::Language ConfigManager::getCurrentLanguage() const
@@ -173,7 +174,7 @@ void ConfigManager::setCurrentLanguage(Language language)
 {
     m_settings->setValue("currentLanguage", static_cast<int>(language));
     m_settings->sync();
-    qDebug() << "Language set to:" << static_cast<int>(language);
+    LOG_DEBUG() << "Language set to:" << static_cast<int>(language);
 }
 
 void ConfigManager::resetToDefaults()
@@ -183,7 +184,7 @@ void ConfigManager::resetToDefaults()
     m_settings->setValue(kLegacySettingsMigratedFlag, true);
     m_settings->setValue(kLegacyDataMigratedFlag, true);
     m_settings->sync();
-    qDebug() << "Settings reset to defaults";
+    LOG_DEBUG() << "Settings reset to defaults";
 }
 
 void ConfigManager::migrateLegacySettingsIfNeeded()
@@ -199,7 +200,7 @@ void ConfigManager::migrateLegacySettingsIfNeeded()
     m_settings->sync();
 
     if (migrated) {
-        qDebug() << "Legacy registry settings migrated to:" << m_settings->fileName();
+        LOG_DEBUG() << "Legacy registry settings migrated to:" << m_settings->fileName();
     }
 }
 
@@ -225,7 +226,7 @@ void ConfigManager::migrateLegacyDataFilesIfNeeded()
     m_settings->sync();
 
     if (migratedAny) {
-        qDebug() << "Legacy data files migrated to:" << targetDir;
+        LOG_DEBUG() << "Legacy data files migrated to:" << targetDir;
     }
 }
 
@@ -265,6 +266,6 @@ bool ConfigManager::migrateDataFileIfNeeded(const QString& fileName,
         return true;
     }
 
-    qWarning() << "Failed to migrate legacy data file:" << sourcePath << "->" << targetPath;
+    LOG_WARN() << "Failed to migrate legacy data file:" << sourcePath << "->" << targetPath;
     return false;
 }

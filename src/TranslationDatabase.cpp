@@ -10,6 +10,7 @@
 
 #include "AppUpdateManager.h"
 #include "FileSystem.h"
+#include "Logger.h"
 
 namespace {
 std::string toUtf8String(const QString& value)
@@ -94,7 +95,7 @@ QList<TranslationGameRecord> TranslationDatabase::loadAllGames() const
     QList<TranslationGameRecord> results;
     const QString path = databasePath();
     if (path.isEmpty()) {
-        qWarning() << "TranslationDatabase: no valid translation database found"
+        LOG_WARN() << "TranslationDatabase: no valid translation database found"
                    << "Bundled candidate:" << bundledDatabasePath()
                    << "Override candidate:" << overrideDatabasePath();
         return results;
@@ -116,7 +117,7 @@ QList<TranslationGameRecord> TranslationDatabase::loadAllGames() const
             results.append(record);
         }
     } catch (const SQLite::Exception& ex) {
-        qWarning() << "TranslationDatabase: failed to load games from" << path << ":" << ex.what();
+        LOG_WARN() << "TranslationDatabase: failed to load games from" << path << ":" << ex.what();
         return {};
     }
 
@@ -151,7 +152,7 @@ TranslationDatabaseMetadata TranslationDatabase::readMetadata(const QString& pat
             }
         }
     } catch (const SQLite::Exception& ex) {
-        qWarning() << "TranslationDatabase: failed to read metadata from" << path << ":" << ex.what();
+        LOG_WARN() << "TranslationDatabase: failed to read metadata from" << path << ":" << ex.what();
         return {};
     }
 
@@ -265,7 +266,7 @@ QString TranslationDatabase::resolveDatabasePath() const
     const bool hasValidOverride =
         QFileInfo::exists(overridePath) && isValidDatabaseFile(overridePath, &overrideError);
     if (QFileInfo::exists(overridePath) && !hasValidOverride && !overrideError.isEmpty()) {
-        qWarning() << "TranslationDatabase: override database invalid, falling back to bundled copy:"
+        LOG_WARN() << "TranslationDatabase: override database invalid, falling back to bundled copy:"
                    << overrideError;
     }
 
@@ -273,7 +274,7 @@ QString TranslationDatabase::resolveDatabasePath() const
     const bool hasValidBundled =
         !bundledPath.isEmpty() && isValidDatabaseFile(bundledPath, &bundledError);
     if (!bundledPath.isEmpty() && !hasValidBundled && !bundledError.isEmpty()) {
-        qWarning() << "TranslationDatabase: bundled database invalid:" << bundledError;
+        LOG_WARN() << "TranslationDatabase: bundled database invalid:" << bundledError;
     }
 
     if (hasValidOverride && hasValidBundled) {
@@ -285,7 +286,7 @@ QString TranslationDatabase::resolveDatabasePath() const
             return overridePath;
         }
 
-        qWarning() << "TranslationDatabase: override database is older than bundled copy, using bundled version"
+        LOG_WARN() << "TranslationDatabase: override database is older than bundled copy, using bundled version"
                    << bundledVersion << "instead of" << overrideVersion;
         return bundledPath;
     }

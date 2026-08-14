@@ -6,6 +6,7 @@
 
 #include "TranslationDatabase.h"
 #include "TranslationTextUtils.h"
+#include "Logger.h"
 
 namespace {
 QString exactLookupKey(const QString& value)
@@ -48,15 +49,15 @@ bool GameMappingManager::initialize()
         return true;
     }
 
-    qDebug() << "GameMappingManager: Initializing...";
+    LOG_DEBUG() << "GameMappingManager: Initializing...";
 
     if (!loadBuiltinMappings()) {
-        qWarning() << "GameMappingManager: Failed to load mappings from SQLite database";
+        LOG_WARN() << "GameMappingManager: Failed to load mappings from SQLite database";
         return false;
     }
 
     m_initialized = true;
-    qDebug() << "GameMappingManager: Initialized with" << m_builtinMappings.size() << "mappings";
+    LOG_DEBUG() << "GameMappingManager: Initialized with" << m_builtinMappings.size() << "mappings";
     return true;
 }
 
@@ -227,7 +228,7 @@ bool GameMappingManager::loadBuiltinMappings()
         addLookupValue(m_normalizedLookupToEnglish, info.normalizedJapanese, info.english);
     }
 
-    qDebug() << "GameMappingManager: Loaded" << m_builtinMappings.size() << "mappings from SQLite";
+    LOG_DEBUG() << "GameMappingManager: Loaded" << m_builtinMappings.size() << "mappings from SQLite";
     return !m_builtinMappings.isEmpty();
 }
 

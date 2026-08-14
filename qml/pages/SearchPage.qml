@@ -12,7 +12,7 @@ Item {
     id: searchPage
     
     // 后端接口和模型
-    property var backend: null  // 后端对象 (getSuggestions 等方法)
+    property var backend: null
     property var modifierModel: null
     property bool loading: backend ? backend.searchLoading : false
     
@@ -35,7 +35,7 @@ Item {
         
         // 获取结构化建议，区分显示文本、输入框文本和实际搜索词
         var suggestions = backend.getSuggestionItems(keyword, 8)
-        console.log("updateSuggestions:", keyword, "-> found", suggestions.length, "suggestions")
+        Log.debug("updateSuggestions: " + keyword + " -> found " + suggestions.length + " suggestions")
         
         for (var i = 0; i < suggestions.length; i++) {
             suggestionsModel.append(suggestions[i])
@@ -56,14 +56,14 @@ Item {
     Connections {
         target: modifierModel
         function onCountChanged() {
-            console.log("SearchPage: 模型数据变化，当前行数:", modifierModel ? modifierModel.rowCount() : 0)
+            Log.debug("SearchPage: 模型数据变化，当前行数: " + (modifierModel ? modifierModel.rowCount() : 0))
         }
     }
     
     onModifierModelChanged: {
-        console.log("SearchPage: modifierModel 属性变化:", modifierModel)
+        Log.debug("SearchPage: modifierModel 属性变化: " + modifierModel)
         if (modifierModel) {
-            console.log("SearchPage: 模型行数:", modifierModel.rowCount())
+            Log.debug("SearchPage: 模型行数: " + modifierModel.rowCount())
         }
     }
 
@@ -138,21 +138,21 @@ Item {
                     onTextChanged: {
                         // 如果是程序化设置文本，不触发建议列表
                         if (searchPage.isProgrammaticTextChange) {
-                            console.log("searchInput.onTextChanged: (programmatic, skipped)")
+                            Log.debug("searchInput.onTextChanged: (programmatic, skipped)")
                             return
                         }
                         
-                        console.log("searchInput.onTextChanged:", text, "activeFocus:", activeFocus)
+                        Log.debug("searchInput.onTextChanged: " + text + " activeFocus: " + activeFocus)
                         if (text.length >= 1 && activeFocus) {
                             // 过滤建议列表
                             searchPage.updateSuggestions(text)
-                            console.log("suggestionsModel.count:", suggestionsModel.count)
+                            Log.debug("suggestionsModel.count: " + suggestionsModel.count)
                             if (suggestionsModel.count > 0) {
                                 suggestionsPopup.open()
                             } else {
                                 suggestionsPopup.close()
                             }
-                            console.log("suggestionsPopup.opened:", suggestionsPopup.opened, "height:", suggestionsPopup.height)
+                            Log.debug("suggestionsPopup.opened: " + suggestionsPopup.opened + " height: " + suggestionsPopup.height)
                         } else {
                             suggestionsPopup.close()
                         }
@@ -186,7 +186,7 @@ Item {
                     enabled: !searchPage.loading
                     model: [qsTr("最近更新"), qsTr("按名称"), qsTr("选项数量")]
                     onActivated: function(index) {
-                        console.log("排序方式改变:", index)
+                        Log.debug("排序方式改变: " + index)
                         sortChanged(index)
                     }
                 }
@@ -459,7 +459,7 @@ Item {
                                     enabled: !searchPage.loading
 
                                     onClicked: {
-                                        console.log("详情按钮点击, rowIndex:", delegateRoot.rowIndex)
+                                        Log.debug("详情按钮点击, rowIndex: " + delegateRoot.rowIndex)
                                         searchPage.detailsRequested(delegateRoot.rowIndex)
                                     }
                                 }

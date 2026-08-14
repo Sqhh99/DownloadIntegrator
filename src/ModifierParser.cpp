@@ -1,4 +1,5 @@
 #include "ModifierParser.h"
+#include "Logger.h"
 #include <QDebug>
 #include <QRegularExpression>
 
@@ -99,7 +100,7 @@ QList<ModifierInfo> ModifierParser::parseModifierListHTML(const std::string& htm
     try {
         // Return empty for invalid HTML
         if (html.size() < 10) {
-            qDebug() << "HTML data too short to parse";
+            LOG_DEBUG() << "HTML data too short to parse";
             return result;
         }
         
@@ -269,13 +270,13 @@ QList<ModifierInfo> ModifierParser::parseModifierListHTML(const std::string& htm
             }
         }
         
-        qDebug() << "Parsed" << result.size() << "modifiers from HTML";
+        LOG_DEBUG() << "Parsed" << result.size() << "modifiers from HTML";
         
         // If no results found, return empty list
         // Do not try alternative search methods
     }
     catch (const std::exception& e) {
-        qDebug() << "HTML parsing exception:" << e.what();
+        LOG_DEBUG() << "HTML parsing exception:" << e.what();
     }
     
     return result;
@@ -291,7 +292,7 @@ ModifierInfo* ModifierParser::parseModifierDetailHTML(const std::string& html, c
     try {
         QString htmlQt = QString::fromStdString(html);
         
-        qDebug() << "Parsing modifier detail:" << modifierName;
+        LOG_DEBUG() << "Parsing modifier detail:" << modifierName;
         
         // Extract game version - try multiple patterns
         QRegularExpression versionRegex("Game Version:\\s*([^<·]+)", QRegularExpression::CaseInsensitiveOption);
@@ -552,14 +553,14 @@ ModifierInfo* ModifierParser::parseModifierDetailHTML(const std::string& html, c
         }
 
     } catch (const std::exception& e) {
-        qDebug() << "Exception during HTML parsing:" << e.what();
+        LOG_DEBUG() << "Exception during HTML parsing:" << e.what();
     }
     
     // If name was passed in but internal name is empty, use the passed name
     if (modifier->name.isEmpty() && !modifierName.isEmpty()) {
         modifier->name = modifierName;
     }
-    qDebug() << "Modifier details parsed:" << modifier->name << ", options:" << modifier->options.size();
+    LOG_DEBUG() << "Modifier details parsed:" << modifier->name << ", options:" << modifier->options.size();
     
     return modifier;
 }
@@ -696,7 +697,7 @@ QStringList ModifierParser::parseOptionsFromHTML(const QString& html) {
         // If options couldn't be extracted, return empty list
         // Do not provide fake generic options
     } catch (const std::exception& e) {
-        qDebug() << "Exception during HTML content parsing:" << e.what();
+        LOG_DEBUG() << "Exception during HTML content parsing:" << e.what();
     }
     
     return options;
@@ -792,7 +793,7 @@ QString ModifierParser::detectGameNameFromHTML(const QString& html) {
         // Do not hardcode specific game names
         
     } catch (const std::exception& e) {
-        qDebug() << "Exception during game name detection:" << e.what();
+        LOG_DEBUG() << "Exception during game name detection:" << e.what();
     }
     return gameName;
 }

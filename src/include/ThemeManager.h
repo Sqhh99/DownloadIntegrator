@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include "ConfigManager.h"
+#include "Logger.h"
 
 /**
  * @brief Theme manager class
@@ -21,7 +22,7 @@ public:
     void switchTheme(ConfigManager::Theme theme) {
         // Save theme setting
         ConfigManager::getInstance().setCurrentTheme(theme);
-        qDebug() << "Theme switched to:" << getThemeName(theme);
+        LOG_DEBUG() << "Theme switched to:" << getThemeName(theme);
     }
     
     // Get theme name

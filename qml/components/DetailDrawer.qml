@@ -303,7 +303,7 @@ Drawer {
                         
                         onClicked: {
                             if (versions.length > 0) {
-                                console.log("详情面板下载按钮点击, 版本索引:", versionComboBox.currentIndex)
+                                Log.debug("详情面板下载按钮点击, 版本索引: " + versionComboBox.currentIndex)
                                 detailDrawer.startDownload(versionComboBox.currentIndex)
                             }
                         }

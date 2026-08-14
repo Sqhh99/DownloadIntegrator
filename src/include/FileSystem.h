@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Logger.h"
+
 #include <QString>
 #include <QDir>
 #include <QCoreApplication>
@@ -37,9 +39,9 @@ public:
         
         bool success = dir.mkpath(path);
         if (success) {
-            qDebug() << "Directory created:" << path;
+            LOG_DEBUG() << "Directory created:" << path;
         } else {
-            qWarning() << "Failed to create directory:" << path;
+            LOG_WARN() << "Failed to create directory:" << path;
         }
         return success;
     }
@@ -61,15 +63,15 @@ public:
     bool deleteFile(const QString& filePath) {
         QFile file(filePath);
         if (!file.exists()) {
-            qDebug() << "Attempting to delete non-existent file:" << filePath;
+            LOG_DEBUG() << "Attempting to delete non-existent file:" << filePath;
             return true; // Non-existent file is considered deleted
         }
         
         bool success = file.remove();
         if (success) {
-            qDebug() << "File deleted:" << filePath;
+            LOG_DEBUG() << "File deleted:" << filePath;
         } else {
-            qWarning() << "Failed to delete file:" << filePath << "Error:" << file.errorString();
+            LOG_WARN() << "Failed to delete file:" << filePath << "Error:" << file.errorString();
         }
         return success;
     }

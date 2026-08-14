@@ -6,6 +6,7 @@
 #include <QDebug>
 #include <QList>
 #include "ConfigManager.h"
+#include "Logger.h"
 
 /**
  * @brief Language manager class responsible for switching and applying different languages
@@ -131,7 +132,7 @@ private:
         
         // If default language (Chinese), no need to load translation
         if (language == Language::Chinese) {
-            qDebug() << "Applied default language: Chinese";
+            LOG_DEBUG() << "Applied default language: Chinese";
             return;
         }
         
@@ -145,13 +146,13 @@ private:
         if (loaded) {
             // Install translator
             app.installTranslator(m_currentTranslator);
-            qDebug() << "Applied language:" << getLanguageName(language);
+            LOG_DEBUG() << "Applied language:" << getLanguageName(language);
         } else {
-            qDebug() << "Cannot load language file:" << locale;
+            LOG_DEBUG() << "Cannot load language file:" << locale;
             
             // If cannot load translation file, fallback to Chinese
             if (language != Language::Chinese) {
-                qDebug() << "Falling back to Chinese";
+                LOG_DEBUG() << "Falling back to Chinese";
                 
                 // Clean up previously created translator
                 delete m_currentTranslator;
