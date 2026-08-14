@@ -14,6 +14,7 @@ QtObject {
     // 当前主题索引
     // 从 C++ 传入的 initialTheme 上下文属性初始化（支持持久化）
     property int currentTheme: typeof initialTheme !== "undefined" ? initialTheme : 0
+    readonly property bool isDark: currentTheme === 1 || currentTheme === 7
     
     // ========== 主色调 ==========
     readonly property color primaryColor: {
@@ -30,11 +31,11 @@ QtObject {
             default: return "#2196F3"
         }
     }
-    
+
     readonly property color secondaryColor: {
         switch(currentTheme) {
-            case 0: return "#4CAF50"  // Light - 清新绿
-            case 1: return "#81C784"  // Dark - 柔和绿
+            case 0: return "#64B5F6"  // Light - 主蓝同族浅蓝
+            case 1: return "#90CAF9"  // Dark - 主蓝同族亮蓝
             case 2: return "#26C6DA"  // Ocean - 青绿
             case 3: return "#FFAB91"  // Sunset - 浅珊瑚
             case 4: return "#81C784"  // Forest - 浅绿
@@ -42,7 +43,7 @@ QtObject {
             case 6: return "#F48FB1"  // Rose - 浅粉
             case 7: return "#7986CB"  // Midnight - 浅靛蓝
             case 8: return "#A1887F"  // Mocha - 浅棕
-            default: return "#4CAF50"
+            default: return "#64B5F6"
         }
     }
     
@@ -274,5 +275,11 @@ QtObject {
 
     function getThemeName(index) {
         return themeNames[index] || themeNames[0]
+    }
+
+    // 实心色块上的对比文字：浅底用深色，深底用白色
+    function contrastOn(background) {
+        var y = 0.299 * background.r + 0.587 * background.g + 0.114 * background.b
+        return y > 0.55 ? "#1A1A1A" : "#FFFFFF"
     }
 }

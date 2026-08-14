@@ -10,6 +10,7 @@ Button {
     id: control
     
     // 按钮类型: "primary", "secondary", "success", "danger", "info"
+    // secondary 使用主题主色的浅底描边，避免再引入一套冲突色相
     property string buttonType: "primary"
     property bool rounded: true
     
@@ -23,27 +24,52 @@ Button {
     
     font.pixelSize: ThemeProvider.fontSizeMedium
     font.bold: true
-    
-    // 根据类型获取背景色
-    readonly property color typeColor: {
-        switch(buttonType) {
-            case "primary": return ThemeProvider.primaryColor
-            case "secondary": return ThemeProvider.secondaryColor
+
+    readonly property bool isTonal: buttonType === "secondary"
+
+    readonly property color accentColor: {
+        switch (buttonType) {
             case "success": return ThemeProvider.successColor
             case "danger": return ThemeProvider.errorColor
             case "info": return ThemeProvider.infoColor
             default: return ThemeProvider.primaryColor
         }
     }
-    
-    // 计算悬停/按下状态的颜色
-    readonly property color hoverTypeColor: Qt.darker(typeColor, 1.1)
-    readonly property color pressedTypeColor: Qt.darker(typeColor, 1.2)
+
+    readonly property color labelColor: {
+        if (!control.enabled)
+            return ThemeProvider.textDisabled
+        if (isTonal)
+            return ThemeProvider.isDark ? accentColor : Qt.darker(accentColor, 1.15)
+        return ThemeProvider.contrastOn(accentColor)
+    }
+
+    function fillWithAlpha(base, alpha) {
+        return Qt.rgba(base.r, base.g, base.b, alpha)
+    }
+
+    readonly property color idleFill: {
+        if (isTonal)
+            return fillWithAlpha(accentColor, ThemeProvider.isDark ? 0.18 : 0.12)
+        return accentColor
+    }
+
+    readonly property color hoverFill: {
+        if (isTonal)
+            return fillWithAlpha(accentColor, ThemeProvider.isDark ? 0.28 : 0.20)
+        return Qt.darker(accentColor, 1.1)
+    }
+
+    readonly property color pressedFill: {
+        if (isTonal)
+            return fillWithAlpha(accentColor, ThemeProvider.isDark ? 0.36 : 0.28)
+        return Qt.darker(accentColor, 1.2)
+    }
     
     contentItem: Text {
         text: control.text
         font: control.font
-        color: control.enabled ? "white" : ThemeProvider.textDisabled
+        color: control.labelColor
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
@@ -54,13 +80,18 @@ Button {
         implicitHeight: 36
         radius: rounded ? ThemeProvider.radiusMedium : 0
         color: {
-            if (!control.enabled) return ThemeProvider.borderColor
-            if (control.pressed) return pressedTypeColor
-            if (control.hovered) return hoverTypeColor
-            return typeColor
+            if (!control.enabled) return ThemeProvider.disabledColor
+            if (control.pressed) return control.pressedFill
+            if (control.hovered) return control.hoverFill
+            return control.idleFill
         }
-        
+        border.width: control.isTonal && control.enabled ? 1 : 0
+        border.color: control.fillWithAlpha(control.accentColor, ThemeProvider.isDark ? 0.50 : 0.38)
+
         Behavior on color {
+            ColorAnimation { duration: 100 }
+        }
+        Behavior on border.color {
             ColorAnimation { duration: 100 }
         }
     }
