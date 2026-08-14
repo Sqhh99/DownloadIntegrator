@@ -1056,6 +1056,9 @@ void Backend::startDownloadTask(const QString& taskId)
         task["errorMessage"] = QString();
         task["resumeRequested"] = false;
         task["speed"] = 0;
+        if (task.value("bytesTotal").toLongLong() <= 0) {
+            task["progress"] = -1.0;
+        }
     });
     
     // Download to .crdownload temp file
