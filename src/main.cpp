@@ -7,6 +7,13 @@
 #include <QDir>
 #include <QTranslator>
 
+#ifdef Q_OS_WIN
+#include <QOperatingSystemVersion>
+#include <QQuickWindow>
+#include <qt_windows.h>
+#include <dwmapi.h>
+#endif
+
 #include "Backend.h"
 #include "ModifierListModel.h"
 #include "DownloadedModifierModel.h"
@@ -14,6 +21,41 @@
 #include "LanguageManager.h"
 #include "GameMappingManager.h"
 #include "ConfigManager.h"
+
+#ifdef Q_OS_WIN
+namespace {
+
+void applyWindows11RoundedCorners(QObject* rootObject)
+{
+    if (QOperatingSystemVersion::current() < QOperatingSystemVersion::Windows11) {
+        return;
+    }
+
+    auto* window = qobject_cast<QQuickWindow*>(rootObject);
+    if (!window) {
+        qWarning() << "Cannot enable rounded corners: QML root object is not a window";
+        return;
+    }
+
+    const auto windowHandle = reinterpret_cast<HWND>(window->winId());
+    if (!windowHandle) {
+        qWarning() << "Cannot enable rounded corners: native window handle is unavailable";
+        return;
+    }
+
+    const DWM_WINDOW_CORNER_PREFERENCE preference = DWMWCP_ROUND;
+    const HRESULT result = DwmSetWindowAttribute(
+        windowHandle,
+        DWMWA_WINDOW_CORNER_PREFERENCE,
+        &preference,
+        sizeof(preference));
+    if (FAILED(result)) {
+        qWarning() << "Failed to enable Windows 11 rounded corners:" << result;
+    }
+}
+
+} // namespace
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -101,7 +143,11 @@ int main(int argc, char *argv[])
             qDebug() << "No QML objects loaded";
             return -1;
         }
-        
+
+#ifdef Q_OS_WIN
+        applyWindows11RoundedCorners(engine.rootObjects().constFirst());
+#endif
+
         qDebug() << "Application initialized, starting event loop";
         
         // Run application
