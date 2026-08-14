@@ -134,93 +134,50 @@ Rectangle {
             onClicked: settingsClicked()
         }
         
-        // 窗口控制按钮
+        // 窗口控制按钮：与下载/设置相同的圆角小矩形
         Row {
             id: windowControls
-            Layout.alignment: Qt.AlignRight
-            spacing: 0
-            
-            // 最小化
-            Rectangle {
-                width: 46
-                height: 40
-                color: minimizeArea.containsMouse ? ThemeProvider.hoverColor : "transparent"
-                
-                Image {
-                    anchors.centerIn: parent
-                    source: ThemeProvider.assetUrl("icons/minimize.png")
-                    width: 16
-                    height: 16
-                    sourceSize: Qt.size(16, 16)
-                }
-                
-                MouseArea {
-                    id: minimizeArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if (targetWindow) targetWindow.showMinimized()
-                        minimizeClicked()
-                    }
+            Layout.alignment: Qt.AlignVCenter
+            Layout.leftMargin: 4
+            spacing: 4
+
+            IconButton {
+                iconSource: ThemeProvider.assetUrl("icons/minimize.png")
+                tooltip: qsTr("最小化")
+                iconSize: 16
+                onClicked: {
+                    if (targetWindow) targetWindow.showMinimized()
+                    minimizeClicked()
                 }
             }
-            
-            // 最大化/还原
-            Rectangle {
-                width: 46
-                height: 40
-                color: maximizeArea.containsMouse ? ThemeProvider.hoverColor : "transparent"
-                
-                Image {
-                    anchors.centerIn: parent
-                    source: maximized ? ThemeProvider.assetUrl("icons/maximize_restoration.png") : ThemeProvider.assetUrl("icons/maximize.png")
-                    width: 16
-                    height: 16
-                    sourceSize: Qt.size(16, 16)
-                }
-                
-                MouseArea {
-                    id: maximizeArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if (targetWindow) {
-                            if (maximized) {
-                                targetWindow.showNormal()
-                            } else {
-                                targetWindow.showMaximized()
-                            }
+
+            IconButton {
+                iconSource: maximized
+                    ? ThemeProvider.assetUrl("icons/maximize_restoration.png")
+                    : ThemeProvider.assetUrl("icons/maximize.png")
+                tooltip: maximized ? qsTr("还原") : qsTr("最大化")
+                iconSize: 16
+                onClicked: {
+                    if (targetWindow) {
+                        if (maximized) {
+                            targetWindow.showNormal()
+                        } else {
+                            targetWindow.showMaximized()
                         }
-                        maximizeClicked()
                     }
+                    maximizeClicked()
                 }
             }
-            
-            // 关闭
-            Rectangle {
-                width: 46
-                height: 40
-                color: closeArea.containsMouse ? "#E81123" : "transparent"
-                
-                Image {
-                    anchors.centerIn: parent
-                    source: ThemeProvider.assetUrl("icons/exit.png")
-                    width: 16
-                    height: 16
-                    sourceSize: Qt.size(16, 16)
-                }
-                
-                MouseArea {
-                    id: closeArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if (targetWindow) targetWindow.close()
-                        closeClicked()
-                    }
+
+            IconButton {
+                iconSource: ThemeProvider.assetUrl("icons/exit.png")
+                tooltip: qsTr("关闭")
+                iconSize: 16
+                hoverColor: ThemeProvider.isDark ? "#8D454C" : "#FFCDD2"
+                pressedColor: ThemeProvider.isDark ? "#A3525A" : "#EF9A9A"
+                onClicked: {
+                    if (targetWindow) targetWindow.close()
+                    closeClicked()
                 }
             }
         }

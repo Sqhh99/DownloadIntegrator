@@ -168,7 +168,7 @@ Item {
                 
                 StyledButton {
                     text: qsTr("搜索")
-                    buttonType: "secondary"
+                    buttonType: "primary"
                     enabled: !searchPage.loading
                     onClicked: {
                         suggestionsPopup.close()
@@ -193,7 +193,7 @@ Item {
                 
                 StyledButton {
                     text: qsTr("显示全部")
-                    buttonType: "primary"
+                    buttonType: "secondary"
                     enabled: !searchPage.loading
                     onClicked: {
                         searchInput.clear()
