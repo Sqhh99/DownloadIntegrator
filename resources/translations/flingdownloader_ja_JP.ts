@@ -292,6 +292,26 @@
         <source>设置</source>
         <translation type="unfinished">設定</translation>
     </message>
+    <message>
+        <location filename="../../qml/components/CustomTitleBar.qml" line="146"/>
+        <source>最小化</source>
+        <translation>最小化</translation>
+    </message>
+    <message>
+        <location filename="../../qml/components/CustomTitleBar.qml" line="158"/>
+        <source>还原</source>
+        <translation>元に戻す</translation>
+    </message>
+    <message>
+        <location filename="../../qml/components/CustomTitleBar.qml" line="158"/>
+        <source>最大化</source>
+        <translation>最大化</translation>
+    </message>
+    <message>
+        <location filename="../../qml/components/CustomTitleBar.qml" line="174"/>
+        <source>关闭</source>
+        <translation>閉じる</translation>
+    </message>
 </context>
 <context>
     <name>DatabaseUpdateManager</name>
@@ -331,7 +351,7 @@
     <message>
         <location filename="../../qml/components/DetailDrawer.qml" line="125"/>
         <source>关闭</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">閉じる</translation>
     </message>
     <message>
         <location filename="../../qml/components/DetailDrawer.qml" line="186"/>
@@ -1527,47 +1547,47 @@
         <translation type="obsolete">カラフルテーマ</translation>
     </message>
     <message>
-        <location filename="../../qml/themes/ThemeProvider.qml" line="259"/>
+        <location filename="../../qml/themes/ThemeProvider.qml" line="260"/>
         <source>浅色</source>
         <translation>ライト</translation>
     </message>
     <message>
-        <location filename="../../qml/themes/ThemeProvider.qml" line="260"/>
+        <location filename="../../qml/themes/ThemeProvider.qml" line="261"/>
         <source>深色</source>
         <translation>ダーク</translation>
     </message>
     <message>
-        <location filename="../../qml/themes/ThemeProvider.qml" line="261"/>
+        <location filename="../../qml/themes/ThemeProvider.qml" line="262"/>
         <source>海洋</source>
         <translation>オーシャン</translation>
     </message>
     <message>
-        <location filename="../../qml/themes/ThemeProvider.qml" line="262"/>
+        <location filename="../../qml/themes/ThemeProvider.qml" line="263"/>
         <source>日落</source>
         <translation>夕焼け</translation>
     </message>
     <message>
-        <location filename="../../qml/themes/ThemeProvider.qml" line="263"/>
+        <location filename="../../qml/themes/ThemeProvider.qml" line="264"/>
         <source>森林</source>
         <translation>森林</translation>
     </message>
     <message>
-        <location filename="../../qml/themes/ThemeProvider.qml" line="264"/>
+        <location filename="../../qml/themes/ThemeProvider.qml" line="265"/>
         <source>薰衣草</source>
         <translation>ラベンダー</translation>
     </message>
     <message>
-        <location filename="../../qml/themes/ThemeProvider.qml" line="265"/>
+        <location filename="../../qml/themes/ThemeProvider.qml" line="266"/>
         <source>玫瑰</source>
         <translation>ローズ</translation>
     </message>
     <message>
-        <location filename="../../qml/themes/ThemeProvider.qml" line="266"/>
+        <location filename="../../qml/themes/ThemeProvider.qml" line="267"/>
         <source>午夜</source>
         <translation>深夜</translation>
     </message>
     <message>
-        <location filename="../../qml/themes/ThemeProvider.qml" line="267"/>
+        <location filename="../../qml/themes/ThemeProvider.qml" line="268"/>
         <source>摩卡</source>
         <translation>モカ</translation>
     </message>
