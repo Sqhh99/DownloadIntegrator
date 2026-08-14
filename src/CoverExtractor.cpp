@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "yolos/tasks/detection.hpp"
+#include "Logger.h"
 
 namespace {
 
@@ -36,7 +37,7 @@ yolos::det::YOLODetector* coverDetector()
         const QString labelsPath = baseDir + "/models/game-cover.names";
 
         if (!QFile::exists(modelPath)) {
-            qWarning() << "Cover detection model not found:" << modelPath;
+            LOG_WARN() << "Cover detection model not found:" << modelPath;
             return;
         }
 
@@ -46,7 +47,7 @@ yolos::det::YOLODetector* coverDetector()
                 labelsPath.toStdString(),
                 /*useGPU=*/false);
         } catch (const std::exception& e) {
-            qWarning() << "Failed to load cover detection model:" << e.what();
+            LOG_WARN() << "Failed to load cover detection model:" << e.what();
             detector.reset();
         }
     });
@@ -198,7 +199,7 @@ cv::Mat CoverExtractor::extractCoverByModel(const cv::Mat& rgbImage)
         return rgbImage(cv::Rect(x, y, w, h)).clone();
 
     } catch (const std::exception& e) {
-        qWarning() << "Model-based cover extraction failed:" << e.what();
+        LOG_WARN() << "Model-based cover extraction failed:" << e.what();
         return cv::Mat();
     }
 }
@@ -229,7 +230,7 @@ QPixmap CoverExtractor::matToQPixmap(const cv::Mat& mat)
         }
         
     } catch (const std::exception& e) {
-        qDebug() << "Mat to QPixmap conversion failed:" << e.what();
+        LOG_DEBUG() << "Mat to QPixmap conversion failed:" << e.what();
         return QPixmap();
     }
 }
@@ -250,7 +251,7 @@ cv::Mat CoverExtractor::qPixmapToMat(const QPixmap& pixmap)
         return mat.clone();
         
     } catch (const std::exception& e) {
-        qDebug() << "QPixmap to Mat conversion failed:" << e.what();
+        LOG_DEBUG() << "QPixmap to Mat conversion failed:" << e.what();
         return cv::Mat();
     }
 }

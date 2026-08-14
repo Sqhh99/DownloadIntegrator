@@ -47,11 +47,8 @@ class Backend : public QObject
     Q_PROPERTY(QString selectedModifierLastUpdate READ selectedModifierLastUpdate NOTIFY selectedModifierChanged)
     Q_PROPERTY(QString selectedModifierOptions READ selectedModifierOptions NOTIFY selectedModifierOptionsChanged)
     Q_PROPERTY(QVariantList selectedModifierVersions READ selectedModifierVersions NOTIFY selectedModifierChanged)
-    Q_PROPERTY(QString selectedModifierCoverUrl READ selectedModifierCoverUrl NOTIFY selectedModifierChanged)
 
     // Download status
-    Q_PROPERTY(bool isDownloading READ isDownloading NOTIFY downloadingChanged)
-    Q_PROPERTY(qreal downloadProgress READ downloadProgress NOTIFY downloadProgressChanged)
     Q_PROPERTY(bool searchLoading READ searchLoading NOTIFY searchLoadingChanged)
     Q_PROPERTY(QVariantList downloadTasks READ downloadTasks NOTIFY downloadTasksChanged)
     Q_PROPERTY(bool autoCheckAppUpdates READ autoCheckAppUpdates WRITE setAutoCheckAppUpdates NOTIFY autoCheckAppUpdatesChanged)
@@ -100,7 +97,6 @@ public:
     QString selectedModifierLastUpdate() const;
     QString selectedModifierOptions() const;
     QVariantList selectedModifierVersions() const;
-    QString selectedModifierCoverUrl() const;
 
     // Cover extraction feature
     Q_INVOKABLE void extractCover();
@@ -109,8 +105,6 @@ public:
     Q_PROPERTY(bool coverLoading READ coverLoading NOTIFY coverLoadingChanged)
     bool coverLoading() const { return m_coverLoading; }
 
-    bool isDownloading() const { return m_isDownloading; }
-    qreal downloadProgress() const { return m_downloadProgress; }
     bool searchLoading() const { return m_searchLoading; }
     QVariantList downloadTasks() const;
     bool autoCheckAppUpdates() const;
@@ -160,7 +154,6 @@ public slots:
     // Downloaded management
     Q_INVOKABLE void runModifier(int index);
     Q_INVOKABLE void deleteModifier(int index);
-    Q_INVOKABLE void checkForUpdates();
     Q_INVOKABLE void checkAppUpdate();
     Q_INVOKABLE void downloadAppUpdate();
     Q_INVOKABLE void checkDatabaseUpdate();
@@ -174,19 +167,12 @@ public slots:
     Q_INVOKABLE void setUpdateSource(int index);  // 0 = GitHub, 1 = Gitee
     
     // Search suggestions - obtained from fling_translations.db
-    Q_INVOKABLE QStringList getSuggestions(const QString& keyword, int maxResults = 8);
     Q_INVOKABLE QVariantList getSuggestionItems(const QString& keyword, int maxResults = 8);
-
 
 signals:
     void languageChanged();
     void selectedModifierChanged();
     void selectedModifierOptionsChanged();
-    void downloadingChanged();
-    void downloadProgressChanged();
-    void searchCompleted();
-    void downloadCompleted(bool success);
-    void statusMessage(const QString& message);
     void coverExtracted();
     void coverLoadingChanged();
     void updateSourceChanged();
@@ -198,10 +184,6 @@ signals:
     void appUpdateStateChanged();
     void autoCheckDatabaseUpdatesChanged();
     void databaseUpdateStateChanged();
-
-private slots:
-    void onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
-    void onDownloadFinished(bool success);
 
 private:
     struct DownloadTaskMeta {
@@ -241,7 +223,6 @@ private:
     
     // Download status
     bool m_isDownloading = false;
-    qreal m_downloadProgress = 0.0;
     bool m_searchLoading = false;
     quint64 m_nextSearchRequestId = 0;
     quint64 m_activeSearchRequestId = 0;

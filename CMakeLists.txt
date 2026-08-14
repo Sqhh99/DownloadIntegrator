@@ -128,6 +128,7 @@ set(PROJECT_SOURCES
     src/ModifierInfoManager.cpp
     src/SearchManager.cpp
     src/LanguageManager.cpp
+    src/Logger.cpp
     src/TranslationDatabase.cpp
     src/GameMappingManager.cpp
     src/CoverExtractor.cpp
@@ -149,6 +150,7 @@ set(PROJECT_HEADERS
     src/include/ModifierInfoManager.h
     src/include/SearchManager.h
     src/include/LanguageManager.h
+    src/include/Logger.h
     src/include/TranslationDatabase.h
     src/include/TranslationTextUtils.h
     src/include/GameMappingManager.h
@@ -289,13 +291,9 @@ qt_add_qml_module(${PROJECT_NAME}
         qml/components/SettingsDialog.qml
         qml/pages/SearchPage.qml
         qml/pages/DownloadedPage.qml
-        qml/pages/ModifierDetailPanel.qml
-        qml/layouts/AppMenuBar.qml
-        qml/layouts/AppStatusBar.qml
         qml/themes/ThemeProvider.qml
     RESOURCES
         resources/icons/app_icon.png
-        resources/icons/search.png
         resources/icons/download.png
         resources/icons/settings.png
         resources/icons/folder.png

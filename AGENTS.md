@@ -4,7 +4,7 @@ Human-facing contribution rules live in [CONTRIBUTING.md](CONTRIBUTING.md). Keep
 
 ## Project Structure & Module Organization
 
-FLiNG Downloader is a Windows-focused C++17 and Qt 6 application. Core business logic and the QML bridge live in `src/`; public headers are under `src/include/`. The interface is organized in `qml/`, with reusable controls in `qml/components/`, page views in `qml/pages/`, layouts in `qml/layouts/`, and theme definitions in `qml/themes/`. Runtime icons, translations, the SQLite translation database, and the ONNX model belong in `resources/`. Tests are split into `tests/unit/`, `tests/integration/`, and `tests/performance/`, with shared helpers in `tests/fixtures/`. Treat `third_party/` as vendored or generated dependency content and avoid editing it unless updating that dependency intentionally.
+FLiNG Downloader is a Windows-focused C++17 and Qt 6 application. Core business logic and the QML bridge live in `src/`; public headers are under `src/include/`. The interface is organized in `qml/`, with reusable controls in `qml/components/`, page views in `qml/pages/`, and theme definitions in `qml/themes/`. Runtime icons, translations, the SQLite translation database, and the ONNX model belong in `resources/`. Tests are split into `tests/unit/`, `tests/integration/`, and `tests/performance/`, with shared helpers in `tests/fixtures/`. Treat `third_party/` as vendored or generated dependency content and avoid editing it unless updating that dependency intentionally.
 
 ## Build, Test, and Development Commands
 

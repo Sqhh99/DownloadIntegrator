@@ -1,4 +1,5 @@
 #include "ModifierInfoManager.h"
+#include "Logger.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -226,7 +227,7 @@ ModifierInfo ModifierInfoManager::importFromJson(const QString& json)
     
     QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
     if (doc.isNull() || !doc.isObject()) {
-        qWarning() << "Invalid JSON format:" << json;
+        LOG_WARN() << "Invalid JSON format:" << json;
         return info;
     }
     

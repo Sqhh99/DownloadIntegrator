@@ -18,6 +18,7 @@
 #include "ModifierManager.h"
 #include "ConfigManager.h"
 #include "FileSystem.h"
+#include "Logger.h"
 
 // Constructor
 SearchManager::SearchManager(QObject* parent)
@@ -110,7 +111,7 @@ void SearchManager::performSearch(const QString& searchTerm,
                 }
                 
                 if (needsEnrichment && !modifierList.isEmpty()) {
-                    qDebug() << "SearchManager: Search results missing data, fetching from detail pages...";
+                    LOG_DEBUG() << "SearchManager: Search results missing data, fetching from detail pages...";
                     enrichSearchResultsWithDetails(modifierList, [this, callback](const QList<ModifierInfo>& enrichedList) {
                         updateModifierManagerList(enrichedList);
                         if (callback) {
@@ -122,7 +123,7 @@ void SearchManager::performSearch(const QString& searchTerm,
                 
                 updateModifierManagerList(modifierList);
             } else {
-                qWarning() << "SearchManager: Failed to fetch search results";
+                LOG_WARN() << "SearchManager: Failed to fetch search results";
             }
             
             if (callback) {
@@ -325,7 +326,7 @@ void SearchManager::loadFeaturedModifiers(std::function<void(const QList<Modifie
                     }
                 }
             } else {
-                qWarning() << "SearchManager: Failed to fetch featured modifiers";
+                LOG_WARN() << "SearchManager: Failed to fetch featured modifiers";
             }
             
             updateModifierManagerList(featuredModifiers);
@@ -363,14 +364,14 @@ void SearchManager::fetchRecentlyUpdatedModifiersInternal(
                     fromNetwork = true;
                     saveRecentModifiersCache(modifierList);
                 } else {
-                    qWarning() << "SearchManager: Empty recently updated parse result";
+                    LOG_WARN() << "SearchManager: Empty recently updated parse result";
                 }
             } else {
-                qWarning() << "SearchManager: Failed to fetch recently updated modifiers";
+                LOG_WARN() << "SearchManager: Failed to fetch recently updated modifiers";
             }
 
             if (modifierList.isEmpty() && attempt < maxAttempts) {
-                qWarning() << "SearchManager: Retrying recently updated fetch, attempt"
+                LOG_WARN() << "SearchManager: Retrying recently updated fetch, attempt"
                            << (attempt + 1) << "of" << maxAttempts;
                 fetchRecentlyUpdatedModifiersInternal(attempt + 1, maxAttempts, callback);
                 return;
@@ -379,12 +380,12 @@ void SearchManager::fetchRecentlyUpdatedModifiersInternal(
             if (modifierList.isEmpty()) {
                 modifierList = loadRecentModifiersCache();
                 if (!modifierList.isEmpty()) {
-                    qWarning() << "SearchManager: Using cached recently updated list";
+                    LOG_WARN() << "SearchManager: Using cached recently updated list";
                 }
             }
 
             if (!fromNetwork && modifierList.isEmpty()) {
-                qWarning() << "SearchManager: Recently updated list unavailable after retries and cache fallback";
+                LOG_WARN() << "SearchManager: Recently updated list unavailable after retries and cache fallback";
             }
 
             updateModifierManagerList(modifierList);
@@ -561,7 +562,7 @@ void SearchManager::saveRecentModifiersCache(const QList<ModifierInfo>& modifier
     QFile file(cachePath);
 
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        qWarning() << "SearchManager: Failed to save recent modifiers cache:" << cachePath;
+        LOG_WARN() << "SearchManager: Failed to save recent modifiers cache:" << cachePath;
         return;
     }
 
@@ -653,7 +654,7 @@ void SearchManager::enrichSearchResultsWithDetails(QList<ModifierInfo>& modifier
                     QMutexLocker locker(mutex.get());
                     (*pendingCount)--;
                     if (*pendingCount == 0) {
-                        qDebug() << "SearchManager: Finished enriching search results from detail pages";
+                        LOG_DEBUG() << "SearchManager: Finished enriching search results from detail pages";
                         if (callback) {
                             callback(*resultList);
                         }

@@ -21,6 +21,7 @@
 #include "LanguageManager.h"
 #include "GameMappingManager.h"
 #include "ConfigManager.h"
+#include "Logger.h"
 
 #ifdef Q_OS_WIN
 namespace {
@@ -33,13 +34,13 @@ void applyWindows11RoundedCorners(QObject* rootObject)
 
     auto* window = qobject_cast<QQuickWindow*>(rootObject);
     if (!window) {
-        qWarning() << "Cannot enable rounded corners: QML root object is not a window";
+        LOG_WARN() << "Cannot enable rounded corners: QML root object is not a window";
         return;
     }
 
     const auto windowHandle = reinterpret_cast<HWND>(window->winId());
     if (!windowHandle) {
-        qWarning() << "Cannot enable rounded corners: native window handle is unavailable";
+        LOG_WARN() << "Cannot enable rounded corners: native window handle is unavailable";
         return;
     }
 
@@ -50,7 +51,7 @@ void applyWindows11RoundedCorners(QObject* rootObject)
         &preference,
         sizeof(preference));
     if (FAILED(result)) {
-        qWarning() << "Failed to enable Windows 11 rounded corners:" << result;
+        LOG_WARN() << "Failed to enable Windows 11 rounded corners:" << result;
     }
 }
 
@@ -61,6 +62,7 @@ int main(int argc, char *argv[])
 {
     // Use QGuiApplication (pure QML app)
     QGuiApplication app(argc, argv);
+    Logger::install();
 
     // Keep app data under "%AppData%\\FLiNG Downloader" instead of
     // "%AppData%\\Sqhh99\\FLiNG Downloader".
@@ -74,18 +76,18 @@ int main(int argc, char *argv[])
 #endif
 
     try {
-        qDebug() << "Application initializing...";
+        LOG_DEBUG() << "Application initializing...";
         
         // Qt 6 QML module handles resources; no manual Q_INIT_RESOURCE needed
-        qDebug() << "Resources handled by QML module";
+        LOG_DEBUG() << "Resources handled by QML module";
         
         // Verify resource system
         QDir resourceRoot(":/");
         if (resourceRoot.exists()) {
             QStringList entries = resourceRoot.entryList();
-            qDebug() << "Available resource dirs:" << entries;
+            LOG_DEBUG() << "Available resource dirs:" << entries;
         } else {
-            qDebug() << "Resource system initialization failed";
+            LOG_DEBUG() << "Resource system initialization failed";
         }
         
         // Apply current language
@@ -95,11 +97,11 @@ int main(int argc, char *argv[])
         QQuickStyle::setStyle("Basic");
         
         // Initialize game mapping manager
-        qDebug() << "Initializing game mapping manager...";
+        LOG_DEBUG() << "Initializing game mapping manager...";
         if (GameMappingManager::getInstance().initialize()) {
-            qDebug() << "Game mapping manager initialized";
+            LOG_DEBUG() << "Game mapping manager initialized";
         } else {
-            qDebug() << "Game mapping manager failed, Chinese search may be limited";
+            LOG_DEBUG() << "Game mapping manager failed, Chinese search may be limited";
         }
         
         // Register QML types
@@ -122,6 +124,7 @@ int main(int argc, char *argv[])
         // Expose theme index to QML (for ThemeProvider initialization)
         int currentTheme = static_cast<int>(ConfigManager::getInstance().getCurrentTheme());
         engine.rootContext()->setContextProperty("initialTheme", currentTheme);
+        engine.rootContext()->setContextProperty("Log", new LogFacade(&app));
         
         // Set required property initial values
         engine.setInitialProperties({{"backend", QVariant::fromValue(backend)}});
@@ -132,7 +135,7 @@ int main(int argc, char *argv[])
         QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                          &app, [url](QObject *obj, const QUrl &objUrl) {
             if (!obj && url == objUrl) {
-                qDebug() << "QML load failed";
+                LOG_DEBUG() << "QML load failed";
                 QCoreApplication::exit(-1);
             }
         }, Qt::QueuedConnection);
@@ -140,7 +143,7 @@ int main(int argc, char *argv[])
         engine.load(url);
         
         if (engine.rootObjects().isEmpty()) {
-            qDebug() << "No QML objects loaded";
+            LOG_DEBUG() << "No QML objects loaded";
             return -1;
         }
 
@@ -148,17 +151,17 @@ int main(int argc, char *argv[])
         applyWindows11RoundedCorners(engine.rootObjects().constFirst());
 #endif
 
-        qDebug() << "Application initialized, starting event loop";
+        LOG_DEBUG() << "Application initialized, starting event loop";
         
         // Run application
         return app.exec();
     } 
     catch (const std::exception& e) {
-        qDebug() << "Exception:" << e.what();
+        LOG_DEBUG() << "Exception:" << e.what();
         return 1;
     } 
     catch (...) {
-        qDebug() << "Unknown exception";
+        LOG_DEBUG() << "Unknown exception";
         return 1;
     }
 }

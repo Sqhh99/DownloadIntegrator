@@ -5,6 +5,7 @@
 #include <QPointer>
 #include <utility>
 #include "ConfigManager.h"
+#include "Logger.h"
 
 NetworkManager::NetworkManager(QObject* parent)
     : QObject(parent)
@@ -89,7 +90,7 @@ void NetworkManager::sendGetRequest(const QString& url,
                 callback(responseData, true);
             }
         } else {
-            qDebug() << "Network request failed:" << reply->errorString();
+            LOG_DEBUG() << "Network request failed:" << reply->errorString();
             if (callback && (!context || contextGuard)) {
                 callback(QByteArray(), false);
             }
@@ -102,7 +103,7 @@ void NetworkManager::sendGetRequest(const QString& url,
     // Connect error signal
     connect(reply, &QNetworkReply::errorOccurred, this, [reply, callback, timer](QNetworkReply::NetworkError) {
         timer->stop();
-        qDebug() << "Network error:" << reply->errorString();
+        LOG_DEBUG() << "Network error:" << reply->errorString();
     });
 }
 
@@ -175,8 +176,8 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
                                             qint64 resumeFrom,
                                             bool keepPartialOnAbort)
 {
-    qDebug() << "NetworkManager: Starting download from:" << url;
-    qDebug() << "NetworkManager: Save path:" << savePath;
+    LOG_DEBUG() << "NetworkManager: Starting download from:" << url;
+    LOG_DEBUG() << "NetworkManager: Save path:" << savePath;
     QPointer<QObject> contextGuard(context);
     const DownloadProgressCallback safeProgressCallback =
         [progressCallback, context, contextGuard](qint64 bytesReceived, qint64 bytesTotal) {
@@ -216,7 +217,7 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
         ? (QIODevice::WriteOnly | QIODevice::Append)
         : (QIODevice::WriteOnly | QIODevice::Truncate);
     if (!file->open(openMode)) {
-        qDebug() << "NetworkManager: Cannot create file:" << file->errorString();
+        LOG_DEBUG() << "NetworkManager: Cannot create file:" << file->errorString();
         if (safeFinishedCallback) {
             safeFinishedCallback(false, "Cannot create file: " + file->errorString(), 0);
         }
@@ -264,10 +265,10 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
             file->seek(0);
             *effectiveResumeFrom = 0;
             *bytesWritten = 0;
-            qDebug() << "NetworkManager: Range not supported, restarting current response from byte 0";
+            LOG_DEBUG() << "NetworkManager: Range not supported, restarting current response from byte 0";
         } else if (statusCode == 206) {
             *effectiveResumeFrom = resumeFrom;
-            qDebug() << "NetworkManager: Resuming from byte offset:" << resumeFrom;
+            LOG_DEBUG() << "NetworkManager: Resuming from byte offset:" << resumeFrom;
         }
         
         *responseModeChecked = true;
@@ -306,13 +307,13 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
         int httpStatus = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         QUrl redirectUrl = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
         
-        qDebug() << "NetworkManager: Download finished for:" << url;
-        qDebug() << "NetworkManager: HTTP status code:" << httpStatus;
-        qDebug() << "NetworkManager: Bytes written:" << *bytesWritten;
-        qDebug() << "NetworkManager: Network error:" << reply->error() << reply->errorString();
+        LOG_DEBUG() << "NetworkManager: Download finished for:" << url;
+        LOG_DEBUG() << "NetworkManager: HTTP status code:" << httpStatus;
+        LOG_DEBUG() << "NetworkManager: Bytes written:" << *bytesWritten;
+        LOG_DEBUG() << "NetworkManager: Network error:" << reply->error() << reply->errorString();
         
         if (!redirectUrl.isEmpty()) {
-            qDebug() << "NetworkManager: Redirect URL detected:" << redirectUrl;
+            LOG_DEBUG() << "NetworkManager: Redirect URL detected:" << redirectUrl;
         }
         
         if (reply->error() == QNetworkReply::NoError) {
@@ -320,18 +321,18 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
             QFileInfo downloadedFile(savePath);
             qint64 fileSize = downloadedFile.size();
             
-            qDebug() << "NetworkManager: Final file size:" << fileSize << "bytes";
+            LOG_DEBUG() << "NetworkManager: Final file size:" << fileSize << "bytes";
             
             if (fileSize == 0 || *bytesWritten == 0) {
-                qDebug() << "NetworkManager: WARNING - Downloaded file is empty!";
-                qDebug() << "NetworkManager: Response headers:";
+                LOG_DEBUG() << "NetworkManager: WARNING - Downloaded file is empty!";
+                LOG_DEBUG() << "NetworkManager: Response headers:";
                 for (const auto& header : reply->rawHeaderPairs()) {
-                    qDebug() << "  " << header.first << ":" << header.second;
+                    LOG_DEBUG() << "  " << header.first << ":" << header.second;
                 }
                 
                 // Check Content-Type to see if it's an error page
                 QString contentType = reply->header(QNetworkRequest::ContentTypeHeader).toString();
-                qDebug() << "NetworkManager: Content-Type:" << contentType;
+                LOG_DEBUG() << "NetworkManager: Content-Type:" << contentType;
                 
                 // If we got HTML instead of a file, it's likely an error page
                 if (contentType.contains("text/html", Qt::CaseInsensitive)) {
@@ -366,7 +367,7 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
                 }
             }
         } else {
-            qDebug() << "NetworkManager: Download failed:" << reply->errorString();
+            LOG_DEBUG() << "NetworkManager: Download failed:" << reply->errorString();
             if (httpStatus == 416) {
                 QFileInfo existingFile(savePath);
                 if (existingFile.exists() && existingFile.size() > 0) {
@@ -409,7 +410,7 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
     
     // Connect error signal
     connect(reply, &QNetworkReply::errorOccurred, this, [reply, timer](QNetworkReply::NetworkError error) {
-        qDebug() << "NetworkManager: Error occurred during download:" << error << reply->errorString();
+        LOG_DEBUG() << "NetworkManager: Error occurred during download:" << error << reply->errorString();
         timer->start(); // Reset timer
     });
 }
@@ -456,13 +457,13 @@ QTimer* NetworkManager::createTimeoutTimer(QNetworkReply* reply)
 
 void NetworkManager::onTimeoutTriggered()
 {
-    qDebug() << "Network request timeout";
+    LOG_DEBUG() << "Network request timeout";
 }
 
 void NetworkManager::cancelDownload()
 {
     if (m_currentDownloadReply && m_currentDownloadReply->isRunning()) {
-        qDebug() << "Cancelling download";
+        LOG_DEBUG() << "Cancelling download";
         m_currentDownloadReply->abort();
     }
 }

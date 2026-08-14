@@ -1,5 +1,6 @@
 #include "UpdateManager.h"
 #include "ModifierParser.h"
+#include "Logger.h"
 #include <QDebug>
 #include <QRegularExpression>
 
@@ -13,7 +14,7 @@ void UpdateManager::checkModifierUpdate(const QString& url, const QString& curre
                                        std::function<void(bool)> callback)
 {
     if (url.isEmpty()) {
-        qDebug() << "Update check URL is empty";
+        LOG_DEBUG() << "Update check URL is empty";
         if (callback) {
             callback(false);
         }
@@ -51,13 +52,13 @@ void UpdateManager::checkModifierUpdate(const QString& url, const QString& curre
                         callback(hasUpdate);
                     }
                 } else {
-                    qDebug() << "Failed to parse modifier details";
+                    LOG_DEBUG() << "Failed to parse modifier details";
                     if (callback) {
                         callback(false);
                     }
                 }
             } else {
-                qDebug() << "Failed to fetch modifier details page";
+                LOG_DEBUG() << "Failed to fetch modifier details page";
                 if (callback) {
                     callback(false);
                 }

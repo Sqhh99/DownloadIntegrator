@@ -488,7 +488,7 @@ Dialog {
                             currentIndex: settingsDialog.currentLanguage
                             
                             onActivated: function(index) {
-                                console.log("语言切换:", index)
+                                Log.debug("语言切换: " + index)
                                 settingsDialog.currentLanguage = index
                                 settingsDialog.languageChangedSignal(index)
                             }

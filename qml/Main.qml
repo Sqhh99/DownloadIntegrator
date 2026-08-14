@@ -29,16 +29,12 @@ ApplicationWindow {
     // Use plain property for lupdate compatibility with older Qt parser.
     property var backend: null
     
-    // 待下载标志 - 用于等待详情加载完成后自动开始下载
-    property bool pendingDownload: false
-    property int pendingDownloadIndex: -1
-    
     Component.onCompleted: {
-        console.log("Main.qml 加载完成")
-        console.log("Backend 对象:", backend)
-        console.log("ModifierListModel:", backend ? backend.modifierListModel : "null")
+        Log.debug("Main.qml 加载完成")
+        Log.debug("Backend 对象: " + backend)
+        Log.debug("ModifierListModel: " + (backend ? backend.modifierListModel : "null"))
         if (backend && backend.modifierListModel) {
-            console.log("模型行数:", backend.modifierListModel.rowCount())
+            Log.debug("模型行数: " + backend.modifierListModel.rowCount())
         }
     }
     
@@ -57,12 +53,12 @@ ApplicationWindow {
             
             onDownloadClicked: {
                 // 切换下载列表显示
-                console.log("下载按钮点击, popup.visible:", downloadListPopup.visible)
+                Log.debug("下载按钮点击, popup.visible: " + downloadListPopup.visible)
                 if (downloadListPopup.visible) {
-                    console.log("关闭下载列表")
+                    Log.debug("关闭下载列表")
                     downloadListPopup.close()
                 } else {
-                    console.log("打开下载列表")
+                    Log.debug("打开下载列表")
                     downloadListPopup.open()
                 }
             }
@@ -166,7 +162,7 @@ ApplicationWindow {
                 
                 onModifierSelected: function(index) {
                     // 行选择由 SearchPage 内部处理
-                    console.log("行点击, index:", index)
+                    Log.debug("行点击, index: " + index)
                 }
                 
                 onSortChanged: function(sortIndex) {
@@ -208,11 +204,6 @@ ApplicationWindow {
                     if (backend) backend.deleteModifier(index)
                 }
                 
-                onCheckUpdates: {
-                    if (backend) backend.checkForUpdates()
-                    statusBar.showMessage(qsTr("正在检查更新..."), 0)
-                }
-                
                 onModifierDoubleClicked: function(index) {
                     if (backend) backend.runModifier(index)
                 }
@@ -240,45 +231,13 @@ ApplicationWindow {
         
         // 从详情面板触发下载
         onStartDownload: function(versionIndex) {
-            console.log("从详情面板下载, 修改器:", gameName, "版本索引:", versionIndex)
+            Log.debug("从详情面板下载, 修改器: " + gameName + " 版本索引: " + versionIndex)
             
             if (backend) {
                 // 添加任务并开始下载（由后端队列调度）
                 backend.downloadModifier(versionIndex)
                 downloadListPopup.open()
             }
-        }
-    }
-    
-    // 后端连接
-    Connections {
-        target: backend
-        
-        function onSearchCompleted() {
-            // 搜索完成
-        }
-        
-        // 当修改器详情加载完成时，检查是否有待下载任务
-        function onSelectedModifierChanged() {
-            console.log("详情加载完成, pendingDownload:", mainWindow.pendingDownload, "版本数:", backend ? backend.selectedModifierVersions.length : 0)
-            
-            // 只有当有待下载任务 AND 版本列表不为空时才开始下载
-            if (mainWindow.pendingDownload && backend && backend.selectedModifierVersions.length > 0) {
-                mainWindow.pendingDownload = false
-                console.log("开始真正下载, 版本:", backend.selectedModifierVersions[0])
-                
-                // 开始真正的下载
-                backend.downloadModifier(0)  // 下载第一个版本
-            }
-            // 如果版本列表为空，保持 pendingDownload 为 true，等待下一次信号
-        }
-        
-        function onDownloadCompleted(success) {
-            // 下载完成通知已由下载列表处理
-        }
-        
-        function onStatusMessage(message) {
-            // 状态消息已移除
         }
     }
     
@@ -363,12 +322,12 @@ ApplicationWindow {
         }
         
         onLanguageChangedSignal: function(index) {
-            console.log("Main: 语言切换信号收到, index:", index)
+            Log.debug("Main: 语言切换信号收到, index: " + index)
             if (backend) backend.setLanguage(index)
         }
         
         onBrowseDownloadPath: {
-            console.log("Main: 打开下载目录选择对话框")
+            Log.debug("Main: 打开下载目录选择对话框")
             downloadFolderDialog.open()
         }
 
@@ -410,7 +369,7 @@ ApplicationWindow {
             if (backend) {
                 var path = selectedFolder.toString().replace("file:///", "")
                 backend.setDownloadPath(path)
-                console.log("已选择下载目录:", path)
+                Log.debug("已选择下载目录: " + path)
             }
         }
     }

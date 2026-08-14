@@ -10,6 +10,7 @@
 #include "DownloadManager.h"
 #include "ModifierInfoManager.h"
 #include "SearchManager.h"
+#include "Logger.h"
 
 ModifierManager::ModifierManager(QObject* parent)
     : QObject(parent)
@@ -69,7 +70,7 @@ void ModifierManager::getModifierDetail(const QString& url, ModifierDetailCallba
                 
                 callback(modifier);
             } else {
-                qWarning() << "ModifierManager: Failed to get modifier details";
+                LOG_WARN() << "ModifierManager: Failed to get modifier details";
                 
                 ModifierInfo* modifier = new ModifierInfo();
                 modifier->name = modifierName;
@@ -316,7 +317,7 @@ void ModifierManager::saveDownloadedModifiers()
     settings.endArray();
     settings.sync();
     
-    qDebug() << "Downloaded modifiers saved to:" << settingsPath;
+    LOG_DEBUG() << "Downloaded modifiers saved to:" << settingsPath;
 }
 
 void ModifierManager::loadDownloadedModifiers()
@@ -329,7 +330,7 @@ void ModifierManager::loadDownloadedModifiers()
     
     // Check if file exists
     if (!FileSystem::getInstance().fileExists(settingsPath)) {
-        qDebug() << "Downloaded modifiers config not found, using defaults";
+        LOG_DEBUG() << "Downloaded modifiers config not found, using defaults";
         return;
     }
     
@@ -357,7 +358,7 @@ void ModifierManager::loadDownloadedModifiers()
     
     settings.endArray();
     
-    qDebug() << "Loaded" << m_downloadedModifiers.size() << "downloaded modifiers from:" << settingsPath;
+    LOG_DEBUG() << "Loaded" << m_downloadedModifiers.size() << "downloaded modifiers from:" << settingsPath;
 }
 
 QList<ModifierInfo> ModifierManager::filterModifiersByKeyword(const QString& keyword) const
@@ -374,7 +375,7 @@ bool ModifierManager::exportModifierToFile(const ModifierInfo& info, const QStri
     // Save to file
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qWarning() << "Cannot open file for writing:" << filePath;
+        LOG_WARN() << "Cannot open file for writing:" << filePath;
         return false;
     }
     
@@ -390,7 +391,7 @@ ModifierInfo ModifierManager::importModifierFromFile(const QString& filePath)
     // Read JSON from file
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "Cannot open file for reading:" << filePath;
+        LOG_WARN() << "Cannot open file for reading:" << filePath;
         return ModifierInfo();
     }
     
@@ -406,5 +407,5 @@ ModifierInfo ModifierManager::importModifierFromFile(const QString& filePath)
 void ModifierManager::setModifierList(const QList<ModifierInfo>& modifiers)
 {
     m_modifierList = modifiers;
-    qDebug() << "ModifierManager: Modifier list set externally, count:" << m_modifierList.size();
+    LOG_DEBUG() << "ModifierManager: Modifier list set externally, count:" << m_modifierList.size();
 }
