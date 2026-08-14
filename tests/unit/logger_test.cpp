@@ -57,7 +57,7 @@ TEST_F(LoggerTest, LevelNameMatchesFormatToken)
 TEST_F(LoggerTest, StreamMacroFormatsWithoutGoingThroughQtDebug)
 {
     const QString line = Logger::formatLine(
-        Logger::Level::Warn,
+        Logger::Level::Warning,
         QStringLiteral("SearchManager: Failed to fetch recently updated modifiers"),
         QDateTime::fromString(QStringLiteral("2026-08-14 16:32:05.140"),
                               QStringLiteral("yyyy-MM-dd HH:mm:ss.zzz")));
