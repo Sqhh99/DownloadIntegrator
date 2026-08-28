@@ -82,3 +82,18 @@
 3. 开 PR 前先写 `docs/pull-requests/YYYY-MM-DD-<branch-topic>.md` 并用作 PR 正文。
 
 同时写明：没有真正执行过的验证命令不许打勾。
+
+### 规则抽成可复用的 skill
+
+上述规则随后被抽到 `agents/skills/project-records/SKILL.md`：三类记录的触发条件与目录
+对照表、各自的模板骨架、跨文档互链约定，以及「如何新增第四类记录」的扩展指引。
+`CLAUDE.md` 里保留触发表（不加载 skill 也要能看到「什么时候欠一份文档」），细节指向 skill。
+
+配套改了 `.gitignore`：原先第 111 行整个忽略 `agents/`，放在那里的 skill 永远提交不上去，
+别人克隆后只会看到 `CLAUDE.md` 指向一个不存在的文件。现改为 `agents/*` 加一条
+`!agents/skills/` 反向规则，只放出共享的 skill 目录，`agents/prompts/` 维持忽略不变。
+
+**已知限制：** Claude Code 只在 `.claude/skills/<name>/SKILL.md` 下自动发现 skill，
+放在 `agents/skills/` 里它是一份由 `CLAUDE.md` 引用的文档，而不是可直接调用的技能。
+文件本身带了 YAML frontmatter，若要改成可调用，整个目录移到 `.claude/skills/` 即可，
+内容无需改动。

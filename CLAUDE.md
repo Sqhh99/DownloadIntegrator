@@ -133,18 +133,16 @@ in `tests/resources/fling_trainer_screenshot/`).
 Three documentation steps are mandatory, not optional extras. Each writes a
 `YYYY-MM-DD-<topic>.md` file under its own `docs/` subdirectory:
 
-- **After any request that changes files, write a work log** in `docs/work-logs/` as
-  `YYYY-MM-DD-<topic>.md`: what was asked (quote the request), the plan that was
-  agreed, every file touched and why, how it was verified, and what was left open.
-  One file per request; append to the day's file when a request is a follow-up.
-- **After reviewing code, archive the review** in `docs/code-reviews/` as
-  `YYYY-MM-DD-<short-title>.md`. Record the date, the commit reviewed, the scope *and*
-  what was explicitly not covered, and a findings table whose last column states whether
-  each finding is implemented. A review that only exists in the conversation is lost.
-- **Before opening a pull request, write the PR record** in `docs/pull-requests/` as
-  `YYYY-MM-DD-<branch-topic>.md`, then use it as the PR body. Follow the sections in
-  `.github/pull_request_template.md` (关联 / 改了什么 / 怎么验证 / 检查项); these docs
-  and the PR body are written in Chinese, matching `CONTRIBUTING.md`.
+| Trigger | Record | Language |
+|---------|--------|----------|
+| Any request that changes files | `docs/work-logs/` — request (quoted), plan, every file touched and why, verification, what was left open | Chinese |
+| Any code review | `docs/code-reviews/` — commit reviewed, scope *and* what was not covered, findings table whose last column says whether each finding is implemented | English |
+| Before opening a pull request | `docs/pull-requests/` — written first, then used as the PR body, following `.github/pull_request_template.md` (关联 / 改了什么 / 怎么验证 / 检查项) | Chinese |
+
+**Read [`agents/skills/project-records/SKILL.md`](agents/skills/project-records/SKILL.md)
+before writing any of the three** — it holds the templates, the cross-linking rules, and
+how to add a fourth record type. The table above is the trigger list; the skill is the
+how.
 
 Never tick a verification box for a command you did not run — say so and leave it
 unchecked. `CONTRIBUTING.md` requires the AI-assistance disclosure to be filled in

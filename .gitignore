@@ -108,7 +108,9 @@ onnxruntime-win-*
 __cmake_systeminformation
 
 # Agents
-agents/
+agents/*
+# ...except the shared skills, which are part of the repo, not local scratch.
+!agents/skills/
 
 tools/qt6-qml-module-migration.md
 tools/game-mappings-updater
