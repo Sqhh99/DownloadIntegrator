@@ -9,24 +9,25 @@
 
 ## Status summary
 
-**No finding in this document has been implemented.** The review produced no code changes;
-every item below is open. The only file modified in the session that produced this review
-was `CLAUDE.md` (documentation), not application code.
+**All four findings have been implemented** on branch `fix/download-review-findings`
+(2026-08-28). The fixes were written and reviewed by reading the source; they have **not**
+been compiled or run, because the build is Windows-only and this work was done from WSL.
+See the Implementation record section below for what changed, and
+[`docs/work-logs/2026-08-28-download-review-findings.md`](../work-logs/2026-08-28-download-review-findings.md)
+for the full work log.
 
 | # | Finding | Severity | Implemented |
 |---|---------|----------|-------------|
-| 1 | Pause/cancel can abort the wrong download | Medium | ❌ No — open |
-| 2 | Remote-derived version text reaches the save path unsanitized | Medium | ❌ No — open |
-| 3 | `m_currentDownloadReply` is never initialized | Low–Medium (latent) | ❌ No — open |
-| 4 | `file->write()` result discarded, so short writes report success | Low | ❌ No — open |
-
-Suggested order if these get picked up: #1 and #2 first.
+| 1 | Pause/cancel can abort the wrong download | Medium | ✅ Yes — 2026-08-28 |
+| 2 | Remote-derived version text reaches the save path unsanitized | Medium | ✅ Yes — 2026-08-28 |
+| 3 | `m_currentDownloadReply` is never initialized | Low–Medium (latent) | ✅ Yes — 2026-08-28 |
+| 4 | `file->write()` result discarded, so short writes report success | Low | ✅ Yes — 2026-08-28 |
 
 ---
 
 ## 1. Pause/cancel can abort the wrong download
 
-**Location:** `src/NetworkManager.cpp:463` · **Severity:** Medium · **Implemented:** ❌ No
+**Location:** `src/NetworkManager.cpp:463` · **Severity:** Medium · **Implemented:** ✅ Yes
 
 `NetworkManager` tracks exactly one in-flight download in `m_currentDownloadReply`, but
 three independent features write to it:
@@ -49,11 +50,19 @@ The modifier download keeps running while the app update dies silently, and the 
 still marks the modifier "paused".
 
 **Root cause:** a single shared reply handle for logically independent transfers.
-**Direction:** give each download its own handle, or key the abort by task id.
+
+**Fix.** `NetworkManager` now keeps `QHash<QString, QNetworkReply*> m_activeDownloads`,
+keyed by destination path, and `cancelDownload()` became `cancelDownload(const QString&
+savePath)` — it can only abort the transfer writing to the path the caller names.
+`DownloadManager` remembers its own `m_currentSavePath` and passes it, so cancelling a
+modifier download cannot touch the installer or database transfer. Entries are removed
+through `unregisterDownload(savePath, reply)`, which erases only when the stored reply is
+still the one finishing, so a later download to the same path is not dropped by an earlier
+one's cleanup.
 
 ## 2. Remote-derived version text reaches the save path unsanitized
 
-**Location:** `src/Backend.cpp:434` · **Severity:** Medium · **Implemented:** ❌ No
+**Location:** `src/Backend.cpp:434` · **Severity:** Medium · **Implemented:** ✅ Yes
 
 `downloadModifier` sanitizes the modifier name — strips `\ / : * ? " < > |`, trims, removes
 trailing dots — then concatenates an unsanitized sibling value:
@@ -76,9 +85,16 @@ is a straightforward write outside the download directory.
 The asymmetry with the carefully sanitized name directly beside it reads as an oversight
 rather than a deliberate choice.
 
+**Fix.** The inline sanitization was extracted into `sanitizePathComponent(text, fallback)`
+in the anonymous namespace of `src/Backend.cpp`, and **both** components now go through it.
+It replaces `\ / : * ? " < > |` and control characters with `_`, trims, strips leading and
+trailing dots, and falls back to a placeholder when nothing is left — so neither half can
+introduce a separator or escape `downloadDir`. The unsanitized `versionName` is still stored
+in the task as the display label; only the path is sanitized.
+
 ## 3. `m_currentDownloadReply` is never initialized
 
-**Location:** `src/include/NetworkManager.h:114` · **Severity:** Low–Medium (latent) · **Implemented:** ❌ No
+**Location:** `src/include/NetworkManager.h:114` · **Severity:** Low–Medium (latent) · **Implemented:** ✅ Yes
 
 The member has no default initializer and is absent from the constructor's initialiser list
 (`src/NetworkManager.cpp:10-13`), which sets only `m_networkManager` and `m_timeoutInterval`.
@@ -95,11 +111,17 @@ The reachable trigger today is the **test hook**: `downloadFileWithStatus` retur
 callback and then cancels reads an indeterminate pointer.
 
 It is undefined behaviour regardless, and one refactor away from being reachable in
-production. `= nullptr` is the entire fix.
+production.
+
+**Fix.** The raw pointer member is gone. Finding #1 replaced it with a `QHash`, which is
+default-constructed empty, so the uninitialized read is structurally impossible rather than
+merely initialized away. `tests/unit/download_manager_test.cpp` gained
+`CancelDownloadWithoutActiveTransferIsSafe`, which cancels an unknown path with nothing in
+flight — the exact shape that used to read indeterminate memory.
 
 ## 4. `file->write()` result discarded, so short writes report success
 
-**Location:** `src/NetworkManager.cpp:295` · **Severity:** Low · **Implemented:** ❌ No
+**Location:** `src/NetworkManager.cpp:295` · **Severity:** Low · **Implemented:** ✅ Yes
 
 ```cpp
 *bytesWritten += data.size();
@@ -112,6 +134,13 @@ result or calls `flush()` / `error()` before `file->close()`. Success is then de
 
 On a full disk or a write error both values are non-zero, so a truncated archive is reported
 as a completed download and is renamed out of `.crdownload` into the user's library.
+
+**Fix.** `readyRead` now compares `file->write(data)` against `data.size()`, counts only the
+bytes actually persisted, and raises a `writeFailed` flag on a short write. The finished
+handler calls `flush()` and reads `file->error()` **before** `close()` (which clears it), and
+a raised flag turns into a failed callback carrying the file's error string instead of a
+success. The partial file is removed unless `keepPartialOnAbort` is set, in which case it is
+kept so the transfer can resume once the disk has room.
 
 ---
 
@@ -131,6 +160,18 @@ they are not undone later:
 - The callback `QPointer` context guards in `NetworkManager` are sound.
 - `parseModifierDetailHTML` never returns null, so the unchecked dereference at
   `src/ModifierManager.cpp:62` is safe as the code stands.
+
+## Implementation record
+
+| Finding | Files touched |
+|---------|---------------|
+| 1, 3 | `src/NetworkManager.{h,cpp}`, `src/DownloadManager.{h,cpp}`, `tests/unit/download_manager_test.cpp` |
+| 2 | `src/Backend.cpp` |
+| 4 | `src/NetworkManager.cpp` |
+
+**Verification status:** not built and not run. `build.cmd tests` requires Visual Studio and
+Qt on Windows; this branch was prepared from WSL. The changes need a Windows build before the
+PR is merged.
 
 ## Related
 

@@ -128,6 +128,28 @@ workflows, `tests/performance/` Google Benchmark cases (built separately with
 `-DFLING_BUILD_BENCHMARKS=ON`; only `CoverExtractor` is covered, over the sample images
 in `tests/resources/fling_trainer_screenshot/`).
 
+## Mandatory records
+
+Three documentation steps are mandatory, not optional extras. Each writes a
+`YYYY-MM-DD-<topic>.md` file under its own `docs/` subdirectory:
+
+- **After any request that changes files, write a work log** in `docs/work-logs/` as
+  `YYYY-MM-DD-<topic>.md`: what was asked (quote the request), the plan that was
+  agreed, every file touched and why, how it was verified, and what was left open.
+  One file per request; append to the day's file when a request is a follow-up.
+- **After reviewing code, archive the review** in `docs/code-reviews/` as
+  `YYYY-MM-DD-<short-title>.md`. Record the date, the commit reviewed, the scope *and*
+  what was explicitly not covered, and a findings table whose last column states whether
+  each finding is implemented. A review that only exists in the conversation is lost.
+- **Before opening a pull request, write the PR record** in `docs/pull-requests/` as
+  `YYYY-MM-DD-<branch-topic>.md`, then use it as the PR body. Follow the sections in
+  `.github/pull_request_template.md` (关联 / 改了什么 / 怎么验证 / 检查项); these docs
+  and the PR body are written in Chinese, matching `CONTRIBUTING.md`.
+
+Never tick a verification box for a command you did not run — say so and leave it
+unchecked. `CONTRIBUTING.md` requires the AI-assistance disclosure to be filled in
+honestly.
+
 ## Gotchas
 
 - The app version is derived from `git describe --tags` at configure time and injected as
