@@ -8,6 +8,7 @@
 #include <QTimer>
 #include <QString>
 #include <QUrl>
+#include <QHash>
 #include <functional>
 #include "ModifierParser.h"
 
@@ -79,8 +80,9 @@ public:
     // Abort all requests
     void abortAllRequests();
     
-    // Cancel current download
-    void cancelDownload();
+    // Cancel the download writing to savePath. Downloads are tracked per
+    // destination path, so cancelling one transfer never aborts another.
+    void cancelDownload(const QString& savePath);
 
     // Set global timeout interval (milliseconds)
     void setTimeoutInterval(int msec);
@@ -107,11 +109,15 @@ private:
     // Create timeout timer for request
     QTimer* createTimeoutTimer(QNetworkReply* reply);
 
+    // Drop savePath from the active-download table, but only when it still
+    // maps to this reply (a later download to the same path wins).
+    void unregisterDownload(const QString& savePath, QNetworkReply* reply);
+
 private:
     QNetworkAccessManager* m_networkManager;
     int m_timeoutInterval;
     QString m_globalUserAgent;
-    QNetworkReply* m_currentDownloadReply;
+    QHash<QString, QNetworkReply*> m_activeDownloads;
     TestGetRequestHandler m_testGetRequestHandler;
     TestDownloadRequestHandler m_testDownloadRequestHandler;
 

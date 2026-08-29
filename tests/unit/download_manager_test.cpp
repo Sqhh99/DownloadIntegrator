@@ -160,3 +160,15 @@ TEST_F(DownloadManagerTest, DetectFileFormatReturnsEmptyWhenFileCannotBeOpened)
     const QString missingPath = tempDir.filePath(QStringLiteral("missing.tar"));
     EXPECT_TRUE(DownloadManager::getInstance().detectFileFormat(missingPath).isEmpty());
 }
+
+TEST_F(DownloadManagerTest, CancelDownloadWithoutActiveTransferIsSafe)
+{
+    // Regression: NetworkManager tracked the in-flight download in an
+    // uninitialised raw pointer, so cancelling with nothing in flight read
+    // indeterminate memory. Downloads are now keyed by destination path and an
+    // unknown path simply matches nothing.
+    NetworkManager::getInstance().cancelDownload(QStringLiteral("does/not/exist.zip"));
+
+    DownloadManager::getInstance().cancelDownload();
+    EXPECT_FALSE(DownloadManager::getInstance().isDownloading());
+}

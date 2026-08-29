@@ -128,6 +128,26 @@ workflows, `tests/performance/` Google Benchmark cases (built separately with
 `-DFLING_BUILD_BENCHMARKS=ON`; only `CoverExtractor` is covered, over the sample images
 in `tests/resources/fling_trainer_screenshot/`).
 
+## Mandatory records
+
+Three documentation steps are mandatory, not optional extras. Each writes a
+`YYYY-MM-DD-<topic>.md` file under its own `docs/` subdirectory:
+
+| Trigger | Record | Language |
+|---------|--------|----------|
+| Any request that changes files | `docs/work-logs/` — request (quoted), plan, every file touched and why, verification, what was left open | Chinese |
+| Any code review | `docs/code-reviews/` — commit reviewed, scope *and* what was not covered, findings table whose last column says whether each finding is implemented | English |
+| Before opening a pull request | `docs/pull-requests/` — written first, then used as the PR body, following `.github/pull_request_template.md` (关联 / 改了什么 / 怎么验证 / 检查项) | Chinese |
+
+**Read [`agents/skills/project-records/SKILL.md`](agents/skills/project-records/SKILL.md)
+before writing any of the three** — it holds the templates, the cross-linking rules, and
+how to add a fourth record type. The table above is the trigger list; the skill is the
+how.
+
+Never tick a verification box for a command you did not run — say so and leave it
+unchecked. `CONTRIBUTING.md` requires the AI-assistance disclosure to be filled in
+honestly.
+
 ## Gotchas
 
 - The app version is derived from `git describe --tags` at configure time and injected as

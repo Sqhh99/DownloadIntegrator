@@ -22,6 +22,27 @@
 #include <QSet>
 
 namespace {
+// Make a string safe to use as a single path component: strip characters
+// Windows rejects, collapse separators, and refuse leading/trailing dots.
+// Both halves of a download file name go through this - the version label is
+// scraped from the site and is no more trustworthy than the modifier name.
+QString sanitizePathComponent(const QString& text, const QString& fallback)
+{
+    QString sanitized = text;
+    sanitized.replace(QRegularExpression("[\\\\/:*?\"<>|]"), "_");
+    // Control characters are illegal in NTFS names and never intentional here.
+    sanitized.replace(QRegularExpression("[\\x00-\\x1F]"), "_");
+    sanitized = sanitized.trimmed();
+    while (sanitized.startsWith(".")) {
+        sanitized.remove(0, 1);
+    }
+    while (sanitized.endsWith(".")) {
+        sanitized.chop(1);
+    }
+    sanitized = sanitized.trimmed();
+    return sanitized.isEmpty() ? fallback : sanitized;
+}
+
 bool containsJapaneseScript(const QString& text)
 {
     for (const QChar& ch : text) {
@@ -421,17 +442,14 @@ void Backend::downloadModifier(int versionIndex)
     QString versionName = m_selectedModifier.versions.at(idx).first;
     QString downloadDir = ConfigManager::getInstance().getDownloadDirectory();
     
-    // Sanitize filename - remove characters that are illegal in Windows file paths
-    QString sanitizedName = m_selectedModifier.name;
-    // Replace illegal characters: \ / : * ? " < > |
-    sanitizedName.replace(QRegularExpression("[\\\\/:*?\"<>|]"), "_");
-    // Also remove trailing/leading spaces and dots (Windows doesn't like them)
-    sanitizedName = sanitizedName.trimmed();
-    while (sanitizedName.endsWith(".")) {
-        sanitizedName.chop(1);
-    }
+    // Both components are remote-derived, so both are sanitized: an unescaped
+    // separator in either one would place the file outside downloadDir.
+    const QString sanitizedName =
+        sanitizePathComponent(m_selectedModifier.name, QStringLiteral("trainer"));
+    const QString sanitizedVersion =
+        sanitizePathComponent(versionName, QStringLiteral("version"));
     
-    const QString savePath = downloadDir + "/" + sanitizedName + "_" + versionName + ".zip";
+    const QString savePath = downloadDir + "/" + sanitizedName + "_" + sanitizedVersion + ".zip";
     const QString taskId = createDownloadTask(m_selectedModifier, versionName, savePath);
     LOG_DEBUG() << "Backend: queued download task:" << taskId << "for" << m_selectedModifier.name;
     processNextDownloadTask();

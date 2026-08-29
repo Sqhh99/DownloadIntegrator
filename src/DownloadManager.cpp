@@ -34,6 +34,7 @@ void DownloadManager::downloadFile(const QString& url,
     }
     
     m_isDownloading = true;
+    m_currentSavePath = savePath;
     
     // Use NetworkManager to download file
     NetworkManager::getInstance().downloadFile(
@@ -46,6 +47,9 @@ void DownloadManager::downloadFile(const QString& url,
         },
         [this, completedCallback, savePath](bool success, const QString& errorMsg) {
             m_isDownloading = false;
+            if (m_currentSavePath == savePath) {
+                m_currentSavePath.clear();
+            }
             
             if (success) {
                 // Skip extension correction for .crdownload temp files;
@@ -137,8 +141,12 @@ void DownloadManager::downloadModifier(const ModifierInfo& modifier,
 void DownloadManager::cancelDownload()
 {
     if (m_isDownloading) {
-        NetworkManager::getInstance().cancelDownload();
+        // Copy first: abort() can run the finished handler synchronously,
+        // which clears m_currentSavePath while we are still using it.
+        const QString savePath = m_currentSavePath;
         m_isDownloading = false;
+        m_currentSavePath.clear();
+        NetworkManager::getInstance().cancelDownload(savePath);
     }
 }
 

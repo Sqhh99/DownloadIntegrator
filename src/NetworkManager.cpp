@@ -243,7 +243,7 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
     
     // Start download
     QNetworkReply* reply = m_networkManager->get(request);
-    m_currentDownloadReply = reply; // Save current download reply
+    m_activeDownloads.insert(savePath, reply); // Track this transfer by destination
     
     // Set timeout
     QTimer* timer = createTimeoutTimer(reply);
@@ -252,6 +252,7 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
     qint64* bytesWritten = new qint64(0);
     qint64* effectiveResumeFrom = new qint64(resumeFrom);
     bool* responseModeChecked = new bool(false);
+    bool* writeFailed = new bool(false);
     
     auto normalizeResponseMode = [reply, file, resumeFrom, effectiveResumeFrom, responseModeChecked, bytesWritten]() {
         if (*responseModeChecked || resumeFrom <= 0) {
@@ -287,20 +288,35 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
     });
     
     // Connect data ready signal
-    connect(reply, &QNetworkReply::readyRead, this, [reply, file, timer, bytesWritten, normalizeResponseMode]() {
+    connect(reply, &QNetworkReply::readyRead, this, [reply, file, timer, bytesWritten, writeFailed, normalizeResponseMode]() {
         timer->start(); // Reset timer
         normalizeResponseMode();
         QByteArray data = reply->readAll();
-        *bytesWritten += data.size();
-        file->write(data);
+        // Count bytes persisted, not bytes received: a full disk or a write
+        // error must not be reported as a completed download.
+        const qint64 written = file->write(data);
+        if (written != data.size()) {
+            *writeFailed = true;
+            LOG_WARN() << "NetworkManager: Short write to" << file->fileName()
+                       << "- wrote" << written << "of" << data.size()
+                       << "bytes:" << file->errorString();
+        }
+        if (written > 0) {
+            *bytesWritten += written;
+        }
     });
     
     // Connect finished signal
-    connect(reply, &QNetworkReply::finished, this, [this, reply, file, timer, bytesWritten, effectiveResumeFrom, responseModeChecked, normalizeResponseMode, url, savePath, keepPartialOnAbort, safeFinishedCallback]() {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, file, timer, bytesWritten, effectiveResumeFrom, responseModeChecked, writeFailed, normalizeResponseMode, url, savePath, keepPartialOnAbort, safeFinishedCallback]() {
         normalizeResponseMode();
         timer->stop();
         timer->deleteLater();
         
+        // Inspect the write state before close(); QFile clears its error there.
+        if (!file->flush() || file->error() != QFileDevice::NoError) {
+            *writeFailed = true;
+        }
+        const QString writeErrorString = file->errorString();
         file->close();
         
         // Get HTTP status code
@@ -323,6 +339,30 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
             
             LOG_DEBUG() << "NetworkManager: Final file size:" << fileSize << "bytes";
             
+            if (*writeFailed) {
+                // The transfer completed but the bytes did not reach the disk
+                // (full volume, permission loss, I/O error). Reporting success
+                // here would rename a truncated archive into the library.
+                LOG_WARN() << "NetworkManager: Download data could not be written to"
+                           << savePath << ":" << writeErrorString;
+                if (!keepPartialOnAbort) {
+                    file->remove();
+                }
+                delete bytesWritten;
+                delete effectiveResumeFrom;
+                delete responseModeChecked;
+                delete writeFailed;
+                if (safeFinishedCallback) {
+                    safeFinishedCallback(false,
+                                         "Failed to write downloaded data to disk: " + writeErrorString,
+                                         httpStatus);
+                }
+                file->deleteLater();
+                reply->deleteLater();
+                unregisterDownload(savePath, reply);
+                return;
+            }
+            
             if (fileSize == 0 || *bytesWritten == 0) {
                 LOG_DEBUG() << "NetworkManager: WARNING - Downloaded file is empty!";
                 LOG_DEBUG() << "NetworkManager: Response headers:";
@@ -340,14 +380,13 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
                     delete bytesWritten;
                     delete effectiveResumeFrom;
                     delete responseModeChecked;
+                    delete writeFailed;
                     if (safeFinishedCallback) {
                         safeFinishedCallback(false, "Server returned HTML page instead of file - download link may be invalid", httpStatus);
                     }
                     reply->deleteLater();
                     file->deleteLater();
-                    if (m_currentDownloadReply == reply) {
-                        m_currentDownloadReply = nullptr;
-                    }
+                    unregisterDownload(savePath, reply);
                     return;
                 }
                 
@@ -355,6 +394,7 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
                 delete bytesWritten;
                 delete effectiveResumeFrom;
                 delete responseModeChecked;
+                delete writeFailed;
                 if (safeFinishedCallback) {
                     safeFinishedCallback(false, "Downloaded file is empty - server may have returned no content", httpStatus);
                 }
@@ -362,6 +402,7 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
                 delete bytesWritten;
                 delete effectiveResumeFrom;
                 delete responseModeChecked;
+                delete writeFailed;
                 if (safeFinishedCallback) {
                     safeFinishedCallback(true, QString(), httpStatus);
                 }
@@ -374,14 +415,13 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
                     delete bytesWritten;
                     delete effectiveResumeFrom;
                     delete responseModeChecked;
+                    delete writeFailed;
                     if (safeFinishedCallback) {
                         safeFinishedCallback(true, QString(), httpStatus);
                     }
                     file->deleteLater();
                     reply->deleteLater();
-                    if (m_currentDownloadReply == reply) {
-                        m_currentDownloadReply = nullptr;
-                    }
+                    unregisterDownload(savePath, reply);
                     return;
                 }
             }
@@ -393,6 +433,7 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
             delete bytesWritten;
             delete effectiveResumeFrom;
             delete responseModeChecked;
+            delete writeFailed;
             if (safeFinishedCallback) {
                 safeFinishedCallback(false, reply->errorString(), httpStatus);
             }
@@ -402,10 +443,7 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
         file->deleteLater();
         reply->deleteLater();
         
-        // Clear current download reply
-        if (m_currentDownloadReply == reply) {
-            m_currentDownloadReply = nullptr;
-        }
+        unregisterDownload(savePath, reply);
     });
     
     // Connect error signal
@@ -460,10 +498,19 @@ void NetworkManager::onTimeoutTriggered()
     LOG_DEBUG() << "Network request timeout";
 }
 
-void NetworkManager::cancelDownload()
+void NetworkManager::unregisterDownload(const QString& savePath, QNetworkReply* reply)
 {
-    if (m_currentDownloadReply && m_currentDownloadReply->isRunning()) {
-        LOG_DEBUG() << "Cancelling download";
-        m_currentDownloadReply->abort();
+    const auto it = m_activeDownloads.constFind(savePath);
+    if (it != m_activeDownloads.cend() && it.value() == reply) {
+        m_activeDownloads.erase(it);
+    }
+}
+
+void NetworkManager::cancelDownload(const QString& savePath)
+{
+    QNetworkReply* reply = m_activeDownloads.value(savePath);
+    if (reply && reply->isRunning()) {
+        LOG_DEBUG() << "Cancelling download:" << savePath;
+        reply->abort();
     }
 }

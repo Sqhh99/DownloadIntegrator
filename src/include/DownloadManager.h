@@ -59,7 +59,10 @@ public:
                          bool keepPartialOnAbort = false);
     
     /**
-     * @brief Cancel current download
+     * @brief Cancel the download this manager currently owns
+     *
+     * Cancels only its own transfer; app-update and database downloads run
+     * through NetworkManager independently and are left alone.
      */
     void cancelDownload();
     
@@ -115,4 +118,6 @@ private:
     
 private:
     bool m_isDownloading;
+    // Destination of the in-flight transfer, used to cancel exactly that one.
+    QString m_currentSavePath;
 }; 
