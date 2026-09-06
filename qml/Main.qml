@@ -99,7 +99,7 @@ ApplicationWindow {
                     text: parent.text
                     font.pixelSize: ThemeProvider.fontSizeMedium
                     font.bold: parent.checked
-                    color: parent.checked ? ThemeProvider.primaryColor : ThemeProvider.textSecondary
+                    color: parent.checked ? ThemeProvider.primaryTextColor : ThemeProvider.textSecondary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -125,7 +125,7 @@ ApplicationWindow {
                     text: parent.text
                     font.pixelSize: ThemeProvider.fontSizeMedium
                     font.bold: parent.checked
-                    color: parent.checked ? ThemeProvider.primaryColor : ThemeProvider.textSecondary
+                    color: parent.checked ? ThemeProvider.primaryTextColor : ThemeProvider.textSecondary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }

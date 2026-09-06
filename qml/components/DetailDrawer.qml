@@ -236,7 +236,7 @@ Drawer {
                         anchors.verticalCenterOffset: detailDrawer.coverLoading ? 18 : 0
                         text: detailDrawer.coverLoading ? qsTr("封面加载中") : qsTr("暂无封面")
                         font.pixelSize: ThemeProvider.fontSizeSmall
-                        color: ThemeProvider.textDisabled
+                        color: ThemeProvider.textMuted
                     }
                 }
             }

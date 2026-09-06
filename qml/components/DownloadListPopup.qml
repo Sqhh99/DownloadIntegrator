@@ -285,7 +285,7 @@ Popup {
                 anchors.centerIn: parent
                 text: qsTr("暂无下载任务")
                 font.pixelSize: ThemeProvider.fontSizeMedium
-                color: ThemeProvider.textDisabled
+                color: ThemeProvider.textMuted
             }
         }
     }
