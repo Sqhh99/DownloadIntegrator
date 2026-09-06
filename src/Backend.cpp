@@ -1176,8 +1176,28 @@ void Backend::startDownloadTask(const QString& taskId)
                 downloadedInfo.filePath = finalPath;
                 downloadedInfo.url = modifier.url;
                 
-                m_downloadedList.append(downloadedInfo);
-                m_downloadedModifierModel->setModifiers(m_downloadedList);
+                // Upsert by name+version. Appending blindly produced two rows
+                // for one file after re-downloading a version, and deleting
+                // either one removed the file the other still pointed at.
+                int existing = -1;
+                for (int i = 0; i < m_downloadedList.size(); ++i) {
+                    if (m_downloadedList.at(i).name == downloadedInfo.name
+                        && m_downloadedList.at(i).version == downloadedInfo.version) {
+                        existing = i;
+                        break;
+                    }
+                }
+                
+                // Insert or update one row rather than resetting the model:
+                // a reset rebuilds every delegate and drops the user's
+                // selection while the library is open.
+                if (existing >= 0) {
+                    m_downloadedList[existing] = downloadedInfo;
+                    m_downloadedModifierModel->updateModifier(existing, downloadedInfo);
+                } else {
+                    m_downloadedList.append(downloadedInfo);
+                    m_downloadedModifierModel->addModifier(downloadedInfo);
+                }
                 saveDownloadedModifiers();
                 
             } else {
