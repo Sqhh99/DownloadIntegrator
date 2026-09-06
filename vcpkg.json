@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "fling-downloader",
-  "version": "1.1.9",
+  "version": "1.1.10",
   "description": "FLiNG Downloader - Game Modifier Download Integration Tool",
   "homepage": "https://github.com/Sqhh99/FLiNG-Downloader",
   "license": "AGPL-3.0-only",
