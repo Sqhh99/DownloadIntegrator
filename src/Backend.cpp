@@ -369,7 +369,15 @@ void Backend::selectModifier(int index)
     m_selectedModifier = m_modifierListModel->getModifier(index);
     m_selectedVersionIndex = 0;
 
+    // Drop the list row's stale detail payload before the request goes out:
+    // until it returns, any versions or options on screen would belong to
+    // whatever was selected before.
+    m_selectedModifier.versions.clear();
+    m_selectedModifier.options.clear();
+    m_selectedOptions.clear();
+
     emit selectedModifierChanged();
+    emit selectedModifierOptionsChanged();
 
     // Resolve the cover immediately from the name (known now, before the detail
     // request returns): show a cached cover instantly, otherwise clear the old
@@ -388,41 +396,90 @@ void Backend::selectModifier(int index)
     emit coverExtracted();
     emit coverLoadingChanged();
     
-    if (!m_selectedModifier.url.isEmpty()) {
-        
-        ModifierManager::getInstance().getModifierDetail(
-            m_selectedModifier.url,
-            [this](ModifierInfo* modifier) {
-                if (modifier) {
-                    m_selectedModifier.versions = modifier->versions;
-                    m_selectedModifier.options = modifier->options;
-                    m_selectedModifier.optionsCount = modifier->optionsCount;
-                    m_selectedModifier.screenshotUrl = modifier->screenshotUrl;
-                    m_selectedModifier.description = modifier->description;
-                    
-                    m_selectedOptions = m_selectedModifier.options.join("\n");
-                    
-                    emit selectedModifierChanged();
-                    emit selectedModifierOptionsChanged();
-                    
-                    extractCover();
+    requestSelectedModifierDetail();
+}
 
-                    delete modifier;
-                } else {
-                    // Detail fetch failed: stop the cover spinner so it doesn't
-                    // hang forever on the placeholder.
-                    if (m_coverLoading) {
-                        m_coverLoading = false;
-                        emit coverLoadingChanged();
-                    }
-                }
-            }
-        );
-    } else if (m_coverLoading) {
-        // No detail URL to fetch a screenshot from: clear the loading state.
+void Backend::retrySelectedModifierDetail()
+{
+    if (m_selectedModifier.url.isEmpty()) {
+        return;
+    }
+    requestSelectedModifierDetail();
+}
+
+void Backend::setDetailState(const QString& state)
+{
+    if (m_detailState == state) {
+        return;
+    }
+    m_detailState = state;
+    emit detailStateChanged();
+}
+
+void Backend::stopCoverLoading()
+{
+    if (m_coverLoading) {
         m_coverLoading = false;
         emit coverLoadingChanged();
     }
+}
+
+void Backend::requestSelectedModifierDetail()
+{
+    if (m_selectedModifier.url.isEmpty()) {
+        // Nothing to fetch, so the drawer must not sit on a spinner.
+        setDetailState(QStringLiteral("empty"));
+        stopCoverLoading();
+        return;
+    }
+
+    // Tag the request so a reply that arrives after the user has moved on can
+    // be recognised and dropped: it carries another game's versions, options
+    // and screenshot, and writing those into the current selection would let a
+    // download combine this game's name with that game's URL.
+    const quint64 requestId = ++m_nextDetailRequestId;
+    m_activeDetailRequestId = requestId;
+    const QString requestedUrl = m_selectedModifier.url;
+    setDetailState(QStringLiteral("loading"));
+
+    ModifierManager::getInstance().getModifierDetail(
+        requestedUrl,
+        [this, requestId, requestedUrl](ModifierInfo* modifier, bool success) {
+            if (requestId != m_activeDetailRequestId
+                || requestedUrl != m_selectedModifier.url) {
+                delete modifier;
+                return;
+            }
+
+            if (!success || !modifier) {
+                delete modifier;
+                setDetailState(QStringLiteral("error"));
+                stopCoverLoading();
+                return;
+            }
+
+            m_selectedModifier.versions = modifier->versions;
+            m_selectedModifier.options = modifier->options;
+            m_selectedModifier.optionsCount = modifier->optionsCount;
+            m_selectedModifier.screenshotUrl = modifier->screenshotUrl;
+            m_selectedModifier.description = modifier->description;
+            delete modifier;
+
+            m_selectedOptions = m_selectedModifier.options.join("\n");
+
+            emit selectedModifierChanged();
+            emit selectedModifierOptionsChanged();
+
+            // A page can parse correctly and still offer no downloads; that is
+            // a finished request, not a failed one, and its metadata is still
+            // worth showing.
+            setDetailState(m_selectedModifier.versions.isEmpty()
+                               ? QStringLiteral("empty")
+                               : QStringLiteral("ready"));
+
+            extractCover();
+        }
+    );
 }
 
 void Backend::selectVersion(int versionIndex)

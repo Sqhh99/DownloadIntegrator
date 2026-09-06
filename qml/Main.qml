@@ -224,6 +224,11 @@ ApplicationWindow {
         versions: backend ? backend.selectedModifierVersions : []
         coverUrl: backend ? backend.selectedModifierCoverPath : ""
         coverLoading: backend ? backend.coverLoading : false
+        detailState: backend ? backend.detailState : "idle"
+
+        onRetryRequested: {
+            if (backend) backend.retrySelectedModifierDetail()
+        }
 
         onVersionChanged: function(index) {
             if (backend) backend.selectVersion(index)

@@ -68,14 +68,10 @@ void ModifierManager::getModifierDetail(const QString& url, ModifierDetailCallba
                     modifier->versions[i].first = formattedVersion;
                 }
                 
-                callback(modifier);
+                callback(modifier, true);
             } else {
                 LOG_WARN() << "ModifierManager: Failed to get modifier details";
-                
-                ModifierInfo* modifier = new ModifierInfo();
-                modifier->name = modifierName;
-                modifier->url = url;
-                callback(modifier);
+                callback(nullptr, false);
             }
         }
     );

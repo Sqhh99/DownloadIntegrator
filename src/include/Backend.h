@@ -105,6 +105,11 @@ public:
     Q_PROPERTY(bool coverLoading READ coverLoading NOTIFY coverLoadingChanged)
     bool coverLoading() const { return m_coverLoading; }
 
+    // Detail-request state for the drawer: "idle", "loading", "ready",
+    // "empty" (fetched, but the page offers no downloads) or "error".
+    Q_PROPERTY(QString detailState READ detailState NOTIFY detailStateChanged)
+    QString detailState() const { return m_detailState; }
+
     bool searchLoading() const { return m_searchLoading; }
     QVariantList downloadTasks() const;
     bool autoCheckAppUpdates() const;
@@ -142,6 +147,7 @@ public slots:
     // Modifier selection
     Q_INVOKABLE void selectModifier(int index);
     Q_INVOKABLE void selectVersion(int versionIndex);
+    Q_INVOKABLE void retrySelectedModifierDetail();
 
     // Download functionality
     Q_INVOKABLE void downloadModifier(int versionIndex);
@@ -175,6 +181,7 @@ signals:
     void selectedModifierOptionsChanged();
     void coverExtracted();
     void coverLoadingChanged();
+    void detailStateChanged();
     void updateSourceChanged();
     void downloadPathChanged();
     void searchLoadingChanged();
@@ -204,6 +211,9 @@ private:
     void updateDownloadTaskDeferred(const QString& taskId, const std::function<void(QVariantMap&)>& updater);
     quint64 beginSearchRequest();
     void finishSearchRequest(quint64 requestId, const QList<ModifierInfo>& modifiers);
+    void requestSelectedModifierDetail();
+    void setDetailState(const QString& state);
+    void stopCoverLoading();
     void loadDownloadedModifiers();
     void saveDownloadedModifiers();
     void refreshCurrentDatabaseVersion();
@@ -226,6 +236,10 @@ private:
     bool m_searchLoading = false;
     quint64 m_nextSearchRequestId = 0;
     quint64 m_activeSearchRequestId = 0;
+    // Detail replies are matched back to the selection that asked for them.
+    quint64 m_nextDetailRequestId = 0;
+    quint64 m_activeDetailRequestId = 0;
+    QString m_detailState = QStringLiteral("idle");
     quint64 m_nextDownloadTaskId = 0;
     QString m_activeDownloadTaskId;
     QList<QVariantMap> m_downloadTasks;
