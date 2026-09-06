@@ -211,6 +211,7 @@ private:
     void updateDownloadTaskDeferred(const QString& taskId, const std::function<void(QVariantMap&)>& updater);
     quint64 beginSearchRequest();
     void finishSearchRequest(quint64 requestId, const QList<ModifierInfo>& modifiers);
+    void applySortOrder(QList<ModifierInfo>& modifiers) const;
     void requestSelectedModifierDetail();
     void setDetailState(const QString& state);
     void stopCoverLoading();
@@ -234,6 +235,8 @@ private:
     // Download status
     bool m_isDownloading = false;
     bool m_searchLoading = false;
+    // Survives new result sets, so the combo box and the rows agree.
+    int m_sortOrder = 0;
     quint64 m_nextSearchRequestId = 0;
     quint64 m_activeSearchRequestId = 0;
     // Detail replies are matched back to the selection that asked for them.

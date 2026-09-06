@@ -334,11 +334,9 @@ void Backend::fetchRecentModifiers()
         });
 }
 
-void Backend::setSortOrder(int sortIndex)
+void Backend::applySortOrder(QList<ModifierInfo>& modifiers) const
 {
-    QList<ModifierInfo> modifiers = m_modifierListModel->getAllModifiers();
-    
-    switch (sortIndex) {
+    switch (m_sortOrder) {
         case 0: // Recently updated
             std::sort(modifiers.begin(), modifiers.end(), [](const ModifierInfo& a, const ModifierInfo& b) {
                 return a.lastUpdate > b.lastUpdate;
@@ -354,8 +352,20 @@ void Backend::setSortOrder(int sortIndex)
                 return a.optionsCount > b.optionsCount;
             });
             break;
+        default:
+            break;
     }
+}
+
+void Backend::setSortOrder(int sortIndex)
+{
+    // Remember the choice: sorting only the current snapshot meant the next
+    // search installed unsorted rows while the selector still showed the
+    // order the user had picked.
+    m_sortOrder = sortIndex;
     
+    QList<ModifierInfo> modifiers = m_modifierListModel->getAllModifiers();
+    applySortOrder(modifiers);
     m_modifierListModel->setModifiers(modifiers);
 }
 
@@ -1296,7 +1306,9 @@ void Backend::finishSearchRequest(quint64 requestId, const QList<ModifierInfo>& 
         return;
     }
 
-    m_modifierListModel->setModifiers(modifiers);
+    QList<ModifierInfo> sorted = modifiers;
+    applySortOrder(sorted);
+    m_modifierListModel->setModifiers(sorted);
 
     if (m_searchLoading) {
         m_searchLoading = false;
