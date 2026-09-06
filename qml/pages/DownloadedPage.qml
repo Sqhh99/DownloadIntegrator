@@ -175,30 +175,62 @@ Item {
                     spacing: 8
                     
                     // 打开文件夹按钮
-                    IconButton {
+                    Rectangle {
                         id: folderBtn
+                        width: 28
+                        height: 28
                         anchors.verticalCenter: parent.verticalCenter
-                        iconSource: ThemeProvider.assetUrl("icons/folder.png")
-                        iconSize: 18
-                        tooltip: qsTr("打开文件夹")
-                        onClicked: {
-                            Log.debug("DownloadedPage: 打开文件夹点击, index: " + delegateRoot.rowIndex)
-                            downloadedPage.openFolderRequested(delegateRoot.rowIndex)
+                        radius: 4
+                        color: folderMouseArea.containsMouse ? ThemeProvider.hoverColor : "transparent"
+                        
+                        Image {
+                            anchors.centerIn: parent
+                            source: ThemeProvider.assetUrl("icons/folder.png")
+                            width: 18
+                            height: 18
+                            sourceSize: Qt.size(18, 18)
+                        }
+                        
+                        MouseArea {
+                            id: folderMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            
+                            onClicked: {
+                                Log.debug("DownloadedPage: 打开文件夹点击, index: " + delegateRoot.rowIndex)
+                                downloadedPage.openFolderRequested(delegateRoot.rowIndex)
+                            }
                         }
                     }
                     
                     // 删除按钮
-                    IconButton {
+                    Rectangle {
                         id: deleteBtn
+                        width: 28
+                        height: 28
                         anchors.verticalCenter: parent.verticalCenter
-                        iconSource: ThemeProvider.assetUrl("icons/delete.png")
-                        iconSize: 18
-                        tooltip: qsTr("删除")
-                        hoverColor: Qt.rgba(ThemeProvider.dangerColor.r, ThemeProvider.dangerColor.g,
-                                            ThemeProvider.dangerColor.b, 0.3)
-                        onClicked: {
-                            Log.debug("DownloadedPage: 删除点击, index: " + delegateRoot.rowIndex)
-                            downloadedPage.deleteModifier(delegateRoot.rowIndex)
+                        radius: 4
+                        color: deleteMouseArea.containsMouse ? Qt.rgba(ThemeProvider.dangerColor.r, ThemeProvider.dangerColor.g, ThemeProvider.dangerColor.b, 0.3) : "transparent"
+                        
+                        Image {
+                            anchors.centerIn: parent
+                            source: ThemeProvider.assetUrl("icons/delete.png")
+                            width: 18
+                            height: 18
+                            sourceSize: Qt.size(18, 18)
+                        }
+                        
+                        MouseArea {
+                            id: deleteMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            
+                            onClicked: {
+                                Log.debug("DownloadedPage: 删除点击, index: " + delegateRoot.rowIndex)
+                                downloadedPage.deleteModifier(delegateRoot.rowIndex)
+                            }
                         }
                     }
                 }

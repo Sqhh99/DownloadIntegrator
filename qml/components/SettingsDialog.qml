@@ -127,36 +127,140 @@ Dialog {
                 anchors.margins: ThemeProvider.spacingSmall
                 spacing: 4
                 
-                SettingsNavItem {
+                // 外观设置
+                Rectangle {
                     Layout.fillWidth: true
-                    iconSource: ThemeProvider.assetUrl("icons/settings.png")
-                    text: qsTr("外观")
-                    selected: settingsStack.currentIndex === 0
-                    onClicked: settingsStack.currentIndex = 0
+                    Layout.preferredHeight: 40
+                    radius: ThemeProvider.radiusSmall
+                    color: settingsStack.currentIndex === 0 ? ThemeProvider.selectedColor : "transparent"
+                    
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        spacing: 8
+                        
+                        Image {
+                            source: ThemeProvider.assetUrl("icons/settings.png")
+                            width: 18
+                            height: 18
+                            sourceSize: Qt.size(18, 18)
+                        }
+                        
+                        Text {
+                            text: qsTr("外观")
+                            font.pixelSize: ThemeProvider.fontSizeMedium
+                            color: ThemeProvider.textPrimary
+                            Layout.fillWidth: true
+                        }
+                    }
+                    
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: settingsStack.currentIndex = 0
+                    }
                 }
                 
-                SettingsNavItem {
+                // 下载设置
+                Rectangle {
                     Layout.fillWidth: true
-                    iconSource: ThemeProvider.assetUrl("icons/download.png")
-                    text: qsTr("下载")
-                    selected: settingsStack.currentIndex === 1
-                    onClicked: settingsStack.currentIndex = 1
+                    Layout.preferredHeight: 40
+                    radius: ThemeProvider.radiusSmall
+                    color: settingsStack.currentIndex === 1 ? ThemeProvider.selectedColor : "transparent"
+                    
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        spacing: 8
+                        
+                        Image {
+                            source: ThemeProvider.assetUrl("icons/download.png")
+                            width: 18
+                            height: 18
+                            sourceSize: Qt.size(18, 18)
+                        }
+                        
+                        Text {
+                            text: qsTr("下载")
+                            font.pixelSize: ThemeProvider.fontSizeMedium
+                            color: ThemeProvider.textPrimary
+                            Layout.fillWidth: true
+                        }
+                    }
+                    
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: settingsStack.currentIndex = 1
+                    }
                 }
                 
-                SettingsNavItem {
+                // 语言设置
+                Rectangle {
                     Layout.fillWidth: true
-                    iconSource: ThemeProvider.assetUrl("icons/language.png")
-                    text: qsTr("语言")
-                    selected: settingsStack.currentIndex === 2
-                    onClicked: settingsStack.currentIndex = 2
+                    Layout.preferredHeight: 40
+                    radius: ThemeProvider.radiusSmall
+                    color: settingsStack.currentIndex === 2 ? ThemeProvider.selectedColor : "transparent"
+                    
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        spacing: 8
+                        
+                        Image {
+                            source: ThemeProvider.assetUrl("icons/language.png")
+                            width: 18
+                            height: 18
+                            sourceSize: Qt.size(18, 18)
+                        }
+                        
+                        Text {
+                            text: qsTr("语言")
+                            font.pixelSize: ThemeProvider.fontSizeMedium
+                            color: ThemeProvider.textPrimary
+                            Layout.fillWidth: true
+                        }
+                    }
+                    
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: settingsStack.currentIndex = 2
+                    }
                 }
                 
-                SettingsNavItem {
+                // 关于
+                Rectangle {
                     Layout.fillWidth: true
-                    iconSource: ThemeProvider.assetUrl("icons/about.png")
-                    text: qsTr("关于")
-                    selected: settingsStack.currentIndex === 3
-                    onClicked: settingsStack.currentIndex = 3
+                    Layout.preferredHeight: 40
+                    radius: ThemeProvider.radiusSmall
+                    color: settingsStack.currentIndex === 3 ? ThemeProvider.selectedColor : "transparent"
+                    
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        spacing: 8
+                        
+                        Image {
+                            source: ThemeProvider.assetUrl("icons/about.png")
+                            width: 18
+                            height: 18
+                            sourceSize: Qt.size(18, 18)
+                        }
+                        
+                        Text {
+                            text: qsTr("关于")
+                            font.pixelSize: ThemeProvider.fontSizeMedium
+                            color: ThemeProvider.textPrimary
+                            Layout.fillWidth: true
+                        }
+                    }
+                    
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: settingsStack.currentIndex = 3
+                    }
                 }
                 
                 Item { Layout.fillHeight: true }

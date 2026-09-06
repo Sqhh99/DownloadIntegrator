@@ -80,10 +80,8 @@ ComboBox {
         implicitHeight: 36
         radius: ThemeProvider.radiusMedium
         color: ThemeProvider.surfaceColor
-        border.width: control.visualFocus ? 2 : 1
-        border.color: (control.pressed || control.visualFocus)
-                      ? ThemeProvider.primaryColor
-                      : ThemeProvider.borderColor
+        border.width: 1
+        border.color: control.pressed ? ThemeProvider.primaryColor : ThemeProvider.borderColor
         
         Behavior on border.color {
             ColorAnimation { duration: 100 }

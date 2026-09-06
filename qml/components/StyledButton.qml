@@ -85,13 +85,8 @@ Button {
             if (control.hovered) return control.hoverFill
             return control.idleFill
         }
-        // visualFocus 优先：自绘背景不画焦点态的话，键盘用户看不出
-        // 焦点走到了哪里。
-        border.width: control.visualFocus ? 2
-                      : (control.isTonal && control.enabled ? 1 : 0)
-        border.color: control.visualFocus
-                      ? ThemeProvider.primaryColor
-                      : control.fillWithAlpha(control.accentColor, ThemeProvider.isDark ? 0.50 : 0.38)
+        border.width: control.isTonal && control.enabled ? 1 : 0
+        border.color: control.fillWithAlpha(control.accentColor, ThemeProvider.isDark ? 0.50 : 0.38)
 
         Behavior on color {
             ColorAnimation { duration: 100 }

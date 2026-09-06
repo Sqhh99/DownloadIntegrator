@@ -340,16 +340,35 @@ Drawer {
                 }
                 
                 // 下载按钮 - 仅图标
-                IconButton {
+                Rectangle {
                     Layout.preferredWidth: 36
                     Layout.preferredHeight: 36
-                    iconSource: ThemeProvider.assetUrl("icons/download.png")
-                    iconSize: 20
-                    tooltip: qsTr("下载")
-                    enabled: versions.length > 0
-                    onClicked: {
-                        Log.debug("详情面板下载按钮点击, 版本索引: " + versionComboBox.currentIndex)
-                        detailDrawer.startDownload(versionComboBox.currentIndex)
+                    radius: ThemeProvider.radiusSmall
+                    color: downloadBtnMouseArea.containsMouse && versions.length > 0 
+                           ? ThemeProvider.hoverColor 
+                           : "transparent"
+                    opacity: versions.length > 0 ? 1.0 : 0.5
+                    
+                    Image {
+                        anchors.centerIn: parent
+                        source: ThemeProvider.assetUrl("icons/download.png")
+                        width: 20
+                        height: 20
+                        sourceSize: Qt.size(20, 20)
+                    }
+                    
+                    MouseArea {
+                        id: downloadBtnMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: versions.length > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        
+                        onClicked: {
+                            if (versions.length > 0) {
+                                Log.debug("详情面板下载按钮点击, 版本索引: " + versionComboBox.currentIndex)
+                                detailDrawer.startDownload(versionComboBox.currentIndex)
+                            }
+                        }
                     }
                 }
             }

@@ -18,10 +18,8 @@ Switch {
         implicitWidth: 46
         implicitHeight: 26
         radius: height / 2
-        border.width: control.visualFocus ? 2 : 1
-        border.color: (control.checked || control.visualFocus)
-                      ? ThemeProvider.primaryColor
-                      : ThemeProvider.borderColor
+        border.width: 1
+        border.color: control.checked ? ThemeProvider.primaryColor : ThemeProvider.borderColor
         color: {
             if (!control.enabled) return ThemeProvider.disabledColor
             if (control.checked) return Qt.tint(ThemeProvider.primaryColor, Qt.rgba(1, 1, 1, 0.2))

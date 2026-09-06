@@ -278,7 +278,6 @@ qt_add_qml_module(${PROJECT_NAME}
     NO_RESOURCE_TARGET_PATH
     QML_FILES
         qml/Main.qml
-        qml/components/SettingsNavItem.qml
         qml/components/StyledButton.qml
         qml/components/StyledTextField.qml
         qml/components/StyledComboBox.qml
