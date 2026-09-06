@@ -93,6 +93,10 @@ public:
     // Get global user agent
     QString getGlobalUserAgent() const;
 
+    // Same-origin Referer for url ("https://host/"), or empty when url carries
+    // no scheme or host. Some hosts serve downloads to same-origin referrers only.
+    static QString defaultRefererForUrl(const QString& url);
+
     // Test hooks
     void setGetRequestHandlerForTesting(TestGetRequestHandler handler);
     void setDownloadRequestHandlerForTesting(TestDownloadRequestHandler handler);
