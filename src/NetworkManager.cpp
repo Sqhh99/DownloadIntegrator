@@ -236,6 +236,15 @@ void NetworkManager::downloadFileWithStatus(const QString& url,
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, 
                         QNetworkRequest::NoLessSafeRedirectPolicy);
     
+    // flingtrainer.com hands trainer payloads out only to same-origin referrers:
+    // the final /wp-content/uploads/trainer-files/... hop answers 403 without this.
+    // Qt copies request headers onto redirect requests, so setting it once here
+    // covers every hop of the chain.
+    const QString referer = defaultRefererForUrl(url);
+    if (!referer.isEmpty()) {
+        request.setRawHeader("Referer", referer.toUtf8());
+    }
+    
     // Resume partial download with HTTP Range when possible.
     if (resumeFrom > 0) {
         request.setRawHeader("Range", QString("bytes=%1-").arg(resumeFrom).toUtf8());
@@ -474,6 +483,23 @@ void NetworkManager::setGlobalUserAgent(const QString& userAgent)
 QString NetworkManager::getGlobalUserAgent() const
 {
     return m_globalUserAgent;
+}
+
+QString NetworkManager::defaultRefererForUrl(const QString& url)
+{
+    const QUrl parsed(url);
+    if (parsed.scheme().isEmpty() || parsed.host().isEmpty()) {
+        return QString();
+    }
+
+    // Scheme, host and any non-default port only - never the path, which can
+    // carry a download token we have no reason to leak to a redirect target.
+    QUrl origin;
+    origin.setScheme(parsed.scheme());
+    origin.setHost(parsed.host());
+    origin.setPort(parsed.port());
+    origin.setPath(QStringLiteral("/"));
+    return origin.toString();
 }
 
 QTimer* NetworkManager::createTimeoutTimer(QNetworkReply* reply)

@@ -172,3 +172,24 @@ TEST_F(DownloadManagerTest, CancelDownloadWithoutActiveTransferIsSafe)
     DownloadManager::getInstance().cancelDownload();
     EXPECT_FALSE(DownloadManager::getInstance().isDownloading());
 }
+
+TEST_F(DownloadManagerTest, DefaultRefererKeepsOnlyTheOrigin)
+{
+    // Regression: flingtrainer.com started serving trainer payloads only to
+    // same-origin referrers, so downloads without this header answered 403.
+    EXPECT_EQ(
+        NetworkManager::defaultRefererForUrl(
+            QStringLiteral("https://flingtrainer.com/downloads/Ekm-bdRFI0A_lCbUwTEb0g,,")),
+        QStringLiteral("https://flingtrainer.com/"));
+
+    // A non-default port belongs to the origin and has to survive.
+    EXPECT_EQ(
+        NetworkManager::defaultRefererForUrl(QStringLiteral("http://localhost:8080/a/b.zip")),
+        QStringLiteral("http://localhost:8080/"));
+}
+
+TEST_F(DownloadManagerTest, DefaultRefererIsEmptyWithoutSchemeAndHost)
+{
+    EXPECT_TRUE(NetworkManager::defaultRefererForUrl(QStringLiteral("/relative/path.zip")).isEmpty());
+    EXPECT_TRUE(NetworkManager::defaultRefererForUrl(QString()).isEmpty());
+}
