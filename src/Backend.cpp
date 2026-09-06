@@ -710,16 +710,22 @@ void Backend::runModifier(int index)
     }
 }
 
-void Backend::deleteModifier(int index)
+bool Backend::deleteModifier(int index)
 {
     if (index < 0 || index >= m_downloadedModifierModel->count()) {
-        return;
+        return false;
     }
     
     DownloadedModifierInfo modifier = m_downloadedModifierModel->getModifier(index);
     
-    if (QFile::exists(modifier.filePath)) {
-        QFile::remove(modifier.filePath);
+    // A file that is open elsewhere, or in a directory that denies deletion,
+    // fails here. Keep the record so the library still points at the file that
+    // is genuinely still on disk. A record whose file is already gone can be
+    // removed either way.
+    if (QFile::exists(modifier.filePath) && !QFile::remove(modifier.filePath)) {
+        LOG_WARN() << "Backend: could not delete" << modifier.filePath;
+        emit deleteFailed(modifier.name, modifier.filePath);
+        return false;
     }
     
     m_downloadedModifierModel->removeModifier(index);
@@ -728,6 +734,7 @@ void Backend::deleteModifier(int index)
         m_downloadedList.removeAt(index);
     }
     saveDownloadedModifiers();
+    return true;
 }
 
 void Backend::checkAppUpdate()

@@ -203,6 +203,14 @@ ApplicationWindow {
                 onDeleteModifier: function(index) {
                     if (backend) backend.deleteModifier(index)
                 }
+
+                Connections {
+                    target: backend
+                    function onDeleteFailed(name, filePath) {
+                        downloadedPage.showError(
+                            qsTr("无法删除「%1」，文件可能正在使用中：%2").arg(name).arg(filePath))
+                    }
+                }
                 
                 onModifierDoubleClicked: function(index) {
                     if (backend) backend.runModifier(index)

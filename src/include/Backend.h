@@ -159,7 +159,10 @@ public slots:
 
     // Downloaded management
     Q_INVOKABLE void runModifier(int index);
-    Q_INVOKABLE void deleteModifier(int index);
+    // Returns false when the file is still there, in which case the record is
+    // kept: reporting a deletion that did not happen loses the entry and
+    // leaves the file behind.
+    Q_INVOKABLE bool deleteModifier(int index);
     Q_INVOKABLE void checkAppUpdate();
     Q_INVOKABLE void downloadAppUpdate();
     Q_INVOKABLE void checkDatabaseUpdate();
@@ -191,6 +194,7 @@ signals:
     void appUpdateStateChanged();
     void autoCheckDatabaseUpdatesChanged();
     void databaseUpdateStateChanged();
+    void deleteFailed(const QString& name, const QString& filePath);
 
 private:
     struct DownloadTaskMeta {
