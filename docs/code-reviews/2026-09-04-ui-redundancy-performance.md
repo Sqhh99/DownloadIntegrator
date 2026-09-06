@@ -8,8 +8,11 @@
 
 ## Status summary
 
-**Eleven of the twelve findings were implemented on 2026-09-06** on branch
+**Ten of the twelve findings were implemented on 2026-09-06** on branch
 `fix/review-findings-2026-09-04`; see the [implementation work log](../work-logs/2026-09-06-review-findings-2026-09-04.md).
+Finding 5 was implemented and then **reverted**: rebasing `IconButton` on
+`AbstractButton` stretched every icon to its button's content area, so the title-bar
+and drawer icons rendered oversized. It is open again - see the fix note below.
 Finding 3 stays open by decision, not by oversight: publishing search results
 progressively reshapes SearchManager's callback contract and was scoped out so it
 can carry its own test pass. The "additional optimization candidates" below also
@@ -27,7 +30,7 @@ P1 means a high-priority correctness defect; P2 means a normal-priority user-vis
 | 2 | A failed or empty detail response leaves the drawer loading indefinitely | P2 | ✅ Yes - 2026-09-06 |
 | 3 | Search hides usable results until every metadata request finishes | P2 | ❌ No - deferred, see status summary |
 | 4 | Two download libraries persist different paths and apply different update rules | P2 | ✅ Yes - 2026-09-06 |
-| 5 | Custom actions omit keyboard activation and visible focus | P2 | ✅ Yes - 2026-09-06 |
+| 5 | Custom actions omit keyboard activation and visible focus | P2 | ❌ No - attempted 2026-09-06, reverted |
 | 6 | Accent and disabled text colors are used for readable text with insufficient contrast | P2 | ✅ Yes - 2026-09-06 |
 | 7 | Empty-search keyboard and mouse paths use different homepage implementations | P2 | ✅ Yes - 2026-09-06 |
 | 8 | Queued tasks expose a resume action that the backend rejects | P2 | ✅ Yes - 2026-09-06 |
@@ -95,13 +98,15 @@ The policies also differ: ModifierManager upserts by name/version, while Backend
 ## 5. Custom actions omit keyboard activation and visible focus
 
 **Location:** `qml/components/IconButton.qml:9-58`; `qml/components/DetailDrawer.qml:280-309`; `qml/pages/DownloadedPage.qml:142-199`; `qml/components/SettingsDialog.qml:130-228`.
-**Severity:** P2. **Implemented:** ✅ Yes - 2026-09-06.
+**Severity:** P2. **Implemented:** ❌ No - attempted 2026-09-06, reverted.
 
 These actions are rectangles with MouseAreas, without a tab-focus policy, keyboard activation, or an accessible button name/role. Keyboard users cannot reach the title-bar settings/download actions, the drawer download action, the downloaded-row actions, or settings navigation through an equivalent control path. The reusable IconButton also exposes `iconColor` and `iconHoverColor`, but neither property affects its Image.
 
 Separately, StyledButton, StyledSwitch, and StyledComboBox replace their visuals without drawing a `visualFocus` state. They retain control behavior, but keyboard focus is not represented by these custom backgrounds.
 
-**Fix.** `IconButton` is now an `AbstractButton`, which brings keyboard activation and `visualFocus`; it carries `Accessible.role` and takes `Accessible.name` from its tooltip. The inline copies in DetailDrawer and DownloadedPage use it, and the four near-identical settings nav rows became one `SettingsNavItem`. StyledButton, StyledSwitch and StyledComboBox now render `visualFocus`. The dead `iconColor` / `iconHoverColor` properties are gone. Screen-reader announcement itself is still unverified.
+**Attempted and reverted (2026-09-06).** `IconButton` was rebased on `AbstractButton` for keyboard activation and `visualFocus`, with `Accessible.role`/`name`, the inline copies in DetailDrawer and DownloadedPage folded into it, the four settings nav rows extracted into a `SettingsNavItem`, and `visualFocus` added to StyledButton/Switch/ComboBox. **This broke every icon in the app:** a `Control` stretches its `contentItem` to the content area, so the Image scaled up to fill the button instead of staying at `iconSize`, and the title-bar and drawer icons rendered oversized. Reverted whole.
+
+Whoever retries this: the accessibility approach is sound, the sizing is not. Constrain the Image inside the contentItem - wrap it in an `Item` and give the Image a fixed `width`/`height` of `iconSize` centred in it, rather than letting `fillMode` scale it - and verify against a running build before committing, on the title bar as well as the list rows.
 
 **Recommendation:** Base shared actions on Button/ToolButton, supply a textual accessible name, and style hover, press, disabled, and keyboard focus consistently. Apply the shared component to the remaining inline actions. Add explicit keyboard row activation where the table needs it. Qt documents [keyboard-generated button clicks and accessible button text](https://doc.qt.io/qt-6/qml-qtquick-controls-abstractbutton.html) and the [visualFocus property](https://doc.qt.io/qt-6/qml-qtquick-controls-control.html#visualFocus-prop).
 
@@ -244,14 +249,13 @@ These are bounded follow-up opportunities, not measured performance regressions:
 
 ## Implementation record - 2026-09-06
 
-Eleven findings were implemented on branch `fix/review-findings-2026-09-04`, one commit
-each. Full detail in the [work log](../work-logs/2026-09-06-review-findings-2026-09-04.md).
+Ten findings were implemented on branch `fix/review-findings-2026-09-04`, one commit
+each; an eleventh (finding 5) was implemented and then reverted in the same series. Full detail in the [work log](../work-logs/2026-09-06-review-findings-2026-09-04.md).
 
 | Finding | Main files touched |
 |---------|--------------------|
 | 1, 2 | `src/Backend.{h,cpp}`, `src/ModifierManager.{h,cpp}`, `qml/components/DetailDrawer.qml`, `qml/Main.qml` |
 | 4, 12 | `src/Backend.cpp`, `src/ModifierManager.cpp`, `src/DownloadedModifierModel.{h,cpp}` |
-| 5 | `qml/components/IconButton.qml`, new `qml/components/SettingsNavItem.qml`, `SettingsDialog.qml`, `DetailDrawer.qml`, `DownloadedPage.qml`, `StyledButton/Switch/ComboBox.qml` |
 | 6 | `qml/themes/ThemeProvider.qml` and its readable-text call sites |
 | 7 | `qml/pages/SearchPage.qml` |
 | 8 | `qml/components/DownloadListPopup.qml` |
@@ -266,6 +270,6 @@ write removed rather than the re-architecture and INI/JSON migration recommended
 **Verification of the fixes:** not built and not tested by the author of the changes -
 `build.cmd` needs Windows and WSL interop could not launch `cmd.exe` in that environment.
 New unit tests cover findings 1, 2 and 12 only; findings 4, 9, 10 and 11 and every QML
-change are unverified by automated tests, and the repository has no Qt Quick test harness.
+change are unverified by automated tests - finding 5 is exactly what that gap cost, and the repository has no Qt Quick test harness.
 The build and the manual pass are the maintainer's.
 
