@@ -197,7 +197,7 @@ ApplicationWindow {
                 downloadedModel: backend ? backend.downloadedModifierModel : null
                 
                 onOpenFolderRequested: function(index) {
-                    if (backend) backend.openDownloadFolder()  // 打开下载文件夹
+                    if (backend) backend.openModifierFolder(index)
                 }
                 
                 onDeleteModifier: function(index) {
@@ -291,7 +291,11 @@ ApplicationWindow {
         }
         
         onOpenFolder: function(index) {
-            if (backend) backend.openDownloadFolder()
+            if (backend && index >= 0 && index < downloadItems.length) {
+                backend.openTaskFolder(downloadItems[index].taskId)
+            } else if (backend) {
+                backend.openDownloadFolder()
+            }
         }
         
         onRemoveFromList: function(index) {

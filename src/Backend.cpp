@@ -5,6 +5,7 @@
 #include <QUrl>
 #include <QProcess>
 #include <QDebug>
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonArray>
@@ -689,6 +690,43 @@ void Backend::openDownloadFolder()
 {
     QString downloadDir = ConfigManager::getInstance().getDownloadDirectory();
     QDesktopServices::openUrl(QUrl::fromLocalFile(downloadDir));
+}
+
+void Backend::openContainingFolder(const QString& filePath) const
+{
+    // Fall back to the configured directory only when the item has no usable
+    // path of its own - opening the current default for an item downloaded
+    // elsewhere sends the user to the wrong folder.
+    const QString directory = filePath.isEmpty()
+        ? QString()
+        : QFileInfo(filePath).absolutePath();
+
+    if (!directory.isEmpty() && QDir(directory).exists()) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(directory));
+        return;
+    }
+
+    QDesktopServices::openUrl(
+        QUrl::fromLocalFile(ConfigManager::getInstance().getDownloadDirectory()));
+}
+
+void Backend::openModifierFolder(int index)
+{
+    if (index < 0 || index >= m_downloadedModifierModel->count()) {
+        openDownloadFolder();
+        return;
+    }
+    openContainingFolder(m_downloadedModifierModel->getModifier(index).filePath);
+}
+
+void Backend::openTaskFolder(const QString& taskId)
+{
+    const int index = findDownloadTaskIndex(taskId);
+    if (index < 0) {
+        openDownloadFolder();
+        return;
+    }
+    openContainingFolder(m_downloadTasks.at(index).value("savePath").toString());
 }
 
 void Backend::runModifier(int index)

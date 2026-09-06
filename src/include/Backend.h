@@ -156,6 +156,10 @@ public slots:
     Q_INVOKABLE void cancelDownload(const QString& taskId);
     Q_INVOKABLE void removeDownloadTask(const QString& taskId);
     Q_INVOKABLE void openDownloadFolder();
+    // Open the directory a specific item actually lives in, which is not
+    // necessarily the directory currently configured for downloads.
+    Q_INVOKABLE void openModifierFolder(int index);
+    Q_INVOKABLE void openTaskFolder(const QString& taskId);
 
     // Downloaded management
     Q_INVOKABLE void runModifier(int index);
@@ -216,6 +220,7 @@ private:
     quint64 beginSearchRequest();
     void finishSearchRequest(quint64 requestId, const QList<ModifierInfo>& modifiers);
     void applySortOrder(QList<ModifierInfo>& modifiers) const;
+    void openContainingFolder(const QString& filePath) const;
     void requestSelectedModifierDetail();
     void setDetailState(const QString& state);
     void stopCoverLoading();
