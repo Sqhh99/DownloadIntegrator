@@ -2,7 +2,7 @@
 
 - **日期：** 2026-09-06
 - **分支：** `fix/download-referer-403`（基于 `main` 的 `bad5d7e`）
-- **关联文档：** 对应 issue [#40](https://github.com/Sqhh99/FLiNG-Downloader/issues/40)；PR 记录待构建验证通过后再写
+- **关联文档：** 对应 issue [#40](https://github.com/Sqhh99/FLiNG-Downloader/issues/40)；[PR 记录](../pull-requests/2026-09-06-download-403-referer.md)
 
 ## 一、用户的请求
 
@@ -92,9 +92,11 @@ NetworkManager: HTTP status code: 403
 
 ## 五、验证情况
 
-- **没有构建，没有跑测试。** 本次改动在 WSL 里完成，`build.cmd` 需要 Windows；
+- **AI 侧没有构建、没有跑测试。** 本次改动在 WSL 里完成，`build.cmd` 需要 Windows；
   这台机器上的 WSL interop 也起不来 `cmd.exe`（试了 `cmd.exe /c build.cmd tests`，
   cmd.exe 被当成 shell 脚本执行，报 `MZ...: not found`）。
+- **作者已在 Windows 本机构建并实测通过**（2026-09-06 反馈：测试通过，可以提 PR）。
+  断点续传与扩展名纠正这两个子项没有单独反馈结果。
 - 已完成的验证只有**对站点行为的实测**：上面那两张表全部是 curl 实跑的结果，
   包括下载成功时的 1,765,888 字节与 `MZ` 魔数。
 - 新增的单元测试只覆盖 `defaultRefererForUrl()` 的推导逻辑。
@@ -113,8 +115,8 @@ NetworkManager: HTTP status code: 403
 
 - 若实测仍然 403，说明 Qt 在重定向时丢掉了这个请求头。备用方案：把
   `RedirectPolicyAttribute` 改成手动模式，每一跳自己重新设置 `Referer`。
-- PR 记录 `docs/pull-requests/2026-09-06-download-403-referer.md` 等实测通过后再写，
-  这样「怎么验证」几个勾能如实填写实际跑过的内容，而不是留空。
+- issue #40 **不通过合并自动关闭**：PR 里只写「关联」而不写 `Fixes #40`，
+  按维护者要求由人工确认线上表现后手动关掉。
 - 工作区里还有两处与本次无关、且不是本次会话产生的内容，**没有**纳入本次提交：
   - `CMakeLists.txt` 未提交的本地改动（第 178 行 `WIN32` 被注释掉），
     这是为了让控制台日志可见的调试手法，不应提交；
